@@ -132,7 +132,7 @@ Element UIRenderer::render_shortcuts() {
 
 Element UIRenderer::render_save_button(bool modified) {
     return text(" 💾 Ctrl+S ") | 
-           bgcolor(modified ? Color::Blue : Color::GrayDark) |
+           bgcolor(modified ? Color::BlueLight : Color::GrayDark) |
            (modified ? bold : nothing);
 }
 

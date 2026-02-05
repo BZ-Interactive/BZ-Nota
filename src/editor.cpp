@@ -381,7 +381,13 @@ Element Editor::render() {
 
 bool Editor::handle_event(Event event) {
     save_status_shown = false;
-    confirm_quit = false; // Reset quit confirmation on any key press
+    
+    // Don't reset confirm_quit if this is Ctrl+Q (char 17)
+    bool is_ctrl_q = !event.is_character() && event.input().size() == 1 && 
+                     (unsigned char)event.input()[0] == 17;
+    if (!is_ctrl_q) {
+        confirm_quit = false; // Reset quit confirmation on any other key press
+    }
     
     // Ignore all mouse events
     if (event.is_mouse()) {
