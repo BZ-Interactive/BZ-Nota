@@ -20,7 +20,7 @@
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
 public:
-    Editor(const std::string& filename);
+    Editor(const std::string& filename, bool debug_mode = false);
     ~Editor();
     
     /// @brief Start the editor main loop
@@ -50,6 +50,9 @@ private:
     
     // Quit confirmation state
     bool confirm_quit = false;
+    
+    // Debug mode - show key sequences in status bar
+    bool debug_mode = false;
     
     // Manager instances (RAII - automatically constructed/destructed, no 'new' needed)
     // Note to self: These are actual objects, not references

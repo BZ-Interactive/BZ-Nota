@@ -23,7 +23,9 @@ static void handle_sigint(int sig) {
 }
 
 // ===== Constructor / Destructor =====
-Editor::Editor(const std::string& fn) : filename(fn) {
+// Constructor initializer list (more efficient than assigning in body)
+Editor::Editor(const std::string& fn, bool dbg) 
+    : filename(fn), debug_mode(dbg) {
     load_file();
 }
 
@@ -481,16 +483,16 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
 }
 
 bool Editor::handle_navigation_sequences(const std::string& input) {
-    // Debug output disabled - uncomment to see key sequences
-    // if (input.length() > 1 && input[0] == '\x1b') {
-    //     status_message = "Key: ";
-    //     for (unsigned char c : input) {
-    //         char buf[8];
-    //         snprintf(buf, sizeof(buf), "%02x ", c);
-    //         status_message += buf;
-    //     }
-    //     save_status_shown = true;
-    // }
+    // Debug mode: Show ALL escape sequences (enable with -d flag)
+    if (debug_mode && input.length() > 1 && input[0] == '\x1b') {
+        status_message = "Key: ";
+        for (unsigned char c : input) {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%02x ", c);
+            status_message += buf;
+        }
+        save_status_shown = true;
+    }
     
     // Shift + Arrow keys (selection)
     if (input == "\x1b[1;2D") { move_cursor_left(true); return true; }   // Shift+Left
@@ -498,11 +500,21 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
     if (input == "\x1b[1;2A") { move_cursor_up(true); return true; }     // Shift+Up
     if (input == "\x1b[1;2B") { move_cursor_down(true); return true; }   // Shift+Down
     
-    // Ctrl+Shift+Home/End (selection) - Works when Shift+Home/End is caught by terminal
+    // Ctrl+Shift+Home/End (selection) - Works in Alacritty
     if (input == "\x1b[1;6H") { move_cursor_home(true); return true; }   // Ctrl+Shift+Home
     if (input == "\x1b[1;6F") { move_cursor_end(true); return true; }    // Ctrl+Shift+End
     if (input == "\x1b[1;5H") { move_cursor_home(true); return true; }   // Ctrl+Home with selection
     if (input == "\x1b[1;5F") { move_cursor_end(true); return true; }    // Ctrl+End with selection
+    
+    // Alt+Shift+Home/End (selection) - Alternative for GNOME Terminal
+    if (input == "\x1b[1;4H") { move_cursor_home(true); return true; }   // Alt+Shift+Home
+    if (input == "\x1b[1;4F") { move_cursor_end(true); return true; }    // Alt+Shift+End
+    if (input == "\x1b[1;3H") { move_cursor_home(true); return true; }   // Alt+Home
+    if (input == "\x1b[1;3F") { move_cursor_end(true); return true; }    // Alt+End
+    
+    // NOTE: GNOME Terminal may intercept these keys for its own shortcuts.
+    // To use in GNOME Terminal, you may need to disable terminal keybindings:
+    // Preferences → Shortcuts → disable conflicting shortcuts
     
     // Shift + Home/End (selection) - May not work if terminal intercepts for scrollback
     if (input == "\x1b[1;2H") { move_cursor_home(true); return true; }   // Shift+Home (xterm)
