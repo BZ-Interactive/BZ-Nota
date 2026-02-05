@@ -187,6 +187,6 @@ Project Link: [https://github.com/BZ-Interactive/BZ-Nota](https://github.com/BZ-
 <!-- MARKDOWN LINKS & IMAGES -->
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: www.linkedin.com/in/barkin-zorlu
-[CPP-shield]: https://img.shields.io/badge/C++-23-blue
+[CPP-shield]: https://img.shields.io/badge/C++-17-blue
 [CPP-url]: https://isocpp.org/
 <a name="readme-top"></a>
