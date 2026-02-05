@@ -39,3 +39,27 @@
 
 # debug information files
 *.dwo
+
+# Build directory
+build/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# CLion project files
+.idea/
+.cmake/
+
+# VSCode settings
+.vscode/
+
+# Backup and temporary files
+*~
+*.swp
+*.swn
+*.bak
+*.tmp
+*.log
