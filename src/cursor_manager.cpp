@@ -1,6 +1,6 @@
 #include "cursor_manager.hpp"
-#include <algorithm>
-#include <cctype>
+#include <algorithm>  // std::min, std::max
+#include <cctype>     // isspace, isalnum
 
 CursorManager::CursorManager() {}
 
@@ -8,17 +8,17 @@ void CursorManager::move_left(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
 ) {
     // Move cursor first
     if (cursor_x > 0) {
-        cursor_x--;
+        cursor_x--;  // In-place modification via reference
     } else if (cursor_y > 0) {
         cursor_y--;
-        cursor_x = buffer[cursor_y].length();
+        cursor_x = buffer[cursor_y].length();  // .length() returns size_t (unsigned)
     }
     
     // Update selection state (Editor already handles start_selection)
@@ -33,13 +33,13 @@ void CursorManager::move_right(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
 ) {
     // Move cursor first
-    if (cursor_x < (int)buffer[cursor_y].length()) {
+    if (cursor_x < (int)buffer[cursor_y].length()) {  // Cast size_t to int for comparison
         cursor_x++;
     } else if (cursor_y < (int)buffer.size() - 1) {
         cursor_y++;
@@ -58,7 +58,7 @@ void CursorManager::move_up(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -81,7 +81,7 @@ void CursorManager::move_down(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -104,7 +104,7 @@ void CursorManager::move_word_left(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -125,7 +125,7 @@ void CursorManager::move_word_right(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int cursor_y,
-    std::function<void()> start_selection_fn,
+    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select

@@ -3,13 +3,13 @@
 #include <vector>
 #include <memory>
 
-// ftxui includes
+// ftxui includes - Terminal UI library
 #include "ftxui/component/component.hpp"
 #include "ftxui/component/screen_interactive.hpp"
 #include "ftxui/component/event.hpp"
 #include "ftxui/dom/elements.hpp"
 
-// Local includes
+// Local includes - manager classes
 #include "ui_renderer.hpp"
 #include "selection_manager.hpp"
 #include "clipboard_manager.hpp"
@@ -27,11 +27,11 @@ public:
     void run();
     
 private:
-    // Core data
-    std::vector<std::string> buffer;
-    std::string filename;
-    bool modified = false;
-    bool save_status_shown = false;
+    // Core data (std::vector = List<string>, std::string = string)
+    std::vector<std::string> buffer; // Text buffer - each line is one string
+    std::string filename; // Includes File path
+    bool modified = false; // Has unsaved changes?
+    bool save_status_shown = false; // Show status in UI?
     std::string status_message = "";
     
     // Cursor position
@@ -51,13 +51,14 @@ private:
     // Quit confirmation state
     bool confirm_quit = false;
     
-    // Manager instances
-    UIRenderer ui_renderer;
-    SelectionManager selection_manager;
-    ClipboardManager clipboard_manager;
-    EditingManager editing_manager;
-    CursorManager cursor_manager;
-    UndoRedoManager undo_redo_manager;
+    // Manager instances (RAII - automatically constructed/destructed, no 'new' needed)
+    // Note to self: These are actual objects, not references
+    UIRenderer ui_renderer;                 // Handles all rendering
+    SelectionManager selection_manager;     // Text selection state
+    ClipboardManager clipboard_manager;     // Copy/paste operations
+    EditingManager editing_manager;         // Insert/delete text
+    CursorManager cursor_manager;           // Cursor movement
+    UndoRedoManager undo_redo_manager;      // History management
     
     // ===== File Operations =====
     void load_file();
@@ -79,8 +80,8 @@ private:
     // ===== Editing Operations =====
     void insert_char(char c);
     void insert_newline();
-    void delete_char();        // Backspace
-    void delete_forward();     // Delete key
+    void delete_char(); // represents backspace
+    void delete_forward(); // represents delete key
     
     // ===== Cursor Movement =====
     void move_cursor_left(bool select = false);
@@ -88,7 +89,7 @@ private:
     void move_cursor_up(bool select = false);
     void move_cursor_down(bool select = false);
     void move_word_left(bool select = false);
-    void move_word_right(bool select =false);
+    void move_word_right(bool select = false);
     
     // ===== Helper Functions =====
     int find_word_start(int x, int y);
@@ -110,7 +111,9 @@ private:
     bool handle_standard_keys(ftxui::Event event);
     bool handle_text_input(ftxui::Event event);
     
-    // Legacy compatibility for git repo version
+    // Getters (note to self: C++ doesn't have properties like C#)
+    // 'const &' returns reference without copying (not to self: like 'ref readonly' in C#)
+    // Trailing 'const' means method doesn't modify object
     const std::vector<std::string>& get_buffer() const { return buffer; }
     bool is_modified() const { return modified; }
 };

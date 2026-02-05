@@ -1,5 +1,5 @@
 #include "selection_manager.hpp"
-#include <algorithm>
+#include <algorithm>  // For std::min, std::max, std::swap
 
 SelectionManager::SelectionManager() {}
 
@@ -29,6 +29,7 @@ void SelectionManager::delete_selection(
 ) {
     if (!has_selection) return;
     
+    // std::min/std::max
     int start_y = std::min(selection_start_y, selection_end_y);
     int end_y = std::max(selection_start_y, selection_end_y);
     int start_x = selection_start_x;
@@ -45,10 +46,11 @@ void SelectionManager::delete_selection(
         cursor_x = start_x;
         cursor_y = start_y;
     } else {
-        // Multi-line deletion
-        std::string remaining = buffer[start_y].substr(0, start_x) + 
+        // Multi-line deletion - string concatenation using +
+        std::string remaining = buffer[start_y].substr(0, start_x) +
                                buffer[end_y].substr(end_x);
         buffer[start_y] = remaining;
+        // vector.erase with iterators
         buffer.erase(buffer.begin() + start_y + 1, buffer.begin() + end_y + 1);
         cursor_x = start_x;
         cursor_y = start_y;

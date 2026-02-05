@@ -4,17 +4,21 @@
 #include <functional>
 
 /// @brief Manages clipboard operations (copy, cut, paste)
+/// Internal Clipboard (not system clipboard)
 class ClipboardManager {
 public:
     ClipboardManager();
     
-    /// @brief Copy text to clipboard
+    // Copy text to internal clipboard (const& = readonly reference)
     void copy(const std::string& text);
     
-    /// @brief Cut text to clipboard and return character count
+    // Cut text and return character count
     int cut(const std::string& text);
     
     /// @brief Paste clipboard content into buffer
+    /// @param buffer Text buffer (modified by reference)
+    /// @param cursor_x Cursor X position (modified by reference)
+    /// @param cursor_y Cursor Y position (modified by reference)
     /// @return Number of characters pasted
     int paste(
         std::vector<std::string>& buffer,
@@ -22,12 +26,10 @@ public:
         int& cursor_y
     );
     
-    /// @brief Check if clipboard is empty
+    // Inline getters (like C# properties)
     bool is_empty() const { return clipboard.empty(); }
-    
-    /// @brief Get clipboard content
     const std::string& get_content() const { return clipboard; }
 
 private:
-    std::string clipboard;
+    std::string clipboard;  // Internal clipboard (not system clipboard)
 };

@@ -1,16 +1,19 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <functional>
+#include <functional>  // For std::function (like Func<> or Action<> delegates in C#)
 
 /// @brief Manages cursor movement and positioning
+/// Similar to text caret in WPF TextBox but manual positioning
 class CursorManager {
 public:
     CursorManager();
     
+    // std::function<void()> = Action in C# (delegate with no return value)
+    // bool select = optional parameter with default value (like C# optional params)
     void move_left(
-        const std::vector<std::string>& buffer,
-        int& cursor_x,
+        const std::vector<std::string>& buffer,  // const& = readonly reference
+        int& cursor_x,                           // & = modifies original (like 'ref')
         int& cursor_y,
         std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
@@ -70,7 +73,7 @@ public:
     
     void ensure_cursor_visible(int cursor_y, int& scroll_y, int screen_height);
     
-    // Helper functions
+    // Helper functions for word boundary detection
     int find_word_start(const std::string& line, int x);
     int find_word_end(const std::string& line, int x);
 };

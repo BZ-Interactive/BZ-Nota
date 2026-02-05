@@ -12,20 +12,22 @@
 
 using namespace ftxui;
 
-// Global signal handler flag
+// Global flag for signal handling
+// volatile sig_atomic_t = thread-safe atomic type for signal handlers
 static volatile sig_atomic_t ctrl_c_pressed = 0;
 
 static void handle_sigint(int sig) {
-    (void)sig;
+    (void)sig;  // Unused parameter (suppress warning)
     ctrl_c_pressed = 1;
 }
 
 // ===== Constructor / Destructor =====
-
 Editor::Editor(const std::string& fn) : filename(fn) {
     load_file();
 }
 
+// Destructor - automatically called when object goes out of scope (RAII)
+// Note to self: Unlike C# where GC handles cleanup, C++ destructors are deterministic
 Editor::~Editor() {
     if (modified) {
         std::cerr << "Warning: Unsaved changes!" << std::endl;
@@ -50,25 +52,29 @@ void Editor::load_file() {
 }
 
 void Editor::save_file() {
-    // Create directory if needed
-    char* filename_copy = strdup(filename.c_str());
-    char* dir = dirname(filename_copy);
-    mkdir(dir, 0755);
-    free(filename_copy);
+    // Create directory if needed (C-style, could be modernized with C++17 filesystem)
+    // Using raw pointers
+    char* filename_copy = strdup(filename.c_str()); // Allocate memory
+    char* dir = dirname(filename_copy); // Get directory path
+    mkdir(dir, 0755); // Create directory
+    free(filename_copy); // Free memory
     
+    // RAII: file automatically closed when 'ofs' goes out of scope
     std::ofstream ofs(filename);
-    if (!ofs) {
+    if (!ofs) {  // Check if file opened successfully
         status_message = "Error: Could not save file!";
         save_status_shown = true;
         return;
     }
     
+    // 'const auto&' = infer type, use const reference (avoid copy)
     for (const auto& line : buffer) {
         ofs << line << '\n';
     }
     modified = false;
     status_message = "File saved successfully";
     save_status_shown = true;
+    // ofs automatically closed here (destructor called)
 }
 
 // ===== Selection Operations =====
