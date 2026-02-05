@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <csignal>
+#include <cstdio>   // For snprintf (debug output)
 #include <termios.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -275,6 +276,28 @@ void Editor::move_word_right(bool select) {
     cursor_manager.move_word_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
+void Editor::move_cursor_home(bool select) {
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_selection();
+    }
+    
+    cursor_manager.move_home(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
+}
+
+void Editor::move_cursor_end(bool select) {
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_selection();
+    }
+    
+    cursor_manager.move_end(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
+}
+
 // ===== Helper Functions =====
 
 int Editor::find_word_start(int x, int y) {
@@ -458,11 +481,34 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
 }
 
 bool Editor::handle_navigation_sequences(const std::string& input) {
+    // Debug output disabled - uncomment to see key sequences
+    // if (input.length() > 1 && input[0] == '\x1b') {
+    //     status_message = "Key: ";
+    //     for (unsigned char c : input) {
+    //         char buf[8];
+    //         snprintf(buf, sizeof(buf), "%02x ", c);
+    //         status_message += buf;
+    //     }
+    //     save_status_shown = true;
+    // }
+    
     // Shift + Arrow keys (selection)
     if (input == "\x1b[1;2D") { move_cursor_left(true); return true; }   // Shift+Left
     if (input == "\x1b[1;2C") { move_cursor_right(true); return true; }  // Shift+Right
     if (input == "\x1b[1;2A") { move_cursor_up(true); return true; }     // Shift+Up
     if (input == "\x1b[1;2B") { move_cursor_down(true); return true; }   // Shift+Down
+    
+    // Ctrl+Shift+Home/End (selection) - Works when Shift+Home/End is caught by terminal
+    if (input == "\x1b[1;6H") { move_cursor_home(true); return true; }   // Ctrl+Shift+Home
+    if (input == "\x1b[1;6F") { move_cursor_end(true); return true; }    // Ctrl+Shift+End
+    if (input == "\x1b[1;5H") { move_cursor_home(true); return true; }   // Ctrl+Home with selection
+    if (input == "\x1b[1;5F") { move_cursor_end(true); return true; }    // Ctrl+End with selection
+    
+    // Shift + Home/End (selection) - May not work if terminal intercepts for scrollback
+    if (input == "\x1b[1;2H") { move_cursor_home(true); return true; }   // Shift+Home (xterm)
+    if (input == "\x1b[1;2F") { move_cursor_end(true); return true; }    // Shift+End (xterm)
+    if (input == "\x1b[1;2~") { move_cursor_home(true); return true; }   // Shift+Home (vt100)
+    if (input == "\x1b[4;2~") { move_cursor_end(true); return true; }    // Shift+End (vt100)
     
     // Ctrl+Shift+Arrow (word selection) - Alacritty
     if (input == "\x1b[1;6D") { move_word_left(true); return true; }     // Ctrl+Shift+Left
@@ -505,6 +551,10 @@ bool Editor::handle_standard_keys(Event event) {
     if (event == Event::ArrowRight) { move_cursor_right(false); return true; }
     if (event == Event::ArrowUp)    { move_cursor_up(false); return true; }
     if (event == Event::ArrowDown)  { move_cursor_down(false); return true; }
+    
+    // Home/End keys
+    if (event == Event::Home) { move_cursor_home(false); return true; }
+    if (event == Event::End)  { move_cursor_end(false); return true; }
     
     // Editing keys
     if (event == Event::Backspace) { delete_char(); return true; }

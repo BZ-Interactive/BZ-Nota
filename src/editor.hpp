@@ -90,6 +90,8 @@ private:
     void move_cursor_down(bool select = false);
     void move_word_left(bool select = false);
     void move_word_right(bool select = false);
+    void move_cursor_home(bool select = false);  // Home key - start of line
+    void move_cursor_end(bool select = false);   // End key - end of line
     
     // ===== Helper Functions =====
     int find_word_start(int x, int y);

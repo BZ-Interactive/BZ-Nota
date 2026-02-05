@@ -71,6 +71,25 @@ public:
         bool select
     );
     
+    // Home/End keys - move to start/end of line
+    void move_home(
+        const std::vector<std::string>& buffer,
+        int& cursor_x,
+        int cursor_y,
+        std::function<void()> update_selection_fn,
+        std::function<void()> clear_selection_fn,
+        bool select
+    );
+    
+    void move_end(
+        const std::vector<std::string>& buffer,
+        int& cursor_x,
+        int cursor_y,
+        std::function<void()> update_selection_fn,
+        std::function<void()> clear_selection_fn,
+        bool select
+    );
+    
     void ensure_cursor_visible(int cursor_y, int& scroll_y, int screen_height);
     
     // Helper functions for word boundary detection
