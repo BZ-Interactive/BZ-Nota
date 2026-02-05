@@ -24,7 +24,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.0-orange)
+![Version](https://img.shields.io/badge/version-0.4.1-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -134,17 +134,21 @@ To launch the editor, run the executable with a file path:
 ### Command-Line Options
 
 ```sh
-./bznota [-d] <filename>
+./bznota [-d] [-v] <filename>
 ```
 
 **Options:**
 *   `-d`, `--debug` — Enable debug mode (displays key sequence information in the status bar)
+*   `-v`, `--version` — Display version information and exit
 
 **Examples:**
 
 ```sh
 # Open a file for editing
 ./bznota example.txt
+
+# Display version information
+./bznota -v
 
 # Open with debug mode enabled
 ./bznota -d example.txt

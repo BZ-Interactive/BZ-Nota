@@ -1,4 +1,5 @@
 #include "editor.hpp"
+#include "version.hpp"
 #include <iostream>
 #include <string>
 
@@ -18,6 +19,9 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "-d" || arg == "--debug") {
             debug_mode = true;
+        } else if (arg == "-v" || arg == "--version") {
+            std::cout << BZ_NOTA_APP_NAME << " " << BZ_NOTA_VERSION << "\n";
+            return 0;
         } else if (arg[0] == '-') {
             std::cerr << "Unknown option: " << arg << "\n";
             std::cerr << "Usage: " << argv[0] << " [-d] <filename>\n";

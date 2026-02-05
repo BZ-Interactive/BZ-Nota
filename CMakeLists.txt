@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(BZ-Nota VERSION 0.0.1 LANGUAGES CXX)
+project(BZ-Nota VERSION 0.4.1 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
+
+# Generate version header from template
+configure_file(src/version.hpp.in src/version.hpp @ONLY)
 
 # Add ftxui as a subdirectory (submodule)
 add_subdirectory(vendor/ftxui)
@@ -39,6 +42,7 @@ target_link_libraries(bznota PRIVATE ftxui::screen ftxui::dom ftxui::component)
 
 # Include directories
 target_include_directories(bznota PRIVATE src)
+target_include_directories(bznota PRIVATE ${CMAKE_BINARY_DIR}/src)  # For generated version.hpp
 target_include_directories(bznota PRIVATE vendor/ftxui/include)
 
 # Compiler options for better warnings and debugging
