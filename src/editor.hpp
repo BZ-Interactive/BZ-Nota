@@ -9,6 +9,9 @@
 #include "ftxui/component/event.hpp"
 #include "ftxui/dom/elements.hpp"
 
+// Local includes
+#include "ui_renderer.hpp"
+
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
 public:
@@ -58,6 +61,12 @@ private:
     // Screen reference for exiting
     ftxui::ScreenInteractive* screen = nullptr;
     
+    // Quit confirmation state
+    bool confirm_quit = false;
+    
+    // UI Renderer
+    UIRenderer ui_renderer;
+    
     // ===== File Operations =====
     void load_file();
     void save_file();
@@ -101,8 +110,6 @@ private:
     
     // ===== UI Rendering =====
     ftxui::Element render();
-    ftxui::Element render_save_button();
-    ftxui::Element render_close_button();
     
     // ===== Event Handling =====
     bool handle_event(ftxui::Event event);

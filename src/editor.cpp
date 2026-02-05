@@ -559,118 +559,31 @@ void Editor::redo() {
 // ===== UI Rendering =====
 
 Element Editor::render() {
-    Elements lines_display;
-    
     int screen_height = Terminal::Size().dimy;
     ensure_cursor_visible(screen_height);
     
-    int visible_lines = screen_height - 3;
-    int max_line_num_width = std::to_string(buffer.size()).length();
+    // Use UIRenderer to handle all rendering
+    auto is_char_selected_fn = [this](int x, int y) {
+        return this->is_char_selected(x, y);
+    };
     
-    for (int i = 0; i < visible_lines && (scroll_y + i) < (int)buffer.size(); i++) {
-        int line_idx = scroll_y + i;
-        std::string line_num = std::to_string(line_idx + 1);
-        
-        // Pad line number
-        while ((int)line_num.length() < max_line_num_width) {
-            line_num = " " + line_num;
-        }
-        
-        std::string line_content = buffer[line_idx];
-        
-        // Replace tabs with visual representation
-        size_t tab_pos = 0;
-        while ((tab_pos = line_content.find('\t', tab_pos)) != std::string::npos) {
-            line_content.replace(tab_pos, 1, "→   ");
-            tab_pos += 4;
-        }
-        
-        // Build line with selection highlighting
-        Elements line_elements;
-        for (int j = 0; j <= (int)line_content.length(); j++) {
-            if (j == (int)line_content.length() && line_idx != cursor_y) break;
-            
-            bool is_cursor = (line_idx == cursor_y && j == cursor_x);
-            bool is_selected = is_char_selected(j, line_idx);
-            
-            std::string ch_str = (j < (int)line_content.length()) ? 
-                                std::string(1, line_content[j]) : " ";
-            
-            auto elem = text(ch_str);
-            
-            if (is_cursor) {
-                elem = elem | inverted | bold;
-            } else if (is_selected) {
-                elem = elem | bgcolor(Color::Blue) | color(Color::White);
-            }
-            
-            line_elements.push_back(elem);
-        }
-        
-        auto line_elem = hbox(std::move(line_elements));
-        auto full_line = hbox({
-            text(line_num) | color(Color::GrayDark),
-            text(" │ ") | color(Color::GrayDark),
-            line_elem
-        });
-        
-        lines_display.push_back(full_line);
-    }
-    
-    // Header with save status and title
-    std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
-    auto header = hbox({
-        text(" "),
-        render_save_button(),
-        text("  ") | flex,
-        text(title) | bold | center,
-        text("  ") | flex,
-        render_close_button(),
-        text(" ")
-    }) | bgcolor(Color::Blue);
-    
-    // Status bar
-    std::string pos_info = "Line " + std::to_string(cursor_y + 1) + 
-                          ", Col " + std::to_string(cursor_x + 1);
-    std::string status_display = save_status_shown ? status_message : pos_info;
-    
-    auto status_line = hbox({
-        text(" " + status_display) | flex
-    }) | bgcolor(Color::GrayDark);
-    
-    auto shortcuts_line = hbox({
-        text(" ") | flex,
-        text("Ctrl+S:Save | Ctrl+Z:Undo | Ctrl+Y:Redo | Ctrl+Q:Quit") | center,
-        text(" ") | flex
-    }) | bgcolor(Color::Black);
-    
-    return vbox({
-        header,
-        separator(),
-        vbox(std::move(lines_display)) | flex,
-        separator(),
-        status_line,
-        shortcuts_line
-    });
-}
-
-Element Editor::render_save_button() {
-    return text(" 💾 Ctrl+S ") | 
-           bgcolor(modified ? Color::Blue : Color::GrayDark) |
-           (modified ? bold : nothing);
-}
-
-Element Editor::render_close_button() {
-    return text(" ❌ Ctrl+Q ") | 
-           bgcolor(Color::GrayLight) | 
-           color(Color::RedLight) | 
-           bold;
+    return ui_renderer.render(
+        buffer,
+        cursor_x, cursor_y,
+        scroll_y,
+        filename,
+        modified,
+        status_message,
+        save_status_shown,
+        is_char_selected_fn
+    );
 }
 
 // ===== Event Handling =====
 
 bool Editor::handle_event(Event event) {
     save_status_shown = false;
+    confirm_quit = false; // Reset quit confirmation on any key press
     
     // Ignore all mouse events
     if (event.is_mouse()) {
@@ -736,14 +649,9 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             return true;
             
         case 17: // Ctrl+Q
-            if (modified) {
+            if (modified && !confirm_quit) {
                 status_message = "Unsaved changes! Press Ctrl+Q again to quit.";
                 save_status_shown = true;
-                static bool confirm_quit = false;
-                if (confirm_quit) {
-                    screen->Exit();
-                    return true;
-                }
                 confirm_quit = true;
                 return true;
             }

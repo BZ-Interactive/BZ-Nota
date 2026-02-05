@@ -20,6 +20,8 @@ add_executable(bznota
     src/text_buffer.hpp
     src/selection.cpp
     src/selection.hpp
+    src/ui_renderer.cpp
+    src/ui_renderer.hpp
 )
 
 # Link ftxui libraries
