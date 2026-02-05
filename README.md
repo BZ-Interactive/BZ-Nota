@@ -84,16 +84,15 @@ You'll need a modern C++ compiler and CMake to build BZ-Nota. Installing the sta
 
 **Note:** Pre-packaged versions will be available upon reaching version 1.0.
 
-*   **C++ Compiler (GCC)**: Recommended — install `build-essential` and `g++`
+*   **C++ Compiler**: Recommended — install `build-essential` (includes `g++`, `gcc`, and `make`)
 *   **Alternative compilers**: Clang or MSVC are also supported
 *   **CMake**: Version 3.10 or higher
-*   **Optional**: Additional libraries required by your chosen TUI/terminal UI libraries — install as needed
 
 Example (Debian/Ubuntu):
 
 ```sh
 sudo apt-get update
-sudo apt-get install build-essential g++ cmake
+sudo apt-get install build-essential cmake
 ```
 
 For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`, etc.).
@@ -116,7 +115,7 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
     ```
 4.  The executable will be in the `build` directory.
     ```sh
-    ./bz-nota
+    ./bznota
     ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -124,11 +123,66 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
 <!-- USAGE EXAMPLES -->
 ## ✍️ Usage
 
-To launch the editor, run the executable with an optional file path:
+### Basic Usage
+
+To launch the editor, run the executable with a file path:
 
 ```sh
-./bz-nota [file_to_open]
+./bznota <filename>
 ```
+
+### Command-Line Options
+
+```sh
+./bznota [-d] <filename>
+```
+
+**Options:**
+*   `-d`, `--debug` — Enable debug mode (displays key sequence information in the status bar)
+
+**Examples:**
+
+```sh
+# Open a file for editing
+./bznota example.txt
+
+# Open with debug mode enabled
+./bznota -d example.txt
+
+# Debug mode can be placed anywhere
+./bznota --debug myfile.cpp
+```
+
+### Keybindings
+
+**File Operations:**
+*   `Ctrl+S` — Save file
+*   `Ctrl+Q` — Quit (prompts if unsaved changes)
+
+**Editing:**
+*   `Ctrl+C` — Copy selection
+*   `Ctrl+X` — Cut selection
+*   `Ctrl+V` — Paste
+*   `Ctrl+Z` — Undo
+*   `Ctrl+Y` — Redo
+*   `Tab` — Insert tab
+*   `Shift+Tab` — Remove leading tab (unindent)
+
+**Navigation:**
+*   `Arrow Keys` — Move cursor
+*   `Shift+Arrow` — Select text while moving
+*   `Ctrl+Arrow` — Jump by word
+*   `Ctrl+Shift+Arrow` — Select by word (Alacritty)
+*   `Alt+Shift+Arrow` — Select by word (alternative)
+*   `Home` — Jump to start of line (smart: toggles between first non-whitespace and column 0)
+*   `End` — Jump to end of line
+*   `Ctrl+Shift+Home/End` — Select to start/end of line (Alacritty)
+
+**Line Operations:**
+*   `Ctrl+O` — Insert blank line above
+*   `Ctrl+K` — Insert blank line below
+
+**Note:** Some keybindings may be intercepted by your terminal emulator. For best results, use Alacritty or disable conflicting terminal shortcuts.
 
 _For more examples, please refer to the [Documentation](https://github.com/BZ-Interactive/BZ-Nota)_
 

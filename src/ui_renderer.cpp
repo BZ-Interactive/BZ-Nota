@@ -125,7 +125,7 @@ Element UIRenderer::render_status_bar(
 Element UIRenderer::render_shortcuts() {
     return hbox({
         text(" ") | flex,
-        text("Ctrl+S:Save | Ctrl+Z:Undo | Ctrl+Y:Redo | Shift+arrow keys:Select by Char | Ctrl(Alt)+Shift+arrow keys:Select by Word | Ctrl+Q:Quit") | center,
+        text("Ctrl+Z:Undo | Ctrl+Y:Redo | Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
         text(" ") | flex
     }) | bgcolor(Color::Black);
 }
