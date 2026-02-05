@@ -6,12 +6,14 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: " << argv[0] << " <filename>\n";
         return 1;
     }
-    Editor editor(argv[1]);
-    // For now, just print the file contents
-    const auto& buffer = editor.get_buffer();
-    for (const auto& line : buffer) {
-        std::cout << line << std::endl;
+    
+    try {
+        Editor editor(argv[1]);
+        editor.run(); // Launch the ftxui-based editor interface
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
-    // TODO: Add editing and saving logic
+    
     return 0;
 }

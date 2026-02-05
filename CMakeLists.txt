@@ -12,24 +12,28 @@ find_package(PkgConfig REQUIRED)
 add_subdirectory(vendor/ftxui)
 
 # Create the main executable
-add_executable(bz-nota
+add_executable(bznota
     src/main.cpp
     src/editor.cpp
     src/editor.hpp
+    src/text_buffer.cpp
+    src/text_buffer.hpp
+    src/selection.cpp
+    src/selection.hpp
 )
 
 # Link ftxui libraries
-target_link_libraries(bz-nota PRIVATE ftxui-core ftxui-screen)
+target_link_libraries(bznota PRIVATE ftxui::screen ftxui::dom ftxui::component)
 
 # Include directories
-target_include_directories(bz-nota PRIVATE src)
-target_include_directories(bz-nota PRIVATE vendor/ftxui/include)
+target_include_directories(bznota PRIVATE src)
+target_include_directories(bznota PRIVATE vendor/ftxui/include)
 
 # Compiler options for better warnings and debugging
 if(MSVC)
-    target_compile_options(bz-nota PRIVATE /W4)
+    target_compile_options(bznota PRIVATE /W4)
 else()
-    target_compile_options(bz-nota PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(bznota PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 # Set output directory
