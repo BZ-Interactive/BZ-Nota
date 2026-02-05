@@ -74,125 +74,49 @@ void Editor::save_file() {
 // ===== Selection Operations =====
 
 void Editor::start_selection() {
-    has_selection = true;
-    selection_start_x = cursor_x;
-    selection_start_y = cursor_y;
-    selection_end_x = cursor_x;
-    selection_end_y = cursor_y;
+    selection_manager.start_selection(cursor_x, cursor_y);
 }
 
 void Editor::update_selection() {
-    if (has_selection) {
-        selection_end_x = cursor_x;
-        selection_end_y = cursor_y;
-    }
+    selection_manager.update_selection(cursor_x, cursor_y);
 }
 
 void Editor::clear_selection() {
-    has_selection = false;
+    selection_manager.clear_selection();
 }
 
 void Editor::delete_selection() {
-    if (!has_selection) return;
+    if (!selection_manager.has_active_selection()) return;
     
     save_state();
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
-    if (start_y == end_y) {
-        // Single line deletion
-        buffer[start_y].erase(start_x, end_x - start_x);
-        cursor_x = start_x;
-        cursor_y = start_y;
-    } else {
-        // Multi-line deletion
-        std::string remaining = buffer[start_y].substr(0, start_x) + 
-                               buffer[end_y].substr(end_x);
-        buffer[start_y] = remaining;
-        buffer.erase(buffer.begin() + start_y + 1, buffer.begin() + end_y + 1);
-        cursor_x = start_x;
-        cursor_y = start_y;
-    }
-    
-    clear_selection();
+    selection_manager.delete_selection(buffer, cursor_x, cursor_y);
     modified = true;
 }
 
 std::string Editor::get_selected_text() {
-    if (!has_selection) return "";
-    
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
-    if (start_y == end_y) {
-        // Single line
-        return buffer[start_y].substr(start_x, end_x - start_x);
-    } else {
-        // Multi-line
-        std::string result = buffer[start_y].substr(start_x) + "\n";
-        for (int y = start_y + 1; y < end_y; y++) {
-            result += buffer[y] + "\n";
-        }
-        result += buffer[end_y].substr(0, end_x);
-        return result;
-    }
+    return selection_manager.get_selected_text(buffer);
 }
 
 bool Editor::is_char_selected(int x, int y) {
-    if (!has_selection) return false;
-    
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
-    if (y < start_y || y > end_y) return false;
-    if (y == start_y && y == end_y) {
-        return x >= start_x && x < end_x;
-    }
-    if (y == start_y) {
-        return x >= start_x;
-    }
-    if (y == end_y) {
-        return x < end_x;
-    }
-    return true;
+    return selection_manager.is_char_selected(x, y);
 }
 
 // ===== Clipboard Operations =====
 
 void Editor::copy_selection() {
-    clipboard = get_selected_text();
-    if (!clipboard.empty()) {
-        int char_count = clipboard.size();
+    std::string text = get_selected_text();
+    if (!text.empty()) {
+        clipboard_manager.copy(text);
+        int char_count = text.size();
         status_message = "Copied " + std::to_string(char_count) + " characters";
         save_status_shown = true;
     }
 }
 
 void Editor::cut_selection() {
-    clipboard = get_selected_text();
-    if (!clipboard.empty()) {
-        int char_count = clipboard.size();
+    std::string text = get_selected_text();
+    if (!text.empty()) {
+        int char_count = clipboard_manager.cut(text);
         delete_selection();
         status_message = "Cut " + std::to_string(char_count) + " characters";
         save_status_shown = true;
@@ -200,46 +124,17 @@ void Editor::cut_selection() {
 }
 
 void Editor::paste_clipboard() {
-    if (clipboard.empty()) return;
+    if (clipboard_manager.is_empty()) return;
     
     save_state();
     typing_state_saved = false;
     last_action = "paste";
     
-    if (has_selection) {
+    if (selection_manager.has_active_selection()) {
         delete_selection();
     }
     
-    size_t pos = 0;
-    size_t newline_pos;
-    bool first_line = true;
-    
-    while ((newline_pos = clipboard.find('\n', pos)) != std::string::npos) {
-        std::string line_to_insert = clipboard.substr(pos, newline_pos - pos);
-        
-        if (first_line) {
-            buffer[cursor_y].insert(cursor_x, line_to_insert);
-            cursor_x += line_to_insert.length();
-            first_line = false;
-        } else {
-            std::string remainder = buffer[cursor_y].substr(cursor_x);
-            buffer[cursor_y] = buffer[cursor_y].substr(0, cursor_x);
-            cursor_y++;
-            buffer.insert(buffer.begin() + cursor_y, line_to_insert + remainder);
-            cursor_x = line_to_insert.length();
-        }
-        
-        pos = newline_pos + 1;
-    }
-    
-    // Insert remaining text (no newline at end)
-    if (pos < clipboard.length()) {
-        std::string remaining = clipboard.substr(pos);
-        buffer[cursor_y].insert(cursor_x, remaining);
-        cursor_x += remaining.length();
-    }
-    
-    int char_count = clipboard.size();
+    int char_count = clipboard_manager.paste(buffer, cursor_x, cursor_y);
     status_message = "Pasted " + std::to_string(char_count) + " characters";
     save_status_shown = true;
     modified = true;
@@ -248,16 +143,15 @@ void Editor::paste_clipboard() {
 // ===== Editing Operations =====
 
 void Editor::insert_char(char c) {
-    if (has_selection) {
+    if (selection_manager.has_active_selection()) {
         delete_selection();
     }
-    buffer[cursor_y].insert(cursor_x, 1, c);
-    cursor_x++;
+    editing_manager.insert_char(buffer, cursor_x, cursor_y, c);
     modified = true;
 }
 
 void Editor::insert_newline() {
-    if (has_selection) {
+    if (selection_manager.has_active_selection()) {
         delete_selection();
     }
     
@@ -265,20 +159,12 @@ void Editor::insert_newline() {
     typing_state_saved = false;
     last_action = "newline";
     
-    std::string current_line = buffer[cursor_y];
-    std::string before_cursor = current_line.substr(0, cursor_x);
-    std::string after_cursor = current_line.substr(cursor_x);
-    
-    buffer[cursor_y] = before_cursor;
-    buffer.insert(buffer.begin() + cursor_y + 1, after_cursor);
-    
-    cursor_y++;
-    cursor_x = 0;
+    editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
 }
 
 void Editor::delete_char() {
-    if (has_selection) {
+    if (selection_manager.has_active_selection()) {
         delete_selection();
         return;
     }
@@ -289,21 +175,12 @@ void Editor::delete_char() {
     }
     typing_state_saved = false;
     
-    if (cursor_x > 0) {
-        buffer[cursor_y].erase(cursor_x - 1, 1);
-        cursor_x--;
-        modified = true;
-    } else if (cursor_y > 0) {
-        cursor_x = buffer[cursor_y - 1].length();
-        buffer[cursor_y - 1] += buffer[cursor_y];
-        buffer.erase(buffer.begin() + cursor_y);
-        cursor_y--;
-        modified = true;
-    }
+    editing_manager.delete_char(buffer, cursor_x, cursor_y);
+    modified = true;
 }
 
 void Editor::delete_forward() {
-    if (has_selection) {
+    if (selection_manager.has_active_selection()) {
         delete_selection();
         return;
     }
@@ -314,190 +191,106 @@ void Editor::delete_forward() {
     }
     typing_state_saved = false;
     
-    if (cursor_x < (int)buffer[cursor_y].length()) {
-        buffer[cursor_y].erase(cursor_x, 1);
-        modified = true;
-    } else if (cursor_y < (int)buffer.size() - 1) {
-        buffer[cursor_y] += buffer[cursor_y + 1];
-        buffer.erase(buffer.begin() + cursor_y + 1);
-        modified = true;
-    }
+    editing_manager.delete_forward(buffer, cursor_x, cursor_y);
+    modified = true;
 }
 
 // ===== Cursor Movement =====
 
 void Editor::move_cursor_left(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    if (cursor_x > 0) {
-        cursor_x--;
-    } else if (cursor_y > 0) {
-        cursor_y--;
-        cursor_x = buffer[cursor_y].length();
-    }
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_right(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    if (cursor_x < (int)buffer[cursor_y].length()) {
-        cursor_x++;
-    } else if (cursor_y < (int)buffer.size() - 1) {
-        cursor_y++;
-        cursor_x = 0;
-    }
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_up(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    if (cursor_y > 0) {
-        cursor_y--;
-        cursor_x = std::min(cursor_x, (int)buffer[cursor_y].length());
-    }
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_up(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_down(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    if (cursor_y < (int)buffer.size() - 1) {
-        cursor_y++;
-        cursor_x = std::min(cursor_x, (int)buffer[cursor_y].length());
-    }
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_down(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_left(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    int new_x = find_word_start(cursor_x, cursor_y);
-    cursor_x = new_x;
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_word_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_right(bool select) {
-    if (select && !has_selection) {
-        start_selection();
+    auto start_sel = [this]() { this->start_selection(); };
+    auto update_sel = [this]() { this->update_selection(); };
+    auto clear_sel = [this]() { this->clear_selection(); };
+    
+    if (select && !selection_manager.has_active_selection()) {
+        start_sel();
     }
     
-    int new_x = find_word_end(cursor_x, cursor_y);
-    cursor_x = new_x;
-    
-    if (select) {
-        update_selection();
-    } else {
-        clear_selection();
-    }
+    cursor_manager.move_word_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 // ===== Helper Functions =====
 
 int Editor::find_word_start(int x, int y) {
-    const std::string& line = buffer[y];
-    
-    if (x == 0) return 0;
-    
-    // Skip whitespace
-    while (x > 0 && !std::isalnum(line[x - 1]) && line[x - 1] != '_') {
-        x--;
-    }
-    
-    // Skip word characters
-    while (x > 0 && (std::isalnum(line[x - 1]) || line[x - 1] == '_')) {
-        x--;
-    }
-    
-    return x;
+    return cursor_manager.find_word_start(buffer[y], x);
 }
 
 int Editor::find_word_end(int x, int y) {
-    const std::string& line = buffer[y];
-    int len = line.length();
-    
-    if (x >= len) return len;
-    
-    // Skip whitespace
-    while (x < len && !std::isalnum(line[x]) && line[x] != '_') {
-        x++;
-    }
-    
-    // Skip word characters
-    while (x < len && (std::isalnum(line[x]) || line[x] == '_')) {
-        x++;
-    }
-    
-    return x;
+    return cursor_manager.find_word_end(buffer[y], x);
 }
 
 void Editor::ensure_cursor_visible(int screen_height) {
-    int visible_lines = screen_height - 3; // Account for header/status
-    
-    if (cursor_y < scroll_y) {
-        scroll_y = cursor_y;
-    } else if (cursor_y >= scroll_y + visible_lines) {
-        scroll_y = cursor_y - visible_lines + 1;
-    }
+    cursor_manager.ensure_cursor_visible(cursor_y, scroll_y, screen_height);
 }
 
 // ===== Undo/Redo =====
 
 void Editor::save_state() {
-    EditorState state;
-    state.buffer = buffer;
-    state.cursor_x = cursor_x;
-    state.cursor_y = cursor_y;
-    
-    undo_history.push_back(state);
-    
-    // Limit history size
-    if (undo_history.size() > (size_t)max_history) {
-        undo_history.erase(undo_history.begin());
-    }
-    
-    // Clear redo history when new action is performed
-    redo_history.clear();
+    undo_redo_manager.save_state(buffer, cursor_x, cursor_y);
 }
 
 void Editor::undo() {
-    if (undo_history.empty()) {
+    if (!undo_redo_manager.can_undo()) {
         status_message = "Nothing to undo";
         save_status_shown = true;
         return;
@@ -506,20 +299,7 @@ void Editor::undo() {
     typing_state_saved = false;
     last_action = "undo";
     
-    // Save current state to redo history
-    EditorState current_state;
-    current_state.buffer = buffer;
-    current_state.cursor_x = cursor_x;
-    current_state.cursor_y = cursor_y;
-    redo_history.push_back(current_state);
-    
-    // Restore previous state
-    EditorState prev_state = undo_history.back();
-    undo_history.pop_back();
-    
-    buffer = prev_state.buffer;
-    cursor_x = prev_state.cursor_x;
-    cursor_y = prev_state.cursor_y;
+    undo_redo_manager.undo(buffer, cursor_x, cursor_y);
     
     modified = true;
     status_message = "Undo";
@@ -527,7 +307,7 @@ void Editor::undo() {
 }
 
 void Editor::redo() {
-    if (redo_history.empty()) {
+    if (!undo_redo_manager.can_redo()) {
         status_message = "Nothing to redo";
         save_status_shown = true;
         return;
@@ -536,20 +316,7 @@ void Editor::redo() {
     typing_state_saved = false;
     last_action = "redo";
     
-    // Save current state to undo history
-    EditorState current_state;
-    current_state.buffer = buffer;
-    current_state.cursor_x = cursor_x;
-    current_state.cursor_y = cursor_y;
-    undo_history.push_back(current_state);
-    
-    // Restore redo state
-    EditorState next_state = redo_history.back();
-    redo_history.pop_back();
-    
-    buffer = next_state.buffer;
-    cursor_x = next_state.cursor_x;
-    cursor_y = next_state.cursor_y;
+    undo_redo_manager.redo(buffer, cursor_x, cursor_y);
     
     modified = true;
     status_message = "Redo";
@@ -659,7 +426,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             return true;
             
         case 15: // Ctrl+O - insert line above
-            if (has_selection) delete_selection();
+            if (selection_manager.has_active_selection()) delete_selection();
             save_state();
             typing_state_saved = false;
             last_action = "insert_line";
@@ -669,7 +436,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             return true;
             
         case 11: // Ctrl+K - insert line below
-            if (has_selection) delete_selection();
+            if (selection_manager.has_active_selection()) delete_selection();
             save_state();
             typing_state_saved = false;
             last_action = "insert_line";
@@ -711,7 +478,7 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
     
     // Shift+Tab - unindent (remove leading tab if present)
     if (input == "\x1b[Z") {
-        if (has_selection) clear_selection();
+        if (selection_manager.has_active_selection()) clear_selection();
         if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
             save_state();
             typing_state_saved = false;
@@ -740,7 +507,7 @@ bool Editor::handle_standard_keys(Event event) {
     
     // Tab key
     if (event == Event::Tab) {
-        if (has_selection) delete_selection();
+        if (selection_manager.has_active_selection()) delete_selection();
         save_state();
         typing_state_saved = false;
         last_action = "tab";

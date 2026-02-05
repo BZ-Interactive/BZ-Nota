@@ -11,6 +11,11 @@
 
 // Local includes
 #include "ui_renderer.hpp"
+#include "selection_manager.hpp"
+#include "clipboard_manager.hpp"
+#include "editing_manager.hpp"
+#include "cursor_manager.hpp"
+#include "undo_redo_manager.hpp"
 
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
@@ -33,30 +38,12 @@ private:
     int cursor_x = 0;
     int cursor_y = 0;
     
-    // Selection state
-    bool has_selection = false;
-    int selection_start_x = 0;
-    int selection_start_y = 0;
-    int selection_end_x = 0;
-    int selection_end_y = 0;
-    
-    // Clipboard
-    std::string clipboard;
-    
-    // Undo/Redo history
-    struct EditorState {
-        std::vector<std::string> buffer;
-        int cursor_x;
-        int cursor_y;
-    };
-    std::vector<EditorState> undo_history;
-    std::vector<EditorState> redo_history;
-    int max_history = 100;
-    bool typing_state_saved = false;
-    std::string last_action = "";
-    
     // Viewport
     int scroll_y = 0;
+    
+    // Typing state for undo
+    bool typing_state_saved = false;
+    std::string last_action = "";
     
     // Screen reference for exiting
     ftxui::ScreenInteractive* screen = nullptr;
@@ -64,8 +51,13 @@ private:
     // Quit confirmation state
     bool confirm_quit = false;
     
-    // UI Renderer
+    // Manager instances
     UIRenderer ui_renderer;
+    SelectionManager selection_manager;
+    ClipboardManager clipboard_manager;
+    EditingManager editing_manager;
+    CursorManager cursor_manager;
+    UndoRedoManager undo_redo_manager;
     
     // ===== File Operations =====
     void load_file();

@@ -22,6 +22,16 @@ add_executable(bznota
     src/selection.hpp
     src/ui_renderer.cpp
     src/ui_renderer.hpp
+    src/selection_manager.cpp
+    src/selection_manager.hpp
+    src/clipboard_manager.cpp
+    src/clipboard_manager.hpp
+    src/editing_manager.cpp
+    src/editing_manager.hpp
+    src/cursor_manager.cpp
+    src/cursor_manager.hpp
+    src/undo_redo_manager.cpp
+    src/undo_redo_manager.hpp
 )
 
 # Link ftxui libraries
