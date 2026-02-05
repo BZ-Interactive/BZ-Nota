@@ -1,0 +1,3 @@
+[submodule "vendor/ftxui"]
+	path = vendor/ftxui
+	url = https://github.com/ArthurSonzogni/ftxui.git

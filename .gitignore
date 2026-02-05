@@ -49,6 +49,13 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 
+# ftxui submodule build artifacts
+vendor/ftxui/build/
+vendor/ftxui/CMakeFiles/
+vendor/ftxui/CMakeCache.txt
+vendor/ftxui/cmake_install.cmake
+vendor/ftxui/Makefile
+
 # CLion project files
 .idea/
 .cmake/

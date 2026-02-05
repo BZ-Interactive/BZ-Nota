@@ -69,6 +69,7 @@ Key Features:
 ### Built With
 
 *   [![CPP][CPP-shield]][CPP-url]
+*   [![ftxui][ftxui-shield]][ftxui-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -189,4 +190,6 @@ Project Link: [https://github.com/BZ-Interactive/BZ-Nota](https://github.com/BZ-
 [linkedin-url]: www.linkedin.com/in/barkin-zorlu
 [CPP-shield]: https://img.shields.io/badge/C++-17-blue
 [CPP-url]: https://isocpp.org/
+[ftxui-shield]: https://img.shields.io/badge/ftxui-UI-blue
+[ftxui-url]: https://github.com/ArthurSonzogni/ftxui
 <a name="readme-top"></a>
