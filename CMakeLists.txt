@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(BZ-Nota VERSION 0.4.1 LANGUAGES CXX)
+project(BZ-Nota VERSION 0.4.2 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -54,3 +54,8 @@ endif()
 
 # Set output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+# Standard installation rules
+include(GNUInstallDirs)
+
+install(TARGETS bznota RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
