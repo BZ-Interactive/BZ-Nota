@@ -202,17 +202,36 @@ _For more examples, please refer to the [Documentation](https://github.com/BZ-In
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 📅 Planned features (post-initial release)
+## 🖥️ Tested Terminals
 
-These are short-term items planned after the initial release; the editor will focus on core editing and the dashboard first.
+Below are terminals that are tested and their known quirks.
 
-* **Syntax highlighting & language support** — basic highlighting for common languages
-* **Dashboard widgets (configurable)** — file tree, buffer list, project stats
-* **Keybinding customization & simple themes** — user-friendly defaults with later customization options
-* **Session restore** — restore open files/session on startup
+Linux:
+- alacritty — works perfectly.
+- gnome-terminal — `Ctrl+Shift+Arrow` won't work; use `Alt+Shift+Arrow` instead.
+- XTerm and UXterm — missing some of the emojis.
+
+macOS:
+- To be tested.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+
+## 📅 Planned features
+
+These are short-term items planned as next priorities; the editor will focus on core editing and the dashboard first.
+
+- Bullet Point Integration for more complex Text Editing
+- Privilege Elevation similar to Micro
+- User customization for UI colors
+- Limited user customization for controls
+- PgUp / PgDn support for navigation
+- Search, Find and Replace, including Batch Replace
+- Native simple grammar syntax highlighting for common formats (`.yaml`, `.toml`, `.md`, etc.) (via tree-sitter)
+- User-added complex grammar syntax highlighting via shared objects (`.so`) for languages like C++, C#, Python, Lua, etc. (via tree-sitter)
+- Mouse Support
+- Language dictionary and spell checking for 'Text Editing' mode (implementation may change)
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
 ## 🤝 Contributing
