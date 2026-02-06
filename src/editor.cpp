@@ -4,12 +4,13 @@
 #include <algorithm>
 #include <cctype>
 #include <csignal>
-#include <cstdio>   // For snprintf (debug output)
+#include <cstdio>
 #include <termios.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <libgen.h>
 #include <cstring>
+#include <tuple>
 
 using namespace ftxui;
 
@@ -55,29 +56,24 @@ void Editor::load_file() {
 }
 
 void Editor::save_file() {
-    // Create directory if needed (C-style, could be modernized with C++17 filesystem)
-    // Using raw pointers
-    char* filename_copy = strdup(filename.c_str()); // Allocate memory
-    char* dir = dirname(filename_copy); // Get directory path
-    mkdir(dir, 0755); // Create directory
-    free(filename_copy); // Free memory
+    // Create directory if needed
+    char* filename_copy = strdup(filename.c_str());
+    char* dir = dirname(filename_copy);
+    mkdir(dir, 0755);
+    free(filename_copy);
     
-    // RAII: file automatically closed when 'ofs' goes out of scope
     std::ofstream ofs(filename);
-    if (!ofs) {  // Check if file opened successfully
-        status_message = "Error: Could not save file!";
-        save_status_shown = true;
+    if (!ofs) {
+        set_status("Error: Could not save file!");
         return;
     }
     
-    // 'const auto&' = infer type, use const reference (avoid copy)
     for (const auto& line : buffer) {
         ofs << line << '\n';
     }
+    
     modified = false;
-    status_message = "File saved successfully";
-    save_status_shown = true;
-    // ofs automatically closed here (destructor called)
+    set_status("File saved successfully");
 }
 
 // ===== Selection Operations =====
@@ -113,19 +109,17 @@ bool Editor::is_char_selected(int x, int y) {
 // ===== Clipboard Operations =====
 
 void Editor::copy_to_system_clipboard() {
-    std::string text = get_selected_text();
+    const std::string text = get_selected_text();
     if (text.empty()) {
-        status_message = "No text selected";
-        save_status_shown = true;
+        set_status("No text selected");
         return;
     }
     
     if (clipboard_manager.copy_to_system(text)) {
-        status_message = "Copied " + std::to_string(text.length()) + " chars to system clipboard";
+        set_status("Copied " + std::to_string(text.length()) + " chars to system clipboard");
     } else {
-        status_message = "Failed to copy to system clipboard (check xclip/wl-clipboard)";
+        set_status("Failed to copy to system clipboard (check xclip/wl-clipboard)");
     }
-    save_status_shown = true;
 }
 
 void Editor::paste_from_system_clipboard() {
@@ -140,65 +134,50 @@ void Editor::paste_from_system_clipboard() {
     int char_count = clipboard_manager.paste_from_system(buffer, cursor_x, cursor_y);
     
     if (char_count < 0) {
-        status_message = "Failed to paste from system clipboard";
-        save_status_shown = true;
-        return;
-    }
-    
-    if (char_count == 0) {
-        status_message = "System clipboard is empty";
+        set_status("Failed to paste from system clipboard");
+    } else if (char_count == 0) {
+        set_status("System clipboard is empty");
     } else {
-        status_message = "Pasted " + std::to_string(char_count) + " characters from system clipboard";
+        set_status("Pasted " + std::to_string(char_count) + " characters from system clipboard");
         modified = true;
     }
-    save_status_shown = true;
 }
 
 void Editor::cut_to_system_clipboard() {
-    std::string text = get_selected_text();
+    const std::string text = get_selected_text();
     if (text.empty()) {
-        status_message = "No text selected";
-        save_status_shown = true;
+        set_status("No text selected");
         return;
     }
     
     if (clipboard_manager.copy_to_system(text)) {
         delete_selection();
-        status_message = "Cut " + std::to_string(text.length()) + " chars to system clipboard";
+        set_status("Cut " + std::to_string(text.length()) + " chars to system clipboard");
         modified = true;
     } else {
-        status_message = "Failed to cut to system clipboard (check xclip/wl-clipboard)";
+        set_status("Failed to cut to system clipboard (check xclip/wl-clipboard)");
     }
-    save_status_shown = true;
 }
 
 // ===== Editing Operations =====
 
 void Editor::insert_char(char c) {
-    if (selection_manager.has_active_selection()) {
-        delete_selection();
-    }
+    delete_selection_if_active();
     editing_manager.insert_char(buffer, cursor_x, cursor_y, c);
     modified = true;
 }
 
 void Editor::insert_string(const std::string& str) {
-    if (selection_manager.has_active_selection()) {
-        delete_selection();
-    }
+    delete_selection_if_active();
     editing_manager.insert_string(buffer, cursor_x, cursor_y, str);
     modified = true;
 }
 
 void Editor::insert_newline() {
-    if (selection_manager.has_active_selection()) {
-        delete_selection();
-    }
-    
+    delete_selection_if_active();
     save_state();
     typing_state_saved = false;
     last_action = "newline";
-    
     editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
 }
@@ -238,96 +217,50 @@ void Editor::delete_forward() {
 // ===== Cursor Movement =====
 
 void Editor::move_cursor_left(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_right(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_up(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_up(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_down(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_down(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_left(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_word_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_right(bool select) {
-    auto start_sel = [this]() { this->start_selection(); };
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_sel();
-    }
-    
+    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_word_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_home(bool select) {
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_selection();
-    }
-    
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    auto [_, update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_home(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_end(bool select) {
-    auto update_sel = [this]() { this->update_selection(); };
-    auto clear_sel = [this]() { this->clear_selection(); };
-    
-    if (select && !selection_manager.has_active_selection()) {
-        start_selection();
-    }
-    
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    auto [_, update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_end(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
@@ -345,6 +278,24 @@ void Editor::ensure_cursor_visible(int screen_height) {
     cursor_manager.ensure_cursor_visible(cursor_y, scroll_y, screen_height);
 }
 
+void Editor::set_status(const std::string& message) {
+    status_message = message;
+    save_status_shown = true;
+}
+
+void Editor::delete_selection_if_active() {
+    if (selection_manager.has_active_selection()) {
+        delete_selection();
+    }
+}
+
+std::tuple<std::function<void()>, std::function<void()>, std::function<void()>> Editor::get_selection_callbacks() {
+    auto start_sel = [this]() { start_selection(); };
+    auto update_sel = [this]() { update_selection(); };
+    auto clear_sel = [this]() { clear_selection(); };
+    return std::make_tuple(start_sel, update_sel, clear_sel);
+}
+
 // ===== Undo/Redo =====
 
 void Editor::save_state() {
@@ -353,36 +304,28 @@ void Editor::save_state() {
 
 void Editor::undo() {
     if (!undo_redo_manager.can_undo()) {
-        status_message = "Nothing to undo";
-        save_status_shown = true;
+        set_status("Nothing to undo");
         return;
     }
     
     typing_state_saved = false;
     last_action = "undo";
-    
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
-    
     modified = true;
-    status_message = "Undo";
-    save_status_shown = true;
+    set_status("Undo");
 }
 
 void Editor::redo() {
     if (!undo_redo_manager.can_redo()) {
-        status_message = "Nothing to redo";
-        save_status_shown = true;
+        set_status("Nothing to redo");
         return;
     }
     
     typing_state_saved = false;
     last_action = "redo";
-    
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
-    
     modified = true;
-    status_message = "Redo";
-    save_status_shown = true;
+    set_status("Redo");
 }
 
 // ===== UI Rendering =====
@@ -461,34 +404,16 @@ bool Editor::handle_event(Event event) {
 
 bool Editor::handle_ctrl_keys(unsigned char ch) {
     switch (ch) {
-        case 3:  // Ctrl+C - System clipboard
-            copy_to_system_clipboard();
-            return true;
-            
-        case 22: // Ctrl+V - System clipboard
-            paste_from_system_clipboard();
-            return true;
-            
-        case 24: // Ctrl+X - System clipboard
-            cut_to_system_clipboard();
-            return true;
-            
-        case 26: // Ctrl+Z
-            undo();
-            return true;
-            
-        case 25: // Ctrl+Y
-            redo();
-            return true;
-            
-        case 19: // Ctrl+S
-            save_file();
-            return true;
-            
+        case 3:  copy_to_system_clipboard(); return true;  // Ctrl+C
+        case 22: paste_from_system_clipboard(); return true;  // Ctrl+V
+        case 24: cut_to_system_clipboard(); return true;  // Ctrl+X
+        case 26: undo(); return true;  // Ctrl+Z
+        case 25: redo(); return true;  // Ctrl+Y
+        case 19: save_file(); return true;  // Ctrl+S
+        
         case 17: // Ctrl+Q
             if (modified && !confirm_quit) {
-                status_message = "Unsaved changes! Press Ctrl+Q again to quit.";
-                save_status_shown = true;
+                set_status("Unsaved changes! Press Ctrl+Q again to quit.");
                 confirm_quit = true;
                 return true;
             }
@@ -496,7 +421,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             return true;
             
         case 15: // Ctrl+O - insert line above
-            if (selection_manager.has_active_selection()) delete_selection();
+            delete_selection_if_active();
             save_state();
             typing_state_saved = false;
             last_action = "insert_line";
@@ -506,7 +431,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             return true;
             
         case 11: // Ctrl+K - insert line below
-            if (selection_manager.has_active_selection()) delete_selection();
+            delete_selection_if_active();
             save_state();
             typing_state_saved = false;
             last_action = "insert_line";
@@ -522,15 +447,15 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
 }
 
 bool Editor::handle_navigation_sequences(const std::string& input) {
-    // Debug mode: Show ALL escape sequences (enable with -d flag)
+    // Debug mode: Show escape sequences
     if (debug_mode && input.length() > 1 && input[0] == '\x1b') {
-        status_message = "Key: ";
+        std::string hex_str;
         for (unsigned char c : input) {
             char buf[8];
             snprintf(buf, sizeof(buf), "%02x ", c);
-            status_message += buf;
+            hex_str += buf;
         }
-        save_status_shown = true;
+        set_status("Key: " + hex_str);
     }
     
     // Shift + Arrow keys (selection)
@@ -611,9 +536,9 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
         return true;
     }
     
-    // Shift+Tab - unindent (remove leading tab if present)
+    // Shift+Tab - unindent
     if (input == "\x1b[Z") {
-        if (selection_manager.has_active_selection()) clear_selection();
+        clear_selection();
         if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
             save_state();
             typing_state_saved = false;
@@ -646,7 +571,7 @@ bool Editor::handle_standard_keys(Event event) {
     
     // Tab key
     if (event == Event::Tab) {
-        if (selection_manager.has_active_selection()) delete_selection();
+        delete_selection_if_active();
         save_state();
         typing_state_saved = false;
         last_action = "tab";

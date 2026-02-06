@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <functional>
+#include <tuple>
 
 // ftxui includes - Terminal UI library
 #include "ftxui/component/component.hpp"
@@ -101,6 +103,11 @@ private:
     int find_word_start(int x, int y);
     int find_word_end(int x, int y);
     void ensure_cursor_visible(int screen_height);
+    
+    // Internal helpers
+    void set_status(const std::string& message);
+    void delete_selection_if_active();
+    std::tuple<std::function<void()>, std::function<void()>, std::function<void()>> get_selection_callbacks();
     
     // ===== Undo/Redo =====
     void save_state();
