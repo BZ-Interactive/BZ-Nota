@@ -112,41 +112,64 @@ bool Editor::is_char_selected(int x, int y) {
 
 // ===== Clipboard Operations =====
 
-void Editor::copy_selection() {
+void Editor::copy_to_system_clipboard() {
     std::string text = get_selected_text();
-    if (!text.empty()) {
-        clipboard_manager.copy(text);
-        int char_count = text.size();
-        status_message = "Copied " + std::to_string(char_count) + " characters";
+    if (text.empty()) {
+        status_message = "No text selected";
         save_status_shown = true;
+        return;
     }
-}
-
-void Editor::cut_selection() {
-    std::string text = get_selected_text();
-    if (!text.empty()) {
-        int char_count = clipboard_manager.cut(text);
-        delete_selection();
-        status_message = "Cut " + std::to_string(char_count) + " characters";
-        save_status_shown = true;
-    }
-}
-
-void Editor::paste_clipboard() {
-    if (clipboard_manager.is_empty()) return;
     
+    if (clipboard_manager.copy_to_system(text)) {
+        status_message = "Copied " + std::to_string(text.length()) + " chars to system clipboard";
+    } else {
+        status_message = "Failed to copy to system clipboard (check xclip/wl-clipboard)";
+    }
+    save_status_shown = true;
+}
+
+void Editor::paste_from_system_clipboard() {
     save_state();
     typing_state_saved = false;
-    last_action = "paste";
+    last_action = "paste_system";
     
     if (selection_manager.has_active_selection()) {
         delete_selection();
     }
     
-    int char_count = clipboard_manager.paste(buffer, cursor_x, cursor_y);
-    status_message = "Pasted " + std::to_string(char_count) + " characters";
+    int char_count = clipboard_manager.paste_from_system(buffer, cursor_x, cursor_y);
+    
+    if (char_count < 0) {
+        status_message = "Failed to paste from system clipboard";
+        save_status_shown = true;
+        return;
+    }
+    
+    if (char_count == 0) {
+        status_message = "System clipboard is empty";
+    } else {
+        status_message = "Pasted " + std::to_string(char_count) + " characters from system clipboard";
+        modified = true;
+    }
     save_status_shown = true;
-    modified = true;
+}
+
+void Editor::cut_to_system_clipboard() {
+    std::string text = get_selected_text();
+    if (text.empty()) {
+        status_message = "No text selected";
+        save_status_shown = true;
+        return;
+    }
+    
+    if (clipboard_manager.copy_to_system(text)) {
+        delete_selection();
+        status_message = "Cut " + std::to_string(text.length()) + " chars to system clipboard";
+        modified = true;
+    } else {
+        status_message = "Failed to cut to system clipboard (check xclip/wl-clipboard)";
+    }
+    save_status_shown = true;
 }
 
 // ===== Editing Operations =====
@@ -407,7 +430,7 @@ bool Editor::handle_event(Event event) {
     // Check global Ctrl+C flag from signal handler
     if (ctrl_c_pressed) {
         ctrl_c_pressed = 0;
-        copy_selection();
+        copy_to_system_clipboard();
         return true;
     }
     
@@ -438,16 +461,16 @@ bool Editor::handle_event(Event event) {
 
 bool Editor::handle_ctrl_keys(unsigned char ch) {
     switch (ch) {
-        case 3:  // Ctrl+C
-            copy_selection();
+        case 3:  // Ctrl+C - System clipboard
+            copy_to_system_clipboard();
             return true;
             
-        case 22: // Ctrl+V
-            paste_clipboard();
+        case 22: // Ctrl+V - System clipboard
+            paste_from_system_clipboard();
             return true;
             
-        case 24: // Ctrl+X
-            cut_selection();
+        case 24: // Ctrl+X - System clipboard
+            cut_to_system_clipboard();
             return true;
             
         case 26: // Ctrl+Z
@@ -550,9 +573,41 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
     if (input == "\x1b[1;5D") { move_word_left(false); return true; }    // Ctrl+Left
     if (input == "\x1b[1;5C") { move_word_right(false); return true; }   // Ctrl+Right
     
-    // Ctrl+Shift+V in Alacritty - treat as paste
+    // ===== System Clipboard Shortcuts =====
+    
+    // Ctrl+Shift+V - paste from system clipboard (CSI u sequence - modern terminals)
     if (input == "\x1b[86;5u" || input == "\x1b[86;6u") {
-        paste_clipboard();
+        paste_from_system_clipboard();
+        return true;
+    }
+    
+    // Ctrl+Shift+C - copy to system clipboard (CSI u sequence - modern terminals)
+    if (input == "\x1b[67;5u" || input == "\x1b[67;6u") {
+        copy_to_system_clipboard();
+        return true;
+    }
+    
+    // Alt+Shift+V - paste from system clipboard (CSI u sequence)
+    if (input == "\x1b[86;4u") {
+        paste_from_system_clipboard();
+        return true;
+    }
+    
+    // Alt+Shift+C - copy to system clipboard (CSI u sequence)
+    if (input == "\x1b[67;4u") {
+        copy_to_system_clipboard();
+        return true;
+    }
+    
+    // Shift+Insert - paste from system clipboard (traditional, widely supported)
+    if (input == "\x1b[2;2~") {
+        paste_from_system_clipboard();
+        return true;
+    }
+    
+    // Ctrl+Insert - copy to system clipboard (traditional, widely supported)
+    if (input == "\x1b[2;5~") {
+        copy_to_system_clipboard();
         return true;
     }
     

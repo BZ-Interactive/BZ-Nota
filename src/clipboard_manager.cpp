@@ -1,51 +1,181 @@
 #include "clipboard_manager.hpp"
+#include <cstdio>
+#include <array>
+#include <cstdlib>
+#include <unistd.h>
 
-ClipboardManager::ClipboardManager() {}
-
-void ClipboardManager::copy(const std::string& text) {
-    clipboard = text;
+namespace {
+    constexpr size_t READ_BUFFER_SIZE = 256;
 }
 
-int ClipboardManager::cut(const std::string& text) {
-    clipboard = text;
-    return clipboard.size();
+ClipboardManager::ClipboardManager() : tool_detected(false) {}
+
+// ===== System Clipboard Operations =====
+
+std::string ClipboardManager::detect_clipboard_tool() const {
+    if (tool_detected) {
+        return cached_tool;
+    }
+    
+    auto check_tool = [this](const char* tool_name) -> bool {
+        std::string cmd = "which " + std::string(tool_name) + " > /dev/null 2>&1";
+        if (system(cmd.c_str()) == 0) {
+            tool_detected = true;
+            cached_tool = tool_name;
+            return true;
+        }
+        return false;
+    };
+    
+#ifdef __APPLE__
+    if (check_tool("pbcopy")) return cached_tool;
+#else
+    // Priority: Wayland > X11 (xclip > xsel)
+    if (getenv("WAYLAND_DISPLAY") && check_tool("wl-copy")) return cached_tool;
+    
+    if (getenv("DISPLAY")) {
+        if (check_tool("xclip")) return cached_tool;
+        if (check_tool("xsel")) return cached_tool;
+    }
+#endif
+    
+    tool_detected = true;
+    cached_tool = "";
+    return "";
 }
 
-int ClipboardManager::paste(
+bool ClipboardManager::run_clipboard_command(const std::string& cmd, const std::string& input, 
+                                             std::string& output, std::string& error) {
+    if (!input.empty()) {
+        // Write to clipboard
+        FILE* pipe = popen((cmd + " 2>&1").c_str(), "w");
+        if (!pipe) {
+            error = "Failed to open pipe";
+            return false;
+        }
+        
+        size_t written = fwrite(input.c_str(), 1, input.size(), pipe);
+        fflush(pipe);
+        
+        int status = pclose(pipe);
+        
+        if (written != input.size()) {
+            error = "Failed to write all data";
+            return false;
+        }
+        if (status != 0) {
+            error = "Command exited with status " + std::to_string(status);
+            return false;
+        }
+        return true;
+    }
+    
+    // Read from clipboard
+    FILE* pipe = popen((cmd + " 2>/dev/null").c_str(), "r");
+    if (!pipe) {
+        error = "Failed to open pipe";
+        return false;
+    }
+    
+    std::array<char, READ_BUFFER_SIZE> buffer;
+    output.clear();
+    while (fgets(buffer.data(), buffer.size(), pipe)) {
+        output += buffer.data();
+    }
+    
+    int status = pclose(pipe);
+    if (status != 0) {
+        error = "Command exited with status " + std::to_string(status);
+        return false;
+    }
+    return true;
+}
+
+bool ClipboardManager::copy_to_system(const std::string& text) {
+    if (text.empty()) return false;
+    
+    const std::string tool = detect_clipboard_tool();
+    if (tool.empty()) return false;
+    
+    // Map tool names to their copy commands
+    std::string cmd;
+    if (tool == "pbcopy") cmd = "pbcopy";
+    else if (tool == "wl-copy") cmd = "wl-copy";
+    else if (tool == "xclip") cmd = "xclip -selection clipboard";
+    else if (tool == "xsel") cmd = "xsel --clipboard --input";
+    else return false;
+    
+    std::string output, error;
+    return run_clipboard_command(cmd, text, output, error);
+}
+
+int ClipboardManager::paste_from_system(
     std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y
 ) {
-    if (clipboard.empty()) return 0;
+    const std::string tool = detect_clipboard_tool();
+    if (tool.empty()) return -1;
     
+    // Map tool names to their paste commands
+    std::string cmd;
+    if (tool == "pbcopy") cmd = "pbpaste";
+    else if (tool == "wl-copy") cmd = "wl-paste --no-newline";
+    else if (tool == "xclip") cmd = "xclip -selection clipboard -o";
+    else if (tool == "xsel") cmd = "xsel --clipboard --output";
+    else return -1;
+    
+    std::string clipboard_text, error;
+    if (!run_clipboard_command(cmd, "", clipboard_text, error)) return -1;
+    if (clipboard_text.empty()) return 0;
+    
+    // Remove single trailing newline (some tools add it)
+    if (!clipboard_text.empty() && clipboard_text.back() == '\n' && 
+        clipboard_text.find('\n') == clipboard_text.length() - 1) {
+        clipboard_text.pop_back();
+    }
+    
+    return insert_multiline_text(clipboard_text, buffer, cursor_x, cursor_y);
+}
+
+int ClipboardManager::insert_multiline_text(
+    const std::string& text,
+    std::vector<std::string>& buffer,
+    int& cursor_x,
+    int& cursor_y
+) {
     size_t pos = 0;
-    size_t newline_pos;
-    bool first_line = true;
+    bool is_first_line = true;
+    int total_chars = 0;
     
-    while ((newline_pos = clipboard.find('\n', pos)) != std::string::npos) {
-        std::string line_to_insert = clipboard.substr(pos, newline_pos - pos);
+    while (true) {
+        size_t newline_pos = text.find('\n', pos);
+        bool has_more_lines = (newline_pos != std::string::npos);
         
-        if (first_line) {
-            buffer[cursor_y].insert(cursor_x, line_to_insert);
-            cursor_x += line_to_insert.length();
-            first_line = false;
+        std::string line_text = has_more_lines 
+            ? text.substr(pos, newline_pos - pos)
+            : text.substr(pos);
+        
+        if (is_first_line) {
+            buffer[cursor_y].insert(cursor_x, line_text);
+            cursor_x += line_text.length();
+            is_first_line = false;
         } else {
             std::string remainder = buffer[cursor_y].substr(cursor_x);
-            buffer[cursor_y] = buffer[cursor_y].substr(0, cursor_x);
+            buffer[cursor_y].resize(cursor_x);
             cursor_y++;
-            buffer.insert(buffer.begin() + cursor_y, line_to_insert + remainder);
-            cursor_x = line_to_insert.length();
+            buffer.insert(buffer.begin() + cursor_y, line_text + remainder);
+            cursor_x = line_text.length();
         }
         
-        pos = newline_pos + 1;
+        total_chars += line_text.length();
+        if (has_more_lines) {
+            total_chars++; // Count the newline
+            pos = newline_pos + 1;
+        } else {
+            break;
+        }
     }
     
-    // Insert remaining text (no newline at end)
-    if (pos < clipboard.length()) {
-        std::string remaining = clipboard.substr(pos);
-        buffer[cursor_y].insert(cursor_x, remaining);
-        cursor_x += remaining.length();
-    }
-    
-    return clipboard.size();
+    return total_chars;
 }

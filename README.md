@@ -89,11 +89,23 @@ You'll need a modern C++ compiler and CMake to build BZ-Nota. Installing the sta
 *   **Alternative compilers**: Clang or MSVC are also supported
 *   **CMake**: Version 3.10 or higher
 
+**Optional (for system clipboard support):**
+
+*   **Linux (X11)**: Install `xclip` or `xsel`
+*   **Linux (Wayland)**: Install `wl-clipboard`
+*   **macOS**: Built-in clipboard commands (no installation needed)
+
 Example (Debian/Ubuntu):
 
 ```sh
 sudo apt-get update
 sudo apt-get install build-essential cmake
+
+# For system clipboard on X11
+sudo apt-get install xclip
+
+# For system clipboard on Wayland
+sudo apt-get install wl-clipboard
 ```
 
 For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`, etc.).
@@ -177,9 +189,11 @@ To launch the editor, run the executable with a file path:
 *   `Ctrl+Q` — Quit (prompts if unsaved changes)
 
 **Editing:**
-*   `Ctrl+C` — Copy selection
-*   `Ctrl+X` — Cut selection
-*   `Ctrl+V` — Paste
+*   `Ctrl+C` — Copy to system clipboard
+*   `Ctrl+X` — Cut to system clipboard
+*   `Ctrl+V` — Paste from system clipboard
+*   `Ctrl+Insert` / `Shift+Insert` — Traditional clipboard shortcuts (alternative)
+*   `Ctrl+Shift+C` / `Ctrl+Shift+V` — Modern terminal clipboard (Alacritty, WezTerm)
 *   `Ctrl+Z` — Undo
 *   `Ctrl+Y` — Redo
 *   `Tab` — Insert tab
@@ -200,6 +214,8 @@ To launch the editor, run the executable with a file path:
 *   `Ctrl+K` — Insert blank line below
 
 **Note:** Some keybindings may be intercepted by your terminal emulator. For best results, use Alacritty or disable conflicting terminal shortcuts.
+
+**System Clipboard:** The system clipboard feature requires external tools (`xclip`/`xsel` for X11, `wl-clipboard` for Wayland, built-in on macOS). See [CLIPBOARD.md](CLIPBOARD.md) for detailed setup instructions.
 
 _For more examples, please refer to the [Documentation](https://github.com/BZ-Interactive/BZ-Nota)_
 

@@ -76,9 +76,9 @@ private:
     bool is_char_selected(int x, int y);
     
     // ===== Clipboard Operations =====
-    void copy_selection();
-    void cut_selection();
-    void paste_clipboard();
+    void copy_to_system_clipboard();
+    void paste_from_system_clipboard();
+    void cut_to_system_clipboard();
     
     // ===== Editing Operations =====
     void insert_char(char c);
