@@ -11,6 +11,9 @@ find_package(PkgConfig REQUIRED)
 # Generate version header from template
 configure_file(src/version.hpp.in src/version.hpp @ONLY)
 
+# Generate .desktop file from template
+configure_file(bznota.desktop.in bznota.desktop @ONLY)
+
 # Add ftxui as a subdirectory (submodule)
 add_subdirectory(vendor/ftxui)
 
@@ -59,3 +62,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 include(GNUInstallDirs)
 
 install(TARGETS bznota RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Install .desktop file for GUI integration
+install(FILES ${CMAKE_BINARY_DIR}/bznota.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)

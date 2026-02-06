@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=BZ-Nota
+Comment=High-performance terminal-based text editor
+Exec=bznota %f
+Icon=utilities-terminal
+Terminal=true
+Categories=Utility;TextEditor;
+MimeType=text/plain;
