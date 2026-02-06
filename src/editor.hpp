@@ -31,6 +31,7 @@ private:
     std::vector<std::string> buffer; // Text buffer - each line is one string
     std::string filename; // Includes File path
     bool modified = false; // Has unsaved changes?
+    bool syntax_highlighted = false; // Syntax highlighting enabled?
     bool save_status_shown = false; // Show status in UI?
     std::string status_message = "";
     

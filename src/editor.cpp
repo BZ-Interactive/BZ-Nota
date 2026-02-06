@@ -371,6 +371,7 @@ Element Editor::render() {
         scroll_y,
         filename,
         modified,
+        syntax_highlighted,
         status_message,
         save_status_shown,
         undo_redo_manager.can_undo(),

@@ -13,6 +13,7 @@ Element UIRenderer::render(
     int scroll_y,
     const std::string& filename,
     bool modified,
+    bool syntax_highlighted,
     const std::string& status_message,
     bool save_status_shown,
     bool can_undo,
@@ -25,7 +26,7 @@ Element UIRenderer::render(
     auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn);
     
     return vbox({
-        render_header(filename, modified, can_undo, can_redo),
+        render_header(filename, modified, syntax_highlighted, can_undo, can_redo),
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
@@ -97,7 +98,7 @@ Elements UIRenderer::render_lines(
     return lines_display;
 }
 
-Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo) {
+Element UIRenderer::render_header(const std::string& filename, bool modified, bool syntax_highlighted, bool can_undo, bool can_redo) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
         text(" "),
@@ -107,6 +108,7 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
         text("  ") | flex,
         text(title) | bold | center,
         text("  ") | flex,
+        render_syntax_toggle(syntax_highlighted),
         render_close_button(),
         text(" ")
     }) | bgcolor(Color::DarkBlue);
@@ -153,6 +155,16 @@ Element UIRenderer::render_save_button(bool modified) {
            bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
            color(modified ? Color(Color::Black) : Color(Color::White)) |
            (modified ? bold : nothing);
+}
+
+Element UIRenderer::render_syntax_toggle(bool active) {
+    //const std::string checkbox = active ? "[x]" : "[ ]"; // colour based toggle looks much cleaner, so commented this out
+    const ftxui::Color bg_color = active ? Color(Color::DarkGreen) : Color(Color::GrayDark);
+    const ftxui::Color fg_color = active ? Color(Color::White) : Color(Color::Black);
+    return text(" 🖌️ Syntax Highlighting ") | 
+           bgcolor(bg_color) | 
+           color(fg_color) |
+           bold;
 }
 
 Element UIRenderer::render_close_button() {

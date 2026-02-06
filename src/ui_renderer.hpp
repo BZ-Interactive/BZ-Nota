@@ -27,6 +27,7 @@ public:
         int scroll_y,
         const std::string& filename,
         bool modified,
+        bool syntax_highlighted,
         const std::string& status_message,
         bool save_status_shown,
         bool can_undo,
@@ -36,7 +37,7 @@ public:
 
 private:
     /// @brief Render the header bar
-    ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo);
+    ftxui::Element render_header(const std::string& filename, bool modified, bool syntax_highlighted, bool can_undo, bool can_redo);
     
     /// @brief Render the status bar
     ftxui::Element render_status_bar(
@@ -51,9 +52,14 @@ private:
     /// @brief Render the save button
     ftxui::Element render_save_button(bool modified);
 
+    /// @brief Render the undo button
     ftxui::Element render_undo_button(bool available);
 
+    /// @brief Render the redo button
     ftxui::Element render_redo_button(bool available);
+    
+    /// @brief Render the syntax toggle button
+    ftxui::Element render_syntax_toggle(bool active);
     
     /// @brief Render the close button
     ftxui::Element render_close_button();
