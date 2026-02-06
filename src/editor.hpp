@@ -74,6 +74,7 @@ private:
     void update_selection();
     void clear_selection();
     void delete_selection();
+    void select_all();
     std::string get_selected_text();
     bool is_char_selected(int x, int y);
     

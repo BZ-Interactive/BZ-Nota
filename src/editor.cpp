@@ -98,6 +98,15 @@ void Editor::delete_selection() {
     modified = true;
 }
 
+void Editor::select_all() {
+    if (buffer.empty()) return;
+    
+    int end_y = buffer.size() - 1;
+    int end_x = buffer[end_y].size();
+    selection_manager.select_all(end_x, end_y);
+    set_status("Selected all");
+}
+
 std::string Editor::get_selected_text() {
     return selection_manager.get_selected_text(buffer);
 }
@@ -404,6 +413,7 @@ bool Editor::handle_event(Event event) {
 
 bool Editor::handle_ctrl_keys(unsigned char ch) {
     switch (ch) {
+        case 1:  select_all(); return true;  // Ctrl+A
         case 3:  copy_to_system_clipboard(); return true;  // Ctrl+C
         case 22: paste_from_system_clipboard(); return true;  // Ctrl+V
         case 24: cut_to_system_clipboard(); return true;  // Ctrl+X

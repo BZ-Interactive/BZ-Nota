@@ -22,6 +22,14 @@ void SelectionManager::clear_selection() {
     has_selection = false;
 }
 
+void SelectionManager::select_all(int end_x, int end_y) {
+    has_selection = true;
+    selection_start_x = 0;
+    selection_start_y = 0;
+    selection_end_x = end_x;
+    selection_end_y = end_y;
+}
+
 void SelectionManager::delete_selection(
     std::vector<std::string>& buffer,
     int& cursor_x,

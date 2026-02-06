@@ -11,6 +11,7 @@ public:
     void start_selection(int cursor_x, int cursor_y);
     void update_selection(int cursor_x, int cursor_y);
     void clear_selection();
+    void select_all(int end_x, int end_y);
     
     // Inline getter (like C# property get) - const means readonly method
     bool has_active_selection() const { return has_selection; }
