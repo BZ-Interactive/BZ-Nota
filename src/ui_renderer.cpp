@@ -15,6 +15,8 @@ Element UIRenderer::render(
     bool modified,
     const std::string& status_message,
     bool save_status_shown,
+    bool can_undo,
+    bool can_redo,
     std::function<bool(int, int)> is_char_selected_fn
 ) {
     int screen_height = Terminal::Size().dimy;
@@ -23,7 +25,7 @@ Element UIRenderer::render(
     auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn);
     
     return vbox({
-        render_header(filename, modified),
+        render_header(filename, modified, can_undo, can_redo),
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
@@ -76,7 +78,7 @@ Elements UIRenderer::render_lines(
             if (is_cursor) {
                 elem = elem | inverted | bold;
             } else if (is_selected) {
-                elem = elem | bgcolor(Color::Blue) | color(Color::White);
+                elem = elem | bgcolor(Color::Blue) | color(Color::Black);
             }
             
             line_elements.push_back(elem);
@@ -95,17 +97,19 @@ Elements UIRenderer::render_lines(
     return lines_display;
 }
 
-Element UIRenderer::render_header(const std::string& filename, bool modified) {
+Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
         text(" "),
         render_save_button(modified),
+        render_undo_button(can_undo),
+        render_redo_button(can_redo),
         text("  ") | flex,
         text(title) | bold | center,
         text("  ") | flex,
         render_close_button(),
         text(" ")
-    }) | bgcolor(Color::Blue);
+    }) | bgcolor(Color::DarkBlue);
 }
 
 Element UIRenderer::render_status_bar(
@@ -125,14 +129,29 @@ Element UIRenderer::render_status_bar(
 Element UIRenderer::render_shortcuts() {
     return hbox({
         text(" ") | flex,
-        text("Ctrl+Z:Undo | Ctrl+Y:Redo | Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
+        text("Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
         text(" ") | flex
     }) | bgcolor(Color::Black);
 }
 
+Element UIRenderer::render_undo_button(bool available) {
+    return text(" ↩️ Ctrl+Z ") | 
+           bgcolor(available ? Color(Color::DarkOrange) : Color(Color::GrayDark)) |
+           color(available ? Color(Color::Black) : Color(Color::White)) |
+           (available ? bold : nothing);
+}
+
+Element UIRenderer::render_redo_button(bool available) {
+    return text(" ↪️ Ctrl+Y ") | 
+           bgcolor(available ? Color(Color::GreenLight) : Color(Color::GrayDark)) |
+           color(available ? Color(Color::Black) : Color(Color::White)) |
+           (available ? bold : nothing);
+}
+
 Element UIRenderer::render_save_button(bool modified) {
     return text(" 💾 Ctrl+S ") | 
-           bgcolor(modified ? Color::BlueLight : Color::GrayDark) |
+           bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(modified ? Color(Color::Black) : Color(Color::White)) |
            (modified ? bold : nothing);
 }
 

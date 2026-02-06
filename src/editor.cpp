@@ -373,6 +373,8 @@ Element Editor::render() {
         modified,
         status_message,
         save_status_shown,
+        undo_redo_manager.can_undo(),
+        undo_redo_manager.can_redo(),
         is_char_selected_fn
     );
 }

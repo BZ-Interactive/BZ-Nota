@@ -7,7 +7,8 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " [-d] <filename>\n";
         std::cerr << "Options:\n";
-        std::cerr << "  -d    Enable debug mode (show key sequences)\n";
+        std::cerr << "  -d,--debug    Enable debug mode (show key sequences)\n";
+        std::cerr << "  -v,--version    Show version information\n";
         return 1;
     }
     
