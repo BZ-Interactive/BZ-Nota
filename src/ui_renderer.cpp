@@ -55,13 +55,6 @@ Elements UIRenderer::render_lines(
         
         std::string line_content = buffer[line_idx];
         
-        // Replace tabs with visual representation
-        size_t tab_pos = 0;
-        while ((tab_pos = line_content.find('\t', tab_pos)) != std::string::npos) {
-            line_content.replace(tab_pos, 1, "→   ");
-            tab_pos += 4;
-        }
-        
         // Build line with selection highlighting
         Elements line_elements;
         for (int j = 0; j <= (int)line_content.length(); j++) {
@@ -70,8 +63,18 @@ Elements UIRenderer::render_lines(
             bool is_cursor = (line_idx == cursor_y && j == cursor_x);
             bool is_selected = is_char_selected_fn(j, line_idx);
             
-            std::string ch_str = (j < (int)line_content.length()) ? 
-                                std::string(1, line_content[j]) : " ";
+            // tab character handling
+            std::string ch_str;
+            if (j < (int)line_content.length()) {
+                // Render tabs as visible spaces without modifying line_content
+                if (line_content[j] == '\t') {
+                    ch_str = "➡️   ";  // 4 spaces to represent a tab
+                } else {
+                    ch_str = std::string(1, line_content[j]);
+                }
+            } else {
+                ch_str = " ";
+            }
             
             auto elem = text(ch_str);
             
@@ -84,6 +87,7 @@ Elements UIRenderer::render_lines(
             line_elements.push_back(elem);
         }
         
+        // line number + separator + content
         auto line_elem = hbox(std::move(line_elements));
         auto full_line = hbox({
             text(line_num) | color(Color::GrayDark),
