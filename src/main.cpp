@@ -18,7 +18,14 @@ int main(int argc, char* argv[]) {
     
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if (arg == "-d" || arg == "--debug") {
+        if (arg == "-h" || arg == "--help") {
+            std::cout << "Usage: " << argv[0] << " [-d] <filename>\n";
+            std::cout << "Options:\n";
+            std::cout << "  -d,--debug    Enable debug mode (show key sequences)\n";
+            std::cout << "  -v,--version    Show version information\n";
+            return 0;
+        } 
+        else if (arg == "-d" || arg == "--debug") {
             debug_mode = true;
         } else if (arg == "-v" || arg == "--version") {
             std::cout << BZ_NOTA_APP_NAME << " " << BZ_NOTA_VERSION << "\n";

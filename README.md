@@ -63,6 +63,7 @@ Key Features:
 *   **Intuitive Editing**: Familiar keybindings and a focus on simplicity.
 *   **Modern TUI**: A dashboard for file navigation, project statistics, and more.
 *   **High Performance**: Built with C++ for speed and low resource usage.
+*   **Minimal Resource Usage**: Uses less than 1MB and close to zero CPU when editing an empty file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -148,6 +149,8 @@ To launch the editor, run the executable with a file path:
 ```
 
 **Options:**
+
+*   `-h`, `--help` — Show usage and option explanations
 *   `-d`, `--debug` — Enable debug mode (displays key sequence information in the status bar)
 *   `-v`, `--version` — Display version information and exit
 
