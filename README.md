@@ -24,7 +24,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.4.1-orange)
+![Version](https://img.shields.io/badge/version-0.4.2-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -113,8 +113,18 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
     cmake ..
     make
     ```
-4.  The executable will be in the `build` directory.
+4.  (Optional) Install to your system
     ```sh
+    sudo make install
+    ```
+    This will install the `bznota` executable to your system's binary directory (typically `/usr/local/bin`), making it available system-wide.
+
+5.  Run the editor
+    ```sh
+    # If installed
+    bznota
+    
+    # Or run directly from build directory
     ./bznota
     ```
 
