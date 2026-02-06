@@ -82,6 +82,7 @@ private:
     
     // ===== Editing Operations =====
     void insert_char(char c);
+    void insert_string(const std::string& str);
     void insert_newline();
     void delete_char(); // represents backspace
     void delete_forward(); // represents delete key

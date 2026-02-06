@@ -159,6 +159,14 @@ void Editor::insert_char(char c) {
     modified = true;
 }
 
+void Editor::insert_string(const std::string& str) {
+    if (selection_manager.has_active_selection()) {
+        delete_selection();
+    }
+    editing_manager.insert_string(buffer, cursor_x, cursor_y, str);
+    modified = true;
+}
+
 void Editor::insert_newline() {
     if (selection_manager.has_active_selection()) {
         delete_selection();
@@ -601,6 +609,9 @@ bool Editor::handle_text_input(Event event) {
     
     std::string input_str = event.input();
     
+    // Skip empty input
+    if (input_str.empty()) return false;
+    
     // Save state before typing if we haven't already for this typing session
     if (!typing_state_saved || last_action != "typing") {
         save_state();
@@ -608,12 +619,8 @@ bool Editor::handle_text_input(Event event) {
         last_action = "typing";
     }
     
-    // Insert printable characters
-    for (char c : input_str) {
-        if (c >= 32 && c < 127) {
-            insert_char(c);
-        }
-    }
+    // Insert the entire UTF-8 string (could be multi-byte character)
+    insert_string(input_str);
     
     return true;
 }

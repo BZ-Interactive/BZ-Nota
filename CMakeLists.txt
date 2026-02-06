@@ -38,6 +38,8 @@ add_executable(bznota
     src/cursor_manager.hpp
     src/undo_redo_manager.cpp
     src/undo_redo_manager.hpp
+    src/utf8_utils.cpp
+    src/utf8_utils.hpp
 )
 
 # Link ftxui libraries

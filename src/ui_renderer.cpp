@@ -1,4 +1,5 @@
 #include "ui_renderer.hpp"
+#include "utf8_utils.hpp"
 #include "ftxui/component/component.hpp"
 #include "ftxui/screen/terminal.hpp"
 #include <algorithm>
@@ -57,23 +58,29 @@ Elements UIRenderer::render_lines(
         
         // Build line with selection highlighting
         Elements line_elements;
-        for (int j = 0; j <= (int)line_content.length(); j++) {
-            if (j == (int)line_content.length() && line_idx != cursor_y) break;
+        size_t byte_pos = 0;
+        
+        while (byte_pos <= line_content.length()) {
+            if (byte_pos == line_content.length() && line_idx != cursor_y) break;
             
-            bool is_cursor = (line_idx == cursor_y && j == cursor_x);
-            bool is_selected = is_char_selected_fn(j, line_idx);
+            bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
+            bool is_selected = is_char_selected_fn(byte_pos, line_idx);
             
-            // tab character handling
             std::string ch_str;
-            if (j < (int)line_content.length()) {
+            if (byte_pos < line_content.length()) {
                 // Render tabs as visible spaces without modifying line_content
-                if (line_content[j] == '\t') {
+                if (line_content[byte_pos] == '\t') {
                     ch_str = "➡️   ";  // 4 spaces to represent a tab
+                    byte_pos++;
                 } else {
-                    ch_str = std::string(1, line_content[j]);
+                    // Extract the complete UTF-8 character (1-4 bytes)
+                    int char_len = UTF8Utils::get_char_length(line_content, byte_pos);
+                    ch_str = line_content.substr(byte_pos, char_len);
+                    byte_pos += char_len;
                 }
             } else {
                 ch_str = " ";
+                byte_pos++;
             }
             
             auto elem = text(ch_str);

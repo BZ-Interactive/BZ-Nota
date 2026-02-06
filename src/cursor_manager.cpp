@@ -1,4 +1,5 @@
 #include "cursor_manager.hpp"
+#include "utf8_utils.hpp"
 #include <algorithm>  // std::min, std::max
 #include <cctype>     // isspace, isalnum
 
@@ -13,9 +14,9 @@ void CursorManager::move_left(
     std::function<void()> clear_selection_fn,
     bool select
 ) {
-    // Move cursor first
+    // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x > 0) {
-        cursor_x--;  // In-place modification via reference
+        cursor_x = UTF8Utils::prev_char_boundary(buffer[cursor_y], cursor_x);
     } else if (cursor_y > 0) {
         cursor_y--;
         cursor_x = buffer[cursor_y].length();  // .length() returns size_t (unsigned)
@@ -38,9 +39,9 @@ void CursorManager::move_right(
     std::function<void()> clear_selection_fn,
     bool select
 ) {
-    // Move cursor first
+    // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x < (int)buffer[cursor_y].length()) {  // Cast size_t to int for comparison
-        cursor_x++;
+        cursor_x = UTF8Utils::next_char_boundary(buffer[cursor_y], cursor_x);
     } else if (cursor_y < (int)buffer.size() - 1) {
         cursor_y++;
         cursor_x = 0;

@@ -18,6 +18,14 @@ public:
         char c                               // Character to insert
     );
     
+    // Insert UTF-8 string at cursor position
+    void insert_string(
+        std::vector<std::string>& buffer,  // Modifies buffer
+        int& cursor_x,                      // Modifies cursor position
+        int cursor_y,                       // Readonly int (passed by value)
+        const std::string& str              // String to insert
+    );
+    
     void insert_newline(
         std::vector<std::string>& buffer,
         int& cursor_x,
