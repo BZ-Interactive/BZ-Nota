@@ -67,3 +67,23 @@ install(TARGETS bznota RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install .desktop file for GUI integration
 install(FILES ${CMAKE_BINARY_DIR}/bznota.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+
+# Install icon files following freedesktop.org icon theme specification
+# PNG icons for various sizes
+install(FILES assets/BZ-Nota_icon_16.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_24.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/24x24/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_32.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/32x32/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_48.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/48x48/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_64.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/64x64/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_128.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/128x128/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_256.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_512.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/512x512/apps RENAME bznota.png)
+install(FILES assets/BZ-Nota_icon_1024.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/1024x1024/apps RENAME bznota.png)
+
+# SVG icon for scalable/vector graphics
+install(FILES assets/BZ-Nota_icon_scalable.svg DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps RENAME bznota.svg)
+
+# Update icon cache after installation (run with appropriate privileges)
+install(CODE "execute_process(COMMAND gtk-update-icon-cache -f -t ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor ERROR_QUIET)")
+
+# Note: BZ-Nota_icon.ico is kept in assets folder for Windows packaging but not installed on Linux
