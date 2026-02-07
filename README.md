@@ -52,7 +52,17 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#✍️-usage">Usage</a></li>
+    <li>
+      <a href="#✍️-usage">Usage</a>
+      <ul>
+        <li><a href="#basic-usage">Basic Usage</a></li>
+        <li><a href="#command-line-options">Command-Line Options</a></li>
+        <li><a href="#keybindings">Keybindings</a></li>
+        <li><a href="#system-clipboard">System Clipboard</a></li>
+      </ul>
+    </li>
+    <li><a href="#🖥️-tested-terminals">Tested Terminals</a></li>
+    <li><a href="#📅-planned-features">Planned features</a></li>
     <li><a href="#🤝-contributing">Contributing</a></li>
     <li><a href="#📝-license">License</a></li>
     <li><a href="#📧-contact">Contact</a></li>
