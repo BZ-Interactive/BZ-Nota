@@ -89,10 +89,10 @@ You'll need a modern C++ compiler and CMake to build BZ-Nota. Installing the sta
 *   **Alternative compilers**: Clang or MSVC are also supported
 *   **CMake**: Version 3.10 or higher
 
-**Optional (for system clipboard support):**
+**System Clipboard Support:**
 
-*   **Linux (X11)**: Install `xclip` or `xsel`
-*   **Linux (Wayland)**: Install `wl-clipboard`
+*   **Linux (X11)**: `xclip` or `xsel`
+*   **Linux (Wayland)**: `wl-clipboard`
 *   **macOS**: Built-in clipboard commands (no installation needed)
 
 Example (Debian/Ubuntu):
@@ -100,12 +100,6 @@ Example (Debian/Ubuntu):
 ```sh
 sudo apt-get update
 sudo apt-get install build-essential cmake
-
-# For system clipboard on X11
-sudo apt-get install xclip
-
-# For system clipboard on Wayland
-sudo apt-get install wl-clipboard
 ```
 
 For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`, etc.).
