@@ -24,7 +24,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.4.2-orange)
+![Version](https://img.shields.io/badge/version-0.5.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
