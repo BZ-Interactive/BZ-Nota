@@ -1,24 +1,30 @@
 <!-- Improved README.md generation -->
 <br />
 <div align="center">
-  <a href="https://github.com/BZ-Interactive/BZ-Nota">
-    <!-- <img src="images/logo.png" alt="Logo" width="80" height="80"> -->
-  </a>
-
-<h3 align="center">BZ-Nota</h3>
-
-  <p align="center">
-    A high-performance, terminal-based text editor built on C++. It combines the intuitive editing of Micro with a modern, btop-style dashboard interface for a modern TUI experience.
-    <br />
-    <a href="https://github.com/BZ-Interactive/BZ-Nota"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/BZ-Interactive/BZ-Nota/releases">See Releases</a>
-    ·
-    <a href="https://github.com/BZ-Interactive/BZ-Nota/issues">Request Feature</a>
-    ·
-    <a href="https://github.com/BZ-Interactive/BZ-Nota/issues">Report Bug</a>
-  </p>
+  <table>
+    <tr>
+      <td valign="middle" style="padding-right:20px">
+        <a href="https://github.com/BZ-Interactive/BZ-Nota">
+          <img src="assets/BZ-Nota_icon_scalable.svg" alt="BZ-Nota logo" width="150" height="150">
+        </a>
+      </td>
+      <td valign="middle" style="text-align:left; max-width:720px">
+        <h3 style="margin:0">BZ-Nota</h3>
+        <p style="margin-top:8px; margin-bottom:8px; text-align:left">
+          A high-performance, terminal-based text editor built on C++. It combines the intuitive editing of Micro with a modern, btop-style dashboard interface for a modern TUI experience.
+        </p>
+        <p style="margin:0; text-align:left">
+          <a href="https://github.com/BZ-Interactive/BZ-Nota"><strong>Explore the docs »</strong></a>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <a href="https://github.com/BZ-Interactive/BZ-Nota/releases">See Releases</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/BZ-Interactive/BZ-Nota/issues">Request Feature</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/BZ-Interactive/BZ-Nota/issues">Report Bug</a>
+        </p>
+      </td>
+    </tr>
+  </table>
 </div>
 
 <div align="center">
