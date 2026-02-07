@@ -189,6 +189,7 @@ To launch the editor, run the executable with a file path:
 *   `Ctrl+Q` — Quit (prompts if unsaved changes)
 
 **Editing:**
+*   `Ctrl+A` — Select All
 *   `Ctrl+C` — Copy to system clipboard
 *   `Ctrl+X` — Cut to system clipboard
 *   `Ctrl+V` — Paste from system clipboard
@@ -207,7 +208,6 @@ To launch the editor, run the executable with a file path:
 *   `Alt+Shift+Arrow` — Select by word (alternative)
 *   `Home` — Jump to start of line (smart: toggles between first non-whitespace and column 0)
 *   `End` — Jump to end of line
-*   `Ctrl+Shift+Home/End` — Select to start/end of line (Alacritty)
 
 **Line Operations:**
 *   `Ctrl+O` — Insert blank line above
