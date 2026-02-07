@@ -5,7 +5,7 @@
     <tr>
       <td valign="middle" style="padding-right:20px">
         <a href="https://github.com/BZ-Interactive/BZ-Nota">
-          <img src="assets/BZ-Nota_icon_scalable.svg" alt="BZ-Nota logo" width="150" height="150">
+          <img src="assets/BZ-Nota_icon_scalable.svg" alt="BZ-Nota logo" width="180" height="180">
         </a>
       </td>
       <td valign="middle" style="text-align:left; max-width:720px">
