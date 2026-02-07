@@ -283,9 +283,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## 📧 Contact
 
-Barkın Zorlu - barkin.zorlu.bz@gmail.com
+[![Email](https://img.shields.io/badge/-barkin.zorlu.bz@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:barkin.zorlu.bz@gmail.com)
 
-[![LinkedIn][linkedin-shield]][linkedin-url]
+[![GitHub](https://img.shields.io/badge/-@ZorluBarkin-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ZorluBarkin)
+[![LinkedIn](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge)](https://www.linkedin.com/in/barkin-zorlu)
 
 Project Link: [https://github.com/BZ-Interactive/BZ-Nota](https://github.com/BZ-Interactive/BZ-Nota)
 
