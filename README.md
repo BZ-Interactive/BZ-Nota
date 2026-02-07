@@ -3,9 +3,9 @@
 <div align="center">
   <table>
     <tr>
-      <td valign="middle" style="padding-right:20px">
+      <td valign="middle" style="padding-right:10px">
         <a href="https://github.com/BZ-Interactive/BZ-Nota">
-          <img src="assets/BZ-Nota_icon_scalable.svg" alt="BZ-Nota logo" width="180" height="180">
+          <img src="assets/BZ-Nota_icon_scalable.svg" alt="BZ-Nota logo" width="200" height="200">
         </a>
       </td>
       <td valign="middle" style="text-align:left; max-width:720px">
