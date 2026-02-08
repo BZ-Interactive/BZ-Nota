@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.5.0-orange)
+![Version](https://img.shields.io/badge/version-0.6.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -209,6 +209,18 @@ To launch the editor, run the executable with a file path:
 *   `Ctrl+Y` — Redo
 *   `Tab` — Insert tab
 *   `Shift+Tab` — Remove leading tab (unindent)
+
+**Formatting**
+
+*   `Ctrl+B` — Bold
+*   `Ctrl+I` — Italic
+*   `Ctrl+U` — Underline
+*   `Ctrl+T` — Strikethrough
+
+All work on selection, can use this to write formatted or apply any format to a pre-written text.
+
+All can be applied on top of each other.
+
 
 **Navigation:**
 *   `Arrow Keys` — Move cursor
