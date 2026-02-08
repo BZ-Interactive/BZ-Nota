@@ -308,6 +308,43 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
         }
     }
     
+    // Clean up any orphaned/incomplete formatting markers that might remain
+    // Remove orphaned closing tags </u>
+    size_t orphan_pos;
+    while ((orphan_pos = result.find("</u>")) != std::string::npos) {
+        result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 4);
+        has_underline = true;
+    }
+    // Remove partial </u (without >)
+    while ((orphan_pos = result.find("</u")) != std::string::npos) {
+        size_t end_pos = orphan_pos + 3;
+        while (end_pos < result.length() && result[end_pos] != ' ' && result[end_pos] != '\n') {
+            end_pos++;
+            if (result[end_pos - 1] == '>') break;
+        }
+        result = result.substr(0, orphan_pos) + result.substr(end_pos);
+        has_underline = true;
+    }
+    // Remove orphaned opening tags <u>
+    while ((orphan_pos = result.find("<u>")) != std::string::npos) {
+        result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 3);
+        has_underline = true;
+    }
+    
+    // Clean up orphaned ** (single occurrence)
+    orphan_pos = result.find("**");
+    if (orphan_pos != std::string::npos) {
+        result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 2);
+        has_bold = true;
+    }
+    
+    // Clean up orphaned ~~ (single occurrence)
+    orphan_pos = result.find("~~");
+    if (orphan_pos != std::string::npos) {
+        result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 2);
+        has_strikethrough = true;
+    }
+    
     return result;
 }
 

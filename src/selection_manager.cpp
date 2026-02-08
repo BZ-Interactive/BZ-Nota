@@ -1,4 +1,5 @@
 #include "selection_manager.hpp"
+#include "formatter.hpp"
 #include <algorithm>  // For std::min, std::max, std::swap
 
 SelectionManager::SelectionManager() {}
@@ -146,56 +147,18 @@ void SelectionManager::adjust_selection_for_formatting(const std::vector<std::st
     if (start_y != end_y || start_y >= (int)buffer.size()) return;
     
     const std::string& line = buffer[start_y];
-    int original_start = start_x;
-    bool moved = true;
     
-    // Keep moving start back while we find opening markers
-    while (moved && start_x > 0) {
-        moved = false;
-        
-        // Check for opening bold **
-        if (start_x >= 2 && line.substr(start_x - 2, 2) == "**") {
-            start_x -= 2;
-            moved = true;
-            continue;
-        }
-        
-        // Check for opening underline <u>
-        if (start_x >= 3 && line.substr(start_x - 3, 3) == "<u>") {
-            start_x -= 3;
-            moved = true;
-            continue;
-        }
-        
-        // Check for opening strikethrough ~~
-        if (start_x >= 2 && line.substr(start_x - 2, 2) == "~~") {
-            start_x -= 2;
-            moved = true;
-            continue;
-        }
-        
-        // Check for opening italic * (but not **)
-        if (start_x >= 1 && line[start_x - 1] == '*') {
-            // Make sure it's not part of **
-            if (start_x >= 2 && line[start_x - 2] == '*') {
-                // This is part of **, skip it (already handled above)
-            } else {
-                start_x -= 1;
-                moved = true;
-                continue;
-            }
-        }
-    }
+    // Use the object-oriented formatter approach
+    adjust_selection_bounds(line, start_x, end_x);
     
-    // Update the selection if we moved back
-    if (start_x != original_start) {
-        // Determine which bound to update
-        if (selection_start_y == start_y && 
-            (selection_start_y < selection_end_y || 
-             (selection_start_y == selection_end_y && selection_start_x <= selection_end_x))) {
-            selection_start_x = start_x;
-        } else {
-            selection_end_x = start_x;
-        }
+    // Update the selection bounds
+    if (selection_start_y == start_y && 
+        (selection_start_y < selection_end_y || 
+         (selection_start_y == selection_end_y && selection_start_x <= selection_end_x))) {
+        selection_start_x = start_x;
+        selection_end_x = end_x;
+    } else {
+        selection_end_x = start_x;
+        selection_start_x = end_x;
     }
 }

@@ -40,6 +40,8 @@ add_executable(bznota
     src/undo_redo_manager.hpp
     src/format_manager.cpp
     src/format_manager.hpp
+    src/formatter.cpp
+    src/formatter.hpp
     src/utf8_utils.cpp
     src/utf8_utils.hpp
 )
