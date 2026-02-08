@@ -5,6 +5,65 @@
 
 CursorManager::CursorManager() {}
 
+void CursorManager::skip_formatting_markers(const std::string& line, int& cursor_x, int direction) {
+    if (cursor_x < 0 || cursor_x > (int)line.length()) return;
+    
+    // Check for markdown markers and skip over them
+    if (direction < 0) {  // Moving left
+        // Check if we're at the end of a closing marker
+        if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "**") {
+            cursor_x -= 2;
+        } else if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "~~") {
+            cursor_x -= 2;
+        } else if (cursor_x >= 4 && line.substr(cursor_x - 4, 4) == "</u>") {
+            cursor_x -= 4;
+        } else if (cursor_x >= 1 && cursor_x < (int)line.length() && line[cursor_x - 1] == '*') {
+            // Single * for italic - but avoid double-counting **
+            if (!(cursor_x >= 2 && line[cursor_x - 2] == '*')) {
+                cursor_x -= 1;
+            }
+        }
+        // Check if we jumped onto an opening marker, skip that too
+        if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "**") {
+            cursor_x -= 2;
+        } else if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "~~") {
+            cursor_x -= 2;
+        } else if (cursor_x >= 3 && line.substr(cursor_x - 3, 3) == "<u>") {
+            cursor_x -= 3;
+        } else if (cursor_x >= 1 && line[cursor_x - 1] == '*') {
+            if (!(cursor_x >= 2 && line[cursor_x - 2] == '*')) {
+                cursor_x -= 1;
+            }
+        }
+    } else {  // Moving right
+        // Check if we're at the start of an opening marker
+        if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "**") {
+            cursor_x += 2;
+        } else if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "~~") {
+            cursor_x += 2;
+        } else if (cursor_x + 3 <= (int)line.length() && line.substr(cursor_x, 3) == "<u>") {
+            cursor_x += 3;
+        } else if (cursor_x < (int)line.length() && line[cursor_x] == '*') {
+            // Single * for italic
+            if (!(cursor_x + 1 < (int)line.length() && line[cursor_x + 1] == '*')) {
+                cursor_x += 1;
+            }
+        }
+        // Check if we jumped onto a closing marker, skip that too
+        if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "**") {
+            cursor_x += 2;
+        } else if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "~~") {
+            cursor_x += 2;
+        } else if (cursor_x + 4 <= (int)line.length() && line.substr(cursor_x, 4) == "</u>") {
+            cursor_x += 4;
+        } else if (cursor_x < (int)line.length() && line[cursor_x] == '*') {
+            if (!(cursor_x + 1 < (int)line.length() && line[cursor_x + 1] == '*')) {
+                cursor_x += 1;
+            }
+        }
+    }
+}
+
 void CursorManager::move_left(
     const std::vector<std::string>& buffer,
     int& cursor_x,
@@ -17,6 +76,7 @@ void CursorManager::move_left(
     // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x > 0) {
         cursor_x = UTF8Utils::prev_char_boundary(buffer[cursor_y], cursor_x);
+        skip_formatting_markers(buffer[cursor_y], cursor_x, -1);
     } else if (cursor_y > 0) {
         cursor_y--;
         cursor_x = buffer[cursor_y].length();  // .length() returns size_t (unsigned)
@@ -42,6 +102,7 @@ void CursorManager::move_right(
     // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x < (int)buffer[cursor_y].length()) {  // Cast size_t to int for comparison
         cursor_x = UTF8Utils::next_char_boundary(buffer[cursor_y], cursor_x);
+        skip_formatting_markers(buffer[cursor_y], cursor_x, 1);
     } else if (cursor_y < (int)buffer.size() - 1) {
         cursor_y++;
         cursor_x = 0;
@@ -240,3 +301,64 @@ void CursorManager::ensure_cursor_visible(int cursor_y, int& scroll_y, int scree
     }
 }
 
+bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line, int cursor_x) {
+    if (cursor_x < 0 || cursor_x > (int)line.length()) return false;
+    
+    // Check if we're inside ** (bold)
+    if (cursor_x >= 2 && cursor_x < (int)line.length()) {
+        // Check for opening ** before cursor
+        size_t opening = line.rfind("**", cursor_x - 1);
+        if (opening != std::string::npos && opening < (size_t)cursor_x) {
+            // Check for closing ** after cursor
+            size_t closing = line.find("**", cursor_x);
+            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+                return true;
+            }
+        }
+    }
+    
+    // Check if we're inside ~~ (strikethrough)
+    if (cursor_x >= 2 && cursor_x < (int)line.length()) {
+        size_t opening = line.rfind("~~", cursor_x - 1);
+        if (opening != std::string::npos && opening < (size_t)cursor_x) {
+            size_t closing = line.find("~~", cursor_x);
+            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+                return true;
+            }
+        }
+    }
+    
+    // Check if we're inside <u>...</u> (underline)
+    if (cursor_x >= 3 && cursor_x < (int)line.length()) {
+        size_t opening = line.rfind("<u>", cursor_x - 1);
+        if (opening != std::string::npos && opening < (size_t)cursor_x) {
+            size_t closing = line.find("</u>", cursor_x);
+            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+                return true;
+            }
+        }
+    }
+    
+    // Check if we're inside * (italic) - but exclude ** which we already checked
+    if (cursor_x >= 1 && cursor_x < (int)line.length()) {
+        size_t opening = line.rfind("*", cursor_x - 1);
+        if (opening != std::string::npos && opening < (size_t)cursor_x) {
+            // Make sure it's not part of **
+            if (opening == 0 || line[opening - 1] != '*') {
+                if (opening + 1 >= line.length() || line[opening + 1] != '*') {
+                    size_t closing = line.find("*", cursor_x);
+                    if (closing != std::string::npos && closing > (size_t)cursor_x) {
+                        // Make sure closing is not part of **
+                        if (closing == 0 || line[closing - 1] != '*') {
+                            if (closing + 1 >= line.length() || line[closing + 1] != '*') {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
+}

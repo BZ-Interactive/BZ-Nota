@@ -19,6 +19,10 @@ public:
     /// @param save_status_shown Whether to show status message
     /// @param can_undo Whether undo is available
     /// @param can_redo Whether redo is available
+    /// @param bold_active Whether bold formatting is active
+    /// @param italic_active Whether italic formatting is active
+    /// @param underline_active Whether underline formatting is active
+    /// @param strikethrough_active Whether strikethrough formatting is active
     /// @param is_char_selected_fn Function to check if a character is selected
     /// @return The rendered FTXUI Element
     ftxui::Element render(
@@ -31,6 +35,10 @@ public:
         bool save_status_shown,
         bool can_undo,
         bool can_redo,
+        bool bold_active,
+        bool italic_active,
+        bool underline_active,
+        bool strikethrough_active,
         std::function<bool(int, int)> is_char_selected_fn
     );
 
@@ -38,9 +46,22 @@ private:
     /// @brief Check if the terminal supports emojis
     /// @return True if emojis are supported, false otherwise
     bool supports_emojis() const;
+    
+    /// @brief Parse markdown formatting from text and apply FTXUI styles
+    /// @param text The text to parse (may contain markdown)
+    /// @param start_pos Starting position in the text
+    /// @param is_selected Whether this text is selected
+    /// @param cursor_x_in_line Cursor X position in line (-1 if not on this line)
+    /// @return Vector of styled elements and the number of bytes consumed
+    struct ParseResult {
+        ftxui::Elements elements;
+        size_t bytes_consumed;
+    };
+    ParseResult parse_markdown_segment(const std::string& text, size_t start_pos, bool is_selected, int cursor_x_in_line);
 
     /// @brief Render the header bar
-    ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo);
+    ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
+                                 bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active);
     
     /// @brief Render the status bar
     ftxui::Element render_status_bar(

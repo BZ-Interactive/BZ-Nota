@@ -18,6 +18,7 @@
 #include "editing_manager.hpp"
 #include "cursor_manager.hpp"
 #include "undo_redo_manager.hpp"
+#include "format_manager.hpp"
 
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
@@ -64,6 +65,7 @@ private:
     EditingManager editing_manager;         // Insert/delete text
     CursorManager cursor_manager;           // Cursor movement
     UndoRedoManager undo_redo_manager;      // History management
+    FormatManager format_manager;           // Formatting state (bold, italic, etc.)
     
     // ===== File Operations =====
     void load_file();
@@ -89,6 +91,12 @@ private:
     void insert_newline();
     void delete_char(); // represents backspace
     void delete_forward(); // represents delete key
+    
+    // ===== Formatting Operations =====
+    void toggle_bold();
+    void toggle_italic();
+    void toggle_underline();
+    void toggle_strikethrough();
     
     // ===== Cursor Movement =====
     void move_cursor_left(bool select = false);

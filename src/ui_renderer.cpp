@@ -35,6 +35,144 @@ bool UIRenderer::supports_emojis() const {
     return emoji_capable;
 }
 
+UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& line_text, size_t start_pos, bool is_selected, int cursor_x_in_line) {
+    ParseResult result;
+    result.bytes_consumed = 0;
+    
+    if (start_pos >= line_text.length()) {
+        return result;
+    }
+    
+    // Check for markdown markers
+    std::string remaining = line_text.substr(start_pos);
+    
+    // Check for bold **
+    if (remaining.length() >= 2 && remaining.substr(0, 2) == "**") {
+        size_t end_pos = remaining.find("**", 2);
+        if (end_pos != std::string::npos) {
+            std::string content = remaining.substr(2, end_pos - 2);
+            result.bytes_consumed = end_pos + 2;  // end_pos points to closing **, +2 to include it
+            
+            if (cursor_x_in_line >= 0) {
+                // Build character-by-character with cursor on specific char
+                size_t char_pos = 0;
+                while (char_pos < content.length()) {
+                    int char_len = UTF8Utils::get_char_length(content, char_pos);
+                    std::string ch = content.substr(char_pos, char_len);
+                    bool is_cursor_here = ((int)(start_pos + 2 + char_pos) == cursor_x_in_line);
+                    auto elem = text(ch) | bold;
+                    if (is_cursor_here) elem = elem | inverted;
+                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                    result.elements.push_back(elem);
+                    char_pos += char_len;
+                }
+            } else {
+                auto elem = text(content) | bold;
+                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                result.elements.push_back(elem);
+            }
+            return result;
+        }
+    }
+    
+    // Check for strikethrough ~~
+    if (remaining.length() >= 2 && remaining.substr(0, 2) == "~~") {
+        size_t end_pos = remaining.find("~~", 2);
+        if (end_pos != std::string::npos) {
+            std::string content = remaining.substr(2, end_pos - 2);
+            result.bytes_consumed = end_pos + 2;  // end_pos points to closing ~~, +2 to include it
+            
+            if (cursor_x_in_line >= 0) {
+                size_t char_pos = 0;
+                while (char_pos < content.length()) {
+                    int char_len = UTF8Utils::get_char_length(content, char_pos);
+                    std::string ch = content.substr(char_pos, char_len);
+                    bool is_cursor_here = ((int)(start_pos + 2 + char_pos) == cursor_x_in_line);
+                    auto elem = text(ch) | strikethrough;
+                    if (is_cursor_here) elem = elem | inverted;
+                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                    result.elements.push_back(elem);
+                    char_pos += char_len;
+                }
+            } else {
+                auto elem = text(content) | strikethrough;
+                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                result.elements.push_back(elem);
+            }
+            return result;
+        }
+    }
+    
+    // Check for underline <u>
+    if (remaining.length() >= 3 && remaining.substr(0, 3) == "<u>") {
+        size_t end_pos = remaining.find("</u>");
+        if (end_pos != std::string::npos) {
+            std::string content = remaining.substr(3, end_pos - 3);
+            result.bytes_consumed = end_pos + 4;  // end_pos points to </u>, +4 to include </u>
+            
+            if (cursor_x_in_line >= 0) {
+                size_t char_pos = 0;
+                while (char_pos < content.length()) {
+                    int char_len = UTF8Utils::get_char_length(content, char_pos);
+                    std::string ch = content.substr(char_pos, char_len);
+                    bool is_cursor_here = ((int)(start_pos + 3 + char_pos) == cursor_x_in_line);
+                    auto elem = text(ch) | underlined;
+                    if (is_cursor_here) elem = elem | inverted;
+                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                    result.elements.push_back(elem);
+                    char_pos += char_len;
+                }
+            } else {
+                auto elem = text(content) | underlined;
+                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                result.elements.push_back(elem);
+            }
+            return result;
+        }
+    }
+    
+    // Check for italic *
+    if (remaining.length() >= 1 && remaining[0] == '*') {
+        size_t end_pos = remaining.find("*", 1);
+        if (end_pos != std::string::npos) {
+            std::string content = remaining.substr(1, end_pos - 1);
+            result.bytes_consumed = end_pos + 2;
+            
+            if (cursor_x_in_line >= 0) {
+                size_t char_pos = 0;
+                while (char_pos < content.length()) {
+                    int char_len = UTF8Utils::get_char_length(content, char_pos);
+                    std::string ch = content.substr(char_pos, char_len);
+                    bool is_cursor_here = ((int)(start_pos + 1 + char_pos) == cursor_x_in_line);
+                    auto elem = text(ch) | italic;
+                    if (is_cursor_here) elem = elem | inverted;
+                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                    result.elements.push_back(elem);
+                    char_pos += char_len;
+                }
+            } else {
+                auto elem = text(content) | italic;
+                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                result.elements.push_back(elem);
+            }
+            return result;
+        }
+    }
+    
+    // No formatting found - return single character
+    int char_len = UTF8Utils::get_char_length(line_text, start_pos);
+    std::string ch_str = line_text.substr(start_pos, char_len);
+    result.bytes_consumed = char_len;
+    
+    bool is_cursor_here = (cursor_x_in_line >= 0 && (int)start_pos == cursor_x_in_line);
+    auto elem = text(ch_str);
+    if (is_cursor_here) elem = elem | inverted | bold;
+    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+    result.elements.push_back(elem);
+    
+    return result;
+}
+
 Element UIRenderer::render(
     const std::vector<std::string>& buffer,
     int cursor_x, int cursor_y,
@@ -45,6 +183,10 @@ Element UIRenderer::render(
     bool save_status_shown,
     bool can_undo,
     bool can_redo,
+    bool bold_active,
+    bool italic_active,
+    bool underline_active,
+    bool strikethrough_active,
     std::function<bool(int, int)> is_char_selected_fn
 ) {
     int screen_height = Terminal::Size().dimy;
@@ -53,7 +195,7 @@ Element UIRenderer::render(
     auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn);
     
     return vbox({
-        render_header(filename, modified, can_undo, can_redo),
+        render_header(filename, modified, can_undo, can_redo, bold_active, italic_active, underline_active, strikethrough_active),
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
@@ -83,42 +225,46 @@ Elements UIRenderer::render_lines(
         
         std::string line_content = buffer[line_idx];
         
-        // Build line with selection highlighting
+        // Build line with selection highlighting and markdown parsing
         Elements line_elements;
         size_t byte_pos = 0;
         
         while (byte_pos <= line_content.length()) {
             if (byte_pos == line_content.length() && line_idx != cursor_y) break;
             
-            bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
             bool is_selected = is_char_selected_fn(byte_pos, line_idx);
             
-            std::string ch_str;
             if (byte_pos < line_content.length()) {
-                // Render tabs as visible spaces without modifying line_content
+                // Handle tabs specially
                 if (line_content[byte_pos] == '\t') {
-                    ch_str = "➡️   ";  // 4 spaces to represent a tab
+                    bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
+                    auto elem = text("➡️   ");  // 4 spaces to represent a tab
+                    if (is_cursor) elem = elem | inverted | bold;
+                    else if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
+                    line_elements.push_back(elem);
                     byte_pos++;
                 } else {
-                    // Extract the complete UTF-8 character (1-4 bytes)
-                    int char_len = UTF8Utils::get_char_length(line_content, byte_pos);
-                    ch_str = line_content.substr(byte_pos, char_len);
-                    byte_pos += char_len;
+                    // Parse markdown and apply formatting
+                    // Pass cursor_x if this is the cursor line, -1 otherwise
+                    int cursor_x_for_parse = (line_idx == cursor_y) ? cursor_x : -1;
+                    auto parse_result = parse_markdown_segment(line_content, byte_pos, is_selected, cursor_x_for_parse);
+                    
+                    for (auto& elem : parse_result.elements) {
+                        line_elements.push_back(elem);
+                    }
+                    byte_pos += parse_result.bytes_consumed;
+                    if (parse_result.bytes_consumed == 0) {
+                        // Fallback - advance by one character to avoid infinite loop
+                        byte_pos++;
+                    }
                 }
             } else {
-                ch_str = " ";
+                bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
+                auto elem = text(" ");
+                if (is_cursor) elem = elem | inverted | bold;
+                line_elements.push_back(elem);
                 byte_pos++;
             }
-            
-            auto elem = text(ch_str);
-            
-            if (is_cursor) {
-                elem = elem | inverted | bold;
-            } else if (is_selected) {
-                elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-            }
-            
-            line_elements.push_back(elem);
         }
         
         // line number + separator + content
@@ -135,15 +281,16 @@ Elements UIRenderer::render_lines(
     return lines_display;
 }
 
-Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo) {
+Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
+                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
         text(" "),
         render_save_button(modified),
-        render_bold_button(true),
-        render_italic_button(true),
-        render_underline_button(true),
-        render_strikethrough_button(true),
+        render_bold_button(bold_active),
+        render_italic_button(italic_active),
+        render_underline_button(underline_active),
+        render_strikethrough_button(strikethrough_active),
         render_bullet_button(),
         //render_font_button(),
         text(" ") | flex,
@@ -179,7 +326,7 @@ Element UIRenderer::render_shortcuts() {
 }
 
 Element UIRenderer::render_save_button(bool modified) {
-    auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold; // change true to supports_emojis bool
+    auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+S ") | nothing}) | 
            bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
            color(modified ? Color(Color::Black) : Color(Color::White)) |
@@ -187,7 +334,7 @@ Element UIRenderer::render_save_button(bool modified) {
 }
 
 Element UIRenderer::render_bold_button(bool active) {
-    auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold; // change true to supports_emojis bool
+    auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+B ") | nothing}) | 
            bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
@@ -211,8 +358,8 @@ Element UIRenderer::render_underline_button(bool active) {
 }
 
 Element UIRenderer::render_strikethrough_button(bool active) {
-    auto symbol = text("S") | bold | strikethrough;
-    return hbox({text(" "), symbol, text(" Ctrl+T ")}) | 
+    auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
+    return hbox({symbol, text("Ctrl+T ")}) | 
            bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
            (active ? bold : nothing);
@@ -220,14 +367,14 @@ Element UIRenderer::render_strikethrough_button(bool active) {
 
 Element UIRenderer::render_bullet_button() {
     auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
-    return hbox({text(" "), symbol, text(" Ctrl+B ")}) | 
+    return hbox({text(" "), symbol, text(" Alt+[0-9] ")}) | 
            bgcolor(Color(Color::GrayDark)) |
            color(Color(Color::White));
 }
 
 // this requires more integration so I closed it for now
 Element UIRenderer::render_font_button() {
-    auto symbol = text("F") | bold; // change true to supports_emojis bool
+    auto symbol = text("F") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+F+Arrow ")}) | 
            bgcolor(Color(Color::GrayDark)) | 
            color(Color(Color::White));
@@ -250,7 +397,7 @@ Element UIRenderer::render_redo_button(bool available) {
 }
 
 Element UIRenderer::render_close_button() {
-    auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold; // change true to supports_emojis bool
+    auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+Q ")}) | 
            bgcolor(Color::GrayLight) | 
            color(Color::RedLight) | 

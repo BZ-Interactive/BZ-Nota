@@ -168,22 +168,85 @@ void Editor::cut_to_system_clipboard() {
     }
 }
 
+// ===== Formatting Operations =====
+
+void Editor::toggle_bold() {
+    // End session if we're turning off and session is active
+    if (format_manager.is_bold() && format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
+    format_manager.toggle_bold();
+    set_status(format_manager.get_status_message());
+}
+
+void Editor::toggle_italic() {
+    if (format_manager.is_italic() && format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
+    format_manager.toggle_italic();
+    set_status(format_manager.get_status_message());
+}
+
+void Editor::toggle_underline() {
+    if (format_manager.is_underline() && format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
+    format_manager.toggle_underline();
+    set_status(format_manager.get_status_message());
+}
+
+void Editor::toggle_strikethrough() {
+    if (format_manager.is_strikethrough() && format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
+    format_manager.toggle_strikethrough();
+    set_status(format_manager.get_status_message());
+}
+
 // ===== Editing Operations =====
 
 void Editor::insert_char(char c) {
     delete_selection_if_active();
+    
+    // Check if we're inside existing formatting markers
+    bool inside_markers = cursor_manager.is_cursor_inside_formatting_markers(buffer[cursor_y], cursor_x);
+    
+    // Start formatting session only if not inside existing markers
+    if (format_manager.has_active_formatting() && !format_manager.in_formatting_session() && !inside_markers) {
+        format_manager.start_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
     editing_manager.insert_char(buffer, cursor_x, cursor_y, c);
     modified = true;
 }
 
 void Editor::insert_string(const std::string& str) {
     delete_selection_if_active();
+    
+    // Check if we're inside existing formatting markers
+    bool inside_markers = cursor_manager.is_cursor_inside_formatting_markers(buffer[cursor_y], cursor_x);
+    
+    // Start formatting session only if not inside existing markers
+    if (format_manager.has_active_formatting() && !format_manager.in_formatting_session() && !inside_markers) {
+        format_manager.start_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
     editing_manager.insert_string(buffer, cursor_x, cursor_y, str);
     modified = true;
 }
 
 void Editor::insert_newline() {
     delete_selection_if_active();
+    
+    // End formatting session before newline
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
+    
     save_state();
     typing_state_saved = false;
     last_action = "newline";
@@ -226,48 +289,72 @@ void Editor::delete_forward() {
 // ===== Cursor Movement =====
 
 void Editor::move_cursor_left(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_right(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_up(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_up(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_down(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_down(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_left(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_word_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_right(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
     if (select && !selection_manager.has_active_selection()) start_sel();
     cursor_manager.move_word_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_home(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     if (select && !selection_manager.has_active_selection()) start_selection();
     auto [_, update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_home(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_end(bool select) {
+    if (format_manager.in_formatting_session()) {
+        format_manager.end_formatting_session(buffer, cursor_x, cursor_y);
+    }
     if (select && !selection_manager.has_active_selection()) start_selection();
     auto [_, update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_end(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
@@ -358,6 +445,10 @@ Element Editor::render() {
         save_status_shown,
         undo_redo_manager.can_undo(),
         undo_redo_manager.can_redo(),
+        format_manager.is_bold(),
+        format_manager.is_italic(),
+        format_manager.is_underline(),
+        format_manager.is_strikethrough(),
         is_char_selected_fn
     );
 }
@@ -420,6 +511,10 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
         case 26: undo(); return true;  // Ctrl+Z
         case 25: redo(); return true;  // Ctrl+Y
         case 19: save_file(); return true;  // Ctrl+S
+        case 2:  toggle_bold(); return true;  // Ctrl+B
+        case 9:  toggle_italic(); return true;  // Ctrl+I
+        case 21: toggle_underline(); return true;  // Ctrl+U
+        case 20: toggle_strikethrough(); return true;  // Ctrl+T
         
         case 17: // Ctrl+Q
             if (modified && !confirm_quit) {
@@ -457,15 +552,24 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
 }
 
 bool Editor::handle_navigation_sequences(const std::string& input) {
-    // Debug mode: Show escape sequences
-    if (debug_mode && input.length() > 1 && input[0] == '\x1b') {
+
+    // debug mode: CTRL + key
+    if (debug_mode && input.length() == 1 && (uint8_t) input[0] <= 26) {
         std::string hex_str;
         for (unsigned char c : input) {
             char buf[8];
             snprintf(buf, sizeof(buf), "%02x ", c);
             hex_str += buf;
         }
-        set_status("Key: " + hex_str);
+        set_status("CTRL Key: " + hex_str);
+    } else if (debug_mode && input.length() > 1 && input[0] == '\x1b') { // Debug mode: Show escape sequences for Alt+Key and others
+        std::string hex_str;
+        for (unsigned char c : input) {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%02x ", c);
+            hex_str += buf;
+        }
+        set_status("Alt Key: " + hex_str);
     }
     
     // Shift + Arrow keys (selection)
@@ -480,7 +584,7 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
     if (input == "\x1b[1;5H") { move_cursor_home(true); return true; }   // Ctrl+Home with selection
     if (input == "\x1b[1;5F") { move_cursor_end(true); return true; }    // Ctrl+End with selection
     
-    // Alt+Shift+Home/End (selection) - Alternative for GNOME Terminal
+    // Alt+Shift+Home/End (selection) - Alternative for GNOME Terminal/Kitty
     if (input == "\x1b[1;4H") { move_cursor_home(true); return true; }   // Alt+Shift+Home
     if (input == "\x1b[1;4F") { move_cursor_end(true); return true; }    // Alt+Shift+End
     if (input == "\x1b[1;3H") { move_cursor_home(true); return true; }   // Alt+Home
@@ -500,7 +604,7 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
     if (input == "\x1b[1;6D") { move_word_left(true); return true; }     // Ctrl+Shift+Left
     if (input == "\x1b[1;6C") { move_word_right(true); return true; }    // Ctrl+Shift+Right
     
-    // Alt+Shift+Arrow (word selection) - Universal fallback
+    // Alt+Shift+Arrow (word selection) - Universal fallback, specifically for GNOME Terminal/Kitty
     if (input == "\x1b[1;4D") { move_word_left(true); return true; }     // Alt+Shift+Left
     if (input == "\x1b[1;4C") { move_word_right(true); return true; }    // Alt+Shift+Right
     

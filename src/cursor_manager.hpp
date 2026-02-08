@@ -95,4 +95,17 @@ public:
     // Helper functions for word boundary detection
     int find_word_start(const std::string& line, int x);
     int find_word_end(const std::string& line, int x);
+    
+    /// @brief Check if cursor is currently inside formatting markers
+    /// @param line The current line text
+    /// @param cursor_x The cursor X position
+    /// @return True if cursor is between opening and closing formatting markers
+    bool is_cursor_inside_formatting_markers(const std::string& line, int cursor_x);
+
+private:
+    /// @brief Skip markdown formatting markers when cursor position is inside them
+    /// @param line The current line text
+    /// @param cursor_x The cursor X position (will be modified to skip markers)
+    /// @param direction -1 for left, +1 for right
+    void skip_formatting_markers(const std::string& line, int& cursor_x, int direction);
 };
