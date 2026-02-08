@@ -238,6 +238,7 @@ Below are terminals that are tested and their known quirks.
 Linux:
 - alacritty — works perfectly.
 - gnome-terminal — `Ctrl+Shift+Arrow` won't work; use `Alt+Shift+Arrow` instead.
+- kitty — `Ctrl+Shift+Arrow` won't work; use `Alt+Shift+Arrow` instead.
 - XTerm and UXterm — missing some of the emojis.
 
 macOS:
