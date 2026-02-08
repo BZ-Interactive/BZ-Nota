@@ -29,6 +29,8 @@ static const Color REDO_BUTTON_ACTIVE_BG = Color::GreenLight;
 static const Color CLOSE_BUTTON_BG = Color::GrayLight;
 static const Color CLOSE_BUTTON_FG = Color::RedLight;
 
+static const auto PRE_SYMBOL_SPACE = text(" ") | nothing;
+
 UIRenderer::UIRenderer() {}
 
 bool UIRenderer::supports_emojis() const {
@@ -333,7 +335,7 @@ Element UIRenderer::render_shortcuts() {
 
 Element UIRenderer::render_save_button(bool modified) {
     auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
-    return hbox({text(" "), symbol, text(" Ctrl+S ") | nothing}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+S ") | nothing}) | 
            bgcolor(modified ? SAVE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(modified ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (modified ? bold : nothing);
@@ -341,7 +343,7 @@ Element UIRenderer::render_save_button(bool modified) {
 
 Element UIRenderer::render_bold_button(bool active) {
     auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
-    return hbox({text(" "), symbol, text(" Ctrl+B ") | nothing}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+B ") | nothing}) | 
            bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -349,7 +351,7 @@ Element UIRenderer::render_bold_button(bool active) {
 
 Element UIRenderer::render_italic_button(bool active) {
     auto symbol = text("I") | bold | italic;
-    return hbox({text(" "), symbol, text(" Ctrl+I ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+I ") | nothing}) | 
            bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -357,7 +359,7 @@ Element UIRenderer::render_italic_button(bool active) {
 
 Element UIRenderer::render_underline_button(bool active) {
     auto symbol = text("U") | bold | underlined;
-    return hbox({text(" "), symbol, text(" Ctrl+U ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+U ") | nothing}) | 
            bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -365,7 +367,7 @@ Element UIRenderer::render_underline_button(bool active) {
 
 Element UIRenderer::render_strikethrough_button(bool active) {
     auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
-    return hbox({symbol, text("Ctrl+T ")}) | 
+    return hbox({symbol, text(" Ctrl+T ") | nothing}) | 
            bgcolor(active ? STRIKETHROUGH_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -373,7 +375,7 @@ Element UIRenderer::render_strikethrough_button(bool active) {
 
 Element UIRenderer::render_bullet_button() {
     auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
-    return hbox({text(" "), symbol, text(" Alt+[0-9] ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Alt+[0-9] ") | nothing}) | 
            bgcolor(BULLET_BUTTON_BG) |
            color(BULLET_BUTTON_FG);
 }
@@ -381,14 +383,14 @@ Element UIRenderer::render_bullet_button() {
 // this requires more integration so I closed it for now
 Element UIRenderer::render_font_button() {
     auto symbol = text("F") | bold;
-    return hbox({text(" "), symbol, text(" Ctrl+F+Arrow ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+F+Arrow ") | nothing}) | 
            bgcolor(FONT_BUTTON_BG) | 
            color(FONT_BUTTON_FG);
 }
 
 Element UIRenderer::render_undo_button(bool available) {
     auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
-    return hbox({text(" "), symbol, text(" Ctrl+Z ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Z ") | nothing}) | 
            bgcolor(available ? UNDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
@@ -396,7 +398,7 @@ Element UIRenderer::render_undo_button(bool available) {
 
 Element UIRenderer::render_redo_button(bool available) {
     auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
-    return hbox({text(" "), symbol, text(" Ctrl+Y ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Y ") | nothing}) | 
            bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
@@ -404,7 +406,7 @@ Element UIRenderer::render_redo_button(bool available) {
 
 Element UIRenderer::render_close_button() {
     auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
-    return hbox({text(" "), symbol, text(" Ctrl+Q ")}) | 
+    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Q ") | nothing}) | 
            bgcolor(CLOSE_BUTTON_BG) | 
            color(CLOSE_BUTTON_FG) | 
            bold;
