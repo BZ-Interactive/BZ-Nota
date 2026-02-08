@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.6.0-orange)
+![Version](https://img.shields.io/badge/version-0.6.1-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -79,7 +79,7 @@ Key Features:
 *   **Intuitive Editing**: Familiar keybindings and a focus on simplicity.
 *   **Modern TUI**: A dashboard for file navigation, project statistics, and more.
 *   **High Performance**: Built with C++ for speed and low resource usage.
-*   **Minimal Resource Usage**: Uses less than 1MB and close to zero CPU when editing an empty file.
+*   **Minimal Resource Usage**: Uses less than 2MB and close to zero CPU when editing an empty file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

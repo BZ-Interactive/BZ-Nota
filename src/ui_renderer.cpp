@@ -319,7 +319,7 @@ Element UIRenderer::render_save_button(bool modified) {
 Element UIRenderer::render_bold_button(bool active) {
     auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+B ") | nothing}) | 
-           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           bgcolor(active ? Color(Color::Orange3) : Color(Color::Black)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
            (active ? bold : nothing);
 }
@@ -327,7 +327,7 @@ Element UIRenderer::render_bold_button(bool active) {
 Element UIRenderer::render_italic_button(bool active) {
     auto symbol = text("I") | bold | italic;
     return hbox({text(" "), symbol, text(" Ctrl+I ")}) | 
-           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           bgcolor(active ? Color(Color::Pink3) : Color(Color::GrayDark)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
            (active ? bold : nothing);
 }
@@ -335,7 +335,7 @@ Element UIRenderer::render_italic_button(bool active) {
 Element UIRenderer::render_underline_button(bool active) {
     auto symbol = text("U") | bold | underlined;
     return hbox({text(" "), symbol, text(" Ctrl+U ")}) | 
-           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           bgcolor(active ? Color(Color::Green4) : Color(Color::Black)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
            (active ? bold : nothing);
 }
@@ -343,7 +343,7 @@ Element UIRenderer::render_underline_button(bool active) {
 Element UIRenderer::render_strikethrough_button(bool active) {
     auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
     return hbox({symbol, text("Ctrl+T ")}) | 
-           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           bgcolor(active ? Color(Color::Red3) : Color(Color::GrayDark)) |
            color(active ? Color(Color::Black) : Color(Color::White)) |
            (active ? bold : nothing);
 }
@@ -351,7 +351,7 @@ Element UIRenderer::render_strikethrough_button(bool active) {
 Element UIRenderer::render_bullet_button() {
     auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
     return hbox({text(" "), symbol, text(" Alt+[0-9] ")}) | 
-           bgcolor(Color(Color::GrayDark)) |
+           bgcolor(Color(Color::Black)) |
            color(Color(Color::White));
 }
 
@@ -374,7 +374,7 @@ Element UIRenderer::render_undo_button(bool available) {
 Element UIRenderer::render_redo_button(bool available) {
     auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
     return hbox({text(" "), symbol, text(" Ctrl+Y ")}) | 
-           bgcolor(available ? Color(Color::GreenLight) : Color(Color::GrayDark)) |
+           bgcolor(available ? Color(Color::GreenLight) : Color(Color::Black)) |
            color(available ? Color(Color::Black) : Color(Color::White)) |
            (available ? bold : nothing);
 }
