@@ -109,7 +109,8 @@ You'll need a modern C++ compiler and CMake to build BZ-Nota. Installing the sta
 
 *   **Linux (X11)**: `xclip` or `xsel`
 *   **Linux (Wayland)**: `wl-clipboard`
-*   **macOS**: Built-in clipboard commands (no installation needed)
+*   **macOS**: Built-in clipboard commands (no installation needed) — Not tested yet
+*   **Windows**: Built-in clipboard commands (`clip` for copy, PowerShell's `Get-Clipboard` for paste) — Not tested yet
 
 Example (Debian/Ubuntu):
 
@@ -254,6 +255,9 @@ Linux:
 - XTerm and UXterm — **Works perfectly**, switches to unicode symbols (fixed/courier).
 
 macOS:
+- To be tested.
+
+Windows:
 - To be tested.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

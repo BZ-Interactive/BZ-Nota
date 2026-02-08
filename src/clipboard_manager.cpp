@@ -22,6 +22,9 @@ std::string ClipboardManager::detect_clipboard_tool() const {
         
     #ifdef __APPLE__
         if (check_tool("pbcopy")) return "pbcopy";
+    #elif defined(_WIN32) || defined(_WIN64)
+        // Windows has built-in clip.exe for copy, PowerShell for paste
+        if (check_tool("clip")) return "clip";
     #else
         // Priority: Wayland > X11 (xclip > xsel)
         if (getenv("WAYLAND_DISPLAY") && check_tool("wl-copy")) return "wl-copy";
@@ -95,6 +98,7 @@ bool ClipboardManager::copy_to_system(const std::string& text) {
     else if (tool == "wl-copy") cmd = "wl-copy";
     else if (tool == "xclip") cmd = "xclip -selection clipboard";
     else if (tool == "xsel") cmd = "xsel --clipboard --input";
+    else if (tool == "clip") cmd = "clip";
     else return false;
     
     std::string output, error;
@@ -115,6 +119,7 @@ int ClipboardManager::paste_from_system(
     else if (tool == "wl-copy") cmd = "wl-paste --no-newline";
     else if (tool == "xclip") cmd = "xclip -selection clipboard -o";
     else if (tool == "xsel") cmd = "xsel --clipboard --output";
+    else if (tool == "clip") cmd = "powershell.exe -NoProfile -Command Get-Clipboard";
     else return -1;
     
     std::string clipboard_text, error;
