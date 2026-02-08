@@ -8,6 +8,33 @@ using namespace ftxui;
 
 UIRenderer::UIRenderer() {}
 
+bool UIRenderer::supports_emojis() const {
+    // The 'static' keyword ensures this block runs ONLY the first time the function is called.
+    static const bool emoji_capable = []() -> bool {
+        const char* colorterm = std::getenv("COLORTERM");
+        const char* term = std::getenv("TERM");
+        std::string term_str = term ? term : "";
+
+        // 1. Check for TrueColor. Almost all modern terminals with 24-bit color 
+        // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty).
+        if (colorterm && (std::string(colorterm) == "truecolor" || 
+                          std::string(colorterm) == "24bit")) {
+            return true;
+        }
+
+        // 2. Explicitly whitelist modern terminals that might not set COLORTERM
+        if (term_str == "alacritty" || term_str == "xterm-kitty" || term_str == "foot") {
+            return true;
+        }
+
+        // 3. Known "Legacy" environments (like UXTerm/Xterm)
+        // These are best served with your '⌼' and other safe Unicode symbols.
+        return false; 
+    }();
+
+    return emoji_capable;
+}
+
 Element UIRenderer::render(
     const std::vector<std::string>& buffer,
     int cursor_x, int cursor_y,
@@ -113,11 +140,17 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
     return hbox({
         text(" "),
         render_save_button(modified),
+        render_bold_button(true),
+        render_italic_button(true),
+        render_underline_button(true),
+        render_strikethrough_button(true),
+        render_bullet_button(),
+        //render_font_button(),
+        text(" ") | flex,
+        text(title) | bold | center, // center line, where title is displayed
+        text(" ") | flex,
         render_undo_button(can_undo),
         render_redo_button(can_redo),
-        text("  ") | flex,
-        text(title) | bold | center,
-        text("  ") | flex,
         render_close_button(),
         text(" ")
     }) | bgcolor(Color::DarkBlue);
@@ -145,29 +178,80 @@ Element UIRenderer::render_shortcuts() {
     }) | bgcolor(Color::Black);
 }
 
+Element UIRenderer::render_save_button(bool modified) {
+    auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold; // change true to supports_emojis bool
+    return hbox({text(" "), symbol, text(" Ctrl+S ") | nothing}) | 
+           bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(modified ? Color(Color::Black) : Color(Color::White)) |
+           (modified ? bold : nothing);
+}
+
+Element UIRenderer::render_bold_button(bool active) {
+    auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold; // change true to supports_emojis bool
+    return hbox({text(" "), symbol, text(" Ctrl+B ") | nothing}) | 
+           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(active ? Color(Color::Black) : Color(Color::White)) |
+           (active ? bold : nothing);
+}
+
+Element UIRenderer::render_italic_button(bool active) {
+    auto symbol = text("I") | bold | italic;
+    return hbox({text(" "), symbol, text(" Ctrl+I ")}) | 
+           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(active ? Color(Color::Black) : Color(Color::White)) |
+           (active ? bold : nothing);
+}
+
+Element UIRenderer::render_underline_button(bool active) {
+    auto symbol = text("U") | bold | underlined;
+    return hbox({text(" "), symbol, text(" Ctrl+U ")}) | 
+           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(active ? Color(Color::Black) : Color(Color::White)) |
+           (active ? bold : nothing);
+}
+
+Element UIRenderer::render_strikethrough_button(bool active) {
+    auto symbol = text("S") | bold | strikethrough;
+    return hbox({text(" "), symbol, text(" Ctrl+T ")}) | 
+           bgcolor(active ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
+           color(active ? Color(Color::Black) : Color(Color::White)) |
+           (active ? bold : nothing);
+}
+
+Element UIRenderer::render_bullet_button() {
+    auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
+    return hbox({text(" "), symbol, text(" Ctrl+B ")}) | 
+           bgcolor(Color(Color::GrayDark)) |
+           color(Color(Color::White));
+}
+
+// this requires more integration so I closed it for now
+Element UIRenderer::render_font_button() {
+    auto symbol = text("F") | bold; // change true to supports_emojis bool
+    return hbox({text(" "), symbol, text(" Ctrl+F+Arrow ")}) | 
+           bgcolor(Color(Color::GrayDark)) | 
+           color(Color(Color::White));
+}
+
 Element UIRenderer::render_undo_button(bool available) {
-    return text(" ↩️ Ctrl+Z ") | 
+    auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
+    return hbox({text(" "), symbol, text(" Ctrl+Z ")}) | 
            bgcolor(available ? Color(Color::DarkOrange) : Color(Color::GrayDark)) |
            color(available ? Color(Color::Black) : Color(Color::White)) |
            (available ? bold : nothing);
 }
 
 Element UIRenderer::render_redo_button(bool available) {
-    return text(" ↪️ Ctrl+Y ") | 
+    auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
+    return hbox({text(" "), symbol, text(" Ctrl+Y ")}) | 
            bgcolor(available ? Color(Color::GreenLight) : Color(Color::GrayDark)) |
            color(available ? Color(Color::Black) : Color(Color::White)) |
            (available ? bold : nothing);
 }
 
-Element UIRenderer::render_save_button(bool modified) {
-    return text(" 💾 Ctrl+S ") | 
-           bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
-           color(modified ? Color(Color::Black) : Color(Color::White)) |
-           (modified ? bold : nothing);
-}
-
 Element UIRenderer::render_close_button() {
-    return text(" ❌ Ctrl+Q ") | 
+    auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold; // change true to supports_emojis bool
+    return hbox({text(" "), symbol, text(" Ctrl+Q ")}) | 
            bgcolor(Color::GrayLight) | 
            color(Color::RedLight) | 
            bold;

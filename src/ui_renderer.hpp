@@ -35,6 +35,10 @@ public:
     );
 
 private:
+    /// @brief Check if the terminal supports emojis
+    /// @return True if emojis are supported, false otherwise
+    bool supports_emojis() const;
+
     /// @brief Render the header bar
     ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo);
     
@@ -45,14 +49,19 @@ private:
         bool save_status_shown
     );
     
-    /// @brief Render the shortcuts bar
+    /// @brief Render the shortcuts bar, the bar below the writing area.
+    ///
+    ///        This is where we can display available shortcuts or tips that doesn't fit on the upper bar.
     ftxui::Element render_shortcuts();
-    
-    /// @brief Render the save button
+
     ftxui::Element render_save_button(bool modified);
-
+    ftxui::Element render_bold_button(bool active);
+    ftxui::Element render_italic_button(bool active);
+    ftxui::Element render_underline_button(bool active);
+    ftxui::Element render_strikethrough_button(bool active);
+    ftxui::Element render_bullet_button();
+    ftxui::Element render_font_button();
     ftxui::Element render_undo_button(bool available);
-
     ftxui::Element render_redo_button(bool available);
     
     /// @brief Render the close button
