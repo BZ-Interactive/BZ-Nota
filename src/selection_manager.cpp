@@ -126,3 +126,76 @@ void SelectionManager::get_bounds(int& start_x, int& start_y, int& end_x, int& e
     end_x = selection_end_x;
     end_y = selection_end_y;
 }
+
+void SelectionManager::adjust_selection_for_formatting(const std::vector<std::string>& buffer) {
+    if (!has_selection) return;
+    
+    // Determine which is the start position
+    int start_x = selection_start_x;
+    int start_y = selection_start_y;
+    int end_x = selection_end_x;
+    int end_y = selection_end_y;
+    
+    if (selection_start_y > selection_end_y || 
+        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
+        std::swap(start_x, end_x);
+        std::swap(start_y, end_y);
+    }
+    
+    // Only adjust single-line selections for now
+    if (start_y != end_y || start_y >= (int)buffer.size()) return;
+    
+    const std::string& line = buffer[start_y];
+    int original_start = start_x;
+    bool moved = true;
+    
+    // Keep moving start back while we find opening markers
+    while (moved && start_x > 0) {
+        moved = false;
+        
+        // Check for opening bold **
+        if (start_x >= 2 && line.substr(start_x - 2, 2) == "**") {
+            start_x -= 2;
+            moved = true;
+            continue;
+        }
+        
+        // Check for opening underline <u>
+        if (start_x >= 3 && line.substr(start_x - 3, 3) == "<u>") {
+            start_x -= 3;
+            moved = true;
+            continue;
+        }
+        
+        // Check for opening strikethrough ~~
+        if (start_x >= 2 && line.substr(start_x - 2, 2) == "~~") {
+            start_x -= 2;
+            moved = true;
+            continue;
+        }
+        
+        // Check for opening italic * (but not **)
+        if (start_x >= 1 && line[start_x - 1] == '*') {
+            // Make sure it's not part of **
+            if (start_x >= 2 && line[start_x - 2] == '*') {
+                // This is part of **, skip it (already handled above)
+            } else {
+                start_x -= 1;
+                moved = true;
+                continue;
+            }
+        }
+    }
+    
+    // Update the selection if we moved back
+    if (start_x != original_start) {
+        // Determine which bound to update
+        if (selection_start_y == start_y && 
+            (selection_start_y < selection_end_y || 
+             (selection_start_y == selection_end_y && selection_start_x <= selection_end_x))) {
+            selection_start_x = start_x;
+        } else {
+            selection_end_x = start_x;
+        }
+    }
+}

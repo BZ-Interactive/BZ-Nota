@@ -101,6 +101,17 @@ public:
     /// @param cursor_x The cursor X position
     /// @return True if cursor is between opening and closing formatting markers
     bool is_cursor_inside_formatting_markers(const std::string& line, int cursor_x);
+    
+    /// @brief Get the type of formatting marker at cursor position
+    /// @param line The current line text
+    /// @param cursor_x The cursor X position
+    /// @param is_bold Output: true if inside bold markers
+    /// @param is_italic Output: true if inside italic markers
+    /// @param is_underline Output: true if inside underline markers
+    /// @param is_strikethrough Output: true if inside strikethrough markers
+    void get_formatting_at_cursor(const std::string& line, int cursor_x, 
+                                  bool& is_bold, bool& is_italic, 
+                                  bool& is_underline, bool& is_strikethrough);
 
 private:
     /// @brief Skip markdown formatting markers when cursor position is inside them

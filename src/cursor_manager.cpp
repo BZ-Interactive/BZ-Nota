@@ -76,7 +76,10 @@ void CursorManager::move_left(
     // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x > 0) {
         cursor_x = UTF8Utils::prev_char_boundary(buffer[cursor_y], cursor_x);
-        skip_formatting_markers(buffer[cursor_y], cursor_x, -1);
+        // Only skip formatting markers when not selecting (allow selecting markers)
+        if (!select) {
+            skip_formatting_markers(buffer[cursor_y], cursor_x, -1);
+        }
     } else if (cursor_y > 0) {
         cursor_y--;
         cursor_x = buffer[cursor_y].length();  // .length() returns size_t (unsigned)
@@ -102,7 +105,10 @@ void CursorManager::move_right(
     // Move cursor first - move by UTF-8 character, not byte
     if (cursor_x < (int)buffer[cursor_y].length()) {  // Cast size_t to int for comparison
         cursor_x = UTF8Utils::next_char_boundary(buffer[cursor_y], cursor_x);
-        skip_formatting_markers(buffer[cursor_y], cursor_x, 1);
+        // Only skip formatting markers when not selecting (allow selecting markers)
+        if (!select) {
+            skip_formatting_markers(buffer[cursor_y], cursor_x, 1);
+        }
     } else if (cursor_y < (int)buffer.size() - 1) {
         cursor_y++;
         cursor_x = 0;
@@ -309,9 +315,9 @@ bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line,
         // Check for opening ** before cursor
         size_t opening = line.rfind("**", cursor_x - 1);
         if (opening != std::string::npos && opening < (size_t)cursor_x) {
-            // Check for closing ** after cursor
+            // Check for closing ** at or after cursor
             size_t closing = line.find("**", cursor_x);
-            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+            if (closing != std::string::npos) {
                 return true;
             }
         }
@@ -322,7 +328,7 @@ bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line,
         size_t opening = line.rfind("~~", cursor_x - 1);
         if (opening != std::string::npos && opening < (size_t)cursor_x) {
             size_t closing = line.find("~~", cursor_x);
-            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+            if (closing != std::string::npos) {
                 return true;
             }
         }
@@ -333,7 +339,7 @@ bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line,
         size_t opening = line.rfind("<u>", cursor_x - 1);
         if (opening != std::string::npos && opening < (size_t)cursor_x) {
             size_t closing = line.find("</u>", cursor_x);
-            if (closing != std::string::npos && closing > (size_t)cursor_x) {
+            if (closing != std::string::npos) {
                 return true;
             }
         }
@@ -347,7 +353,7 @@ bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line,
             if (opening == 0 || line[opening - 1] != '*') {
                 if (opening + 1 >= line.length() || line[opening + 1] != '*') {
                     size_t closing = line.find("*", cursor_x);
-                    if (closing != std::string::npos && closing > (size_t)cursor_x) {
+                    if (closing != std::string::npos) {
                         // Make sure closing is not part of **
                         if (closing == 0 || line[closing - 1] != '*') {
                             if (closing + 1 >= line.length() || line[closing + 1] != '*') {
@@ -361,4 +367,124 @@ bool CursorManager::is_cursor_inside_formatting_markers(const std::string& line,
     }
     
     return false;
+}
+
+void CursorManager::get_formatting_at_cursor(const std::string& line, int cursor_x, 
+                                             bool& is_bold, bool& is_italic, 
+                                             bool& is_underline, bool& is_strikethrough) {
+    is_bold = false;
+    is_italic = false;
+    is_underline = false;
+    is_strikethrough = false;
+    
+    if (cursor_x < 0 || cursor_x > (int)line.length()) return;
+    
+    // Check for bold **
+    // Need to find the OPENING ** before cursor, not just any **
+    if (cursor_x >= 2) {
+        // Search backwards for **, but verify it's an opening by counting ** before it
+        int bold_count = 0;
+        size_t pos = 0;
+        while (pos <= (size_t)cursor_x - 2) {
+            size_t found = line.find("**", pos);
+            if (found == std::string::npos || found >= (size_t)cursor_x) break;
+            pos = found + 2;
+            bold_count++;
+        }
+        // If odd number of ** before cursor, we're inside bold
+        if (bold_count % 2 == 1) {
+            // Verify there's a closing ** after cursor
+            size_t closing = line.find("**", cursor_x);
+            if (closing != std::string::npos) {
+                is_bold = true;
+            }
+        }
+    }
+    
+    // Check for strikethrough ~~
+    if (cursor_x >= 2) {
+        int strike_count = 0;
+        size_t pos = 0;
+        while (pos <= (size_t)cursor_x - 2) {
+            size_t found = line.find("~~", pos);
+            if (found == std::string::npos || found >= (size_t)cursor_x) break;
+            pos = found + 2;
+            strike_count++;
+        }
+        if (strike_count % 2 == 1) {
+            size_t closing = line.find("~~", cursor_x);
+            if (closing != std::string::npos) {
+                is_strikethrough = true;
+            }
+        }
+    }
+    
+    // Check for underline <u>
+    if (cursor_x >= 3) {
+        int underline_count = 0;
+        size_t pos = 0;
+        while (pos <= (size_t)cursor_x - 3) {
+            size_t open_tag = line.find("<u>", pos);
+            if (open_tag == std::string::npos || open_tag >= (size_t)cursor_x) break;
+            pos = open_tag + 3;
+            underline_count++;
+        }
+        // Count closing tags
+        pos = 0;
+        int close_count = 0;
+        while (pos < (size_t)cursor_x) {
+            size_t close_tag = line.find("</u>", pos);
+            if (close_tag == std::string::npos || close_tag >= (size_t)cursor_x) break;
+            pos = close_tag + 4;
+            close_count++;
+        }
+        if (underline_count > close_count) {
+            size_t closing = line.find("</u>", cursor_x);
+            if (closing != std::string::npos) {
+                is_underline = true;
+            }
+        }
+    }
+    
+    // Check for italic * (but exclude **)
+    if (cursor_x >= 1) {
+        int italic_count = 0;
+        size_t pos = 0;
+        while (pos < (size_t)cursor_x) {
+            size_t found = line.find("*", pos);
+            if (found == std::string::npos || found >= (size_t)cursor_x) break;
+            // Skip if it's part of **
+            if (found + 1 < line.length() && line[found + 1] == '*') {
+                pos = found + 2;
+                continue;
+            }
+            if (found > 0 && line[found - 1] == '*') {
+                pos = found + 1;
+                continue;
+            }
+            pos = found + 1;
+            italic_count++;
+        }
+        if (italic_count % 2 == 1) {
+            // Find next * that's not part of **
+            size_t search_pos = cursor_x;
+            while (search_pos < line.length()) {
+                size_t found = line.find("*", search_pos);
+                if (found == std::string::npos) break;
+                // Check if it's part of **
+                bool part_of_double = false;
+                if (found + 1 < line.length() && line[found + 1] == '*') {
+                    part_of_double = true;
+                }
+                if (found > 0 && line[found - 1] == '*') {
+                    part_of_double = true;
+                }
+                if (!part_of_double) {
+                    is_italic = true;
+                    break;
+                }
+                search_pos = found + 1;
+            }
+        }
+    }
 }

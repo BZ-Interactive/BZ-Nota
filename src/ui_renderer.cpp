@@ -51,25 +51,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
         size_t end_pos = remaining.find("**", 2);
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(2, end_pos - 2);
-            result.bytes_consumed = end_pos + 2;  // end_pos points to closing **, +2 to include it
+            result.bytes_consumed = end_pos + 2;
             
-            if (cursor_x_in_line >= 0) {
-                // Build character-by-character with cursor on specific char
-                size_t char_pos = 0;
-                while (char_pos < content.length()) {
-                    int char_len = UTF8Utils::get_char_length(content, char_pos);
-                    std::string ch = content.substr(char_pos, char_len);
-                    bool is_cursor_here = ((int)(start_pos + 2 + char_pos) == cursor_x_in_line);
-                    auto elem = text(ch) | bold;
-                    if (is_cursor_here) elem = elem | inverted;
-                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                    result.elements.push_back(elem);
-                    char_pos += char_len;
+            // Recursively parse content for nested formatting
+            size_t content_pos = 0;
+            while (content_pos < content.length()) {
+                auto nested = parse_markdown_segment(content, content_pos, is_selected, 
+                    cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 2) : -1);
+                
+                // Apply bold to all nested elements
+                for (auto& elem : nested.elements) {
+                    elem = elem | bold;
                 }
-            } else {
-                auto elem = text(content) | bold;
-                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                result.elements.push_back(elem);
+                result.elements.insert(result.elements.end(), nested.elements.begin(), nested.elements.end());
+                content_pos += nested.bytes_consumed;
             }
             return result;
         }
@@ -80,24 +75,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
         size_t end_pos = remaining.find("~~", 2);
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(2, end_pos - 2);
-            result.bytes_consumed = end_pos + 2;  // end_pos points to closing ~~, +2 to include it
+            result.bytes_consumed = end_pos + 2;
             
-            if (cursor_x_in_line >= 0) {
-                size_t char_pos = 0;
-                while (char_pos < content.length()) {
-                    int char_len = UTF8Utils::get_char_length(content, char_pos);
-                    std::string ch = content.substr(char_pos, char_len);
-                    bool is_cursor_here = ((int)(start_pos + 2 + char_pos) == cursor_x_in_line);
-                    auto elem = text(ch) | strikethrough;
-                    if (is_cursor_here) elem = elem | inverted;
-                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                    result.elements.push_back(elem);
-                    char_pos += char_len;
+            // Recursively parse content for nested formatting
+            size_t content_pos = 0;
+            while (content_pos < content.length()) {
+                auto nested = parse_markdown_segment(content, content_pos, is_selected,
+                    cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 2) : -1);
+                
+                // Apply strikethrough to all nested elements
+                for (auto& elem : nested.elements) {
+                    elem = elem | strikethrough;
                 }
-            } else {
-                auto elem = text(content) | strikethrough;
-                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                result.elements.push_back(elem);
+                result.elements.insert(result.elements.end(), nested.elements.begin(), nested.elements.end());
+                content_pos += nested.bytes_consumed;
             }
             return result;
         }
@@ -108,24 +99,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
         size_t end_pos = remaining.find("</u>");
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(3, end_pos - 3);
-            result.bytes_consumed = end_pos + 4;  // end_pos points to </u>, +4 to include </u>
+            result.bytes_consumed = end_pos + 4;
             
-            if (cursor_x_in_line >= 0) {
-                size_t char_pos = 0;
-                while (char_pos < content.length()) {
-                    int char_len = UTF8Utils::get_char_length(content, char_pos);
-                    std::string ch = content.substr(char_pos, char_len);
-                    bool is_cursor_here = ((int)(start_pos + 3 + char_pos) == cursor_x_in_line);
-                    auto elem = text(ch) | underlined;
-                    if (is_cursor_here) elem = elem | inverted;
-                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                    result.elements.push_back(elem);
-                    char_pos += char_len;
+            // Recursively parse content for nested formatting
+            size_t content_pos = 0;
+            while (content_pos < content.length()) {
+                auto nested = parse_markdown_segment(content, content_pos, is_selected,
+                    cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 3) : -1);
+                
+                // Apply underline to all nested elements
+                for (auto& elem : nested.elements) {
+                    elem = elem | underlined;
                 }
-            } else {
-                auto elem = text(content) | underlined;
-                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                result.elements.push_back(elem);
+                result.elements.insert(result.elements.end(), nested.elements.begin(), nested.elements.end());
+                content_pos += nested.bytes_consumed;
             }
             return result;
         }
@@ -138,22 +125,18 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
             std::string content = remaining.substr(1, end_pos - 1);
             result.bytes_consumed = end_pos + 2;
             
-            if (cursor_x_in_line >= 0) {
-                size_t char_pos = 0;
-                while (char_pos < content.length()) {
-                    int char_len = UTF8Utils::get_char_length(content, char_pos);
-                    std::string ch = content.substr(char_pos, char_len);
-                    bool is_cursor_here = ((int)(start_pos + 1 + char_pos) == cursor_x_in_line);
-                    auto elem = text(ch) | italic;
-                    if (is_cursor_here) elem = elem | inverted;
-                    if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                    result.elements.push_back(elem);
-                    char_pos += char_len;
+            // Recursively parse content for nested formatting
+            size_t content_pos = 0;
+            while (content_pos < content.length()) {
+                auto nested = parse_markdown_segment(content, content_pos, is_selected,
+                    cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 1) : -1);
+                
+                // Apply italic to all nested elements
+                for (auto& elem : nested.elements) {
+                    elem = elem | italic;
                 }
-            } else {
-                auto elem = text(content) | italic;
-                if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
-                result.elements.push_back(elem);
+                result.elements.insert(result.elements.end(), nested.elements.begin(), nested.elements.end());
+                content_pos += nested.bytes_consumed;
             }
             return result;
         }

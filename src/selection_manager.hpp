@@ -29,6 +29,9 @@ public:
     
     // Get selection bounds - all parameters passed by reference to modify them
     void get_bounds(int& start_x, int& start_y, int& end_x, int& end_y) const;
+    
+    // Adjust selection to include any opening formatting markers before the start position
+    void adjust_selection_for_formatting(const std::vector<std::string>& buffer);
 
 private:
     // Private fields (like C# private fields)
