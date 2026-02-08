@@ -24,10 +24,6 @@ public:
     );
 
 private:
-    // Cache for detected clipboard tool
-    mutable std::string cached_tool;
-    mutable bool tool_detected = false;
-    
     // Helper methods
     std::string detect_clipboard_tool() const;
     bool run_clipboard_command(const std::string& cmd, const std::string& input, 

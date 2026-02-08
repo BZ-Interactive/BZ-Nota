@@ -8,40 +8,32 @@ namespace {
     constexpr size_t READ_BUFFER_SIZE = 256;
 }
 
-ClipboardManager::ClipboardManager() : tool_detected(false) {}
+ClipboardManager::ClipboardManager() {}
 
 // ===== System Clipboard Operations =====
 
 std::string ClipboardManager::detect_clipboard_tool() const {
-    if (tool_detected) {
-        return cached_tool;
-    }
-    
-    auto check_tool = [this](const char* tool_name) -> bool {
-        std::string cmd = "which " + std::string(tool_name) + " > /dev/null 2>&1";
-        if (system(cmd.c_str()) == 0) {
-            tool_detected = true;
-            cached_tool = tool_name;
-            return true;
+    // Static local variable: initialized once, persists for program lifetime (thread-safe C++11+)
+    static const std::string tool = []() -> std::string {
+        auto check_tool = [](const char* tool_name) -> bool {
+            std::string cmd = "which " + std::string(tool_name) + " > /dev/null 2>&1";
+            return system(cmd.c_str()) == 0;
+        };
+        
+    #ifdef __APPLE__
+        if (check_tool("pbcopy")) return "pbcopy";
+    #else
+        // Priority: Wayland > X11 (xclip > xsel)
+        if (getenv("WAYLAND_DISPLAY") && check_tool("wl-copy")) return "wl-copy";
+        
+        if (getenv("DISPLAY")) {
+            if (check_tool("xclip")) return "xclip";
+            if (check_tool("xsel")) return "xsel";
         }
-        return false;
-    };
-    
-#ifdef __APPLE__
-    if (check_tool("pbcopy")) return cached_tool;
-#else
-    // Priority: Wayland > X11 (xclip > xsel)
-    if (getenv("WAYLAND_DISPLAY") && check_tool("wl-copy")) return cached_tool;
-    
-    if (getenv("DISPLAY")) {
-        if (check_tool("xclip")) return cached_tool;
-        if (check_tool("xsel")) return cached_tool;
-    }
-#endif
-    
-    tool_detected = true;
-    cached_tool = "";
-    return "";
+    #endif
+        return ""; // No tool found
+    }();
+    return tool;
 }
 
 bool ClipboardManager::run_clipboard_command(const std::string& cmd, const std::string& input, 

@@ -24,8 +24,7 @@ int main(int argc, char* argv[]) {
             std::cout << "  -d,--debug    Enable debug mode (show key sequences)\n";
             std::cout << "  -v,--version    Show version information\n";
             return 0;
-        } 
-        else if (arg == "-d" || arg == "--debug") {
+        } else if (arg == "-d" || arg == "--debug") {
             debug_mode = true;
         } else if (arg == "-v" || arg == "--version") {
             std::cout << BZ_NOTA_APP_NAME << " " << BZ_NOTA_VERSION << "\n";
@@ -41,7 +40,7 @@ int main(int argc, char* argv[]) {
     
     if (filename.empty()) {
         std::cerr << "Error: No filename specified\n";
-        std::cerr << "Usage: " << argv[0] << " [-d] <filename>\n";
+        std::cerr << "Usage: " << argv[0] << " [-arg] <filename>\n";
         return 1;
     }
     
