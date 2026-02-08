@@ -6,6 +6,29 @@
 
 using namespace ftxui;
 
+// UI Color Constants - Disabled/Inactive State
+static const Color BUTTON_DISABLED_BG_PRIMARY = Color::GrayDark;
+static const Color BUTTON_DISABLED_BG_SECONDARY = Color::Black;
+static const Color BUTTON_DISABLED_FG = Color::White;
+
+// UI Color Constants - Active State
+static const Color BUTTON_ACTIVE_FG = Color::Black;
+
+// Button-Specific Colors (Active/Enabled State)
+static const Color SAVE_BUTTON_ACTIVE_BG = Color::BlueLight;
+static const Color BOLD_BUTTON_ACTIVE_BG = Color::Orange3;
+static const Color ITALIC_BUTTON_ACTIVE_BG = Color::Pink3;
+static const Color UNDERLINE_BUTTON_ACTIVE_BG = Color::Green4;
+static const Color STRIKETHROUGH_BUTTON_ACTIVE_BG = Color::Red3;
+static const Color BULLET_BUTTON_BG = Color::Black;
+static const Color BULLET_BUTTON_FG = Color::White;
+static const Color FONT_BUTTON_BG = Color::GrayDark;
+static const Color FONT_BUTTON_FG = Color::White;
+static const Color UNDO_BUTTON_ACTIVE_BG = Color::DarkOrange;
+static const Color REDO_BUTTON_ACTIVE_BG = Color::GreenLight;
+static const Color CLOSE_BUTTON_BG = Color::GrayLight;
+static const Color CLOSE_BUTTON_FG = Color::RedLight;
+
 UIRenderer::UIRenderer() {}
 
 bool UIRenderer::supports_emojis() const {
@@ -311,78 +334,78 @@ Element UIRenderer::render_shortcuts() {
 Element UIRenderer::render_save_button(bool modified) {
     auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+S ") | nothing}) | 
-           bgcolor(modified ? Color(Color::BlueLight) : Color(Color::GrayDark)) |
-           color(modified ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(modified ? SAVE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
+           color(modified ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (modified ? bold : nothing);
 }
 
 Element UIRenderer::render_bold_button(bool active) {
     auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+B ") | nothing}) | 
-           bgcolor(active ? Color(Color::Orange3) : Color(Color::Black)) |
-           color(active ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
+           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
 }
 
 Element UIRenderer::render_italic_button(bool active) {
     auto symbol = text("I") | bold | italic;
     return hbox({text(" "), symbol, text(" Ctrl+I ")}) | 
-           bgcolor(active ? Color(Color::Pink3) : Color(Color::GrayDark)) |
-           color(active ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
+           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
 }
 
 Element UIRenderer::render_underline_button(bool active) {
     auto symbol = text("U") | bold | underlined;
     return hbox({text(" "), symbol, text(" Ctrl+U ")}) | 
-           bgcolor(active ? Color(Color::Green4) : Color(Color::Black)) |
-           color(active ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
+           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
 }
 
 Element UIRenderer::render_strikethrough_button(bool active) {
     auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
     return hbox({symbol, text("Ctrl+T ")}) | 
-           bgcolor(active ? Color(Color::Red3) : Color(Color::GrayDark)) |
-           color(active ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(active ? STRIKETHROUGH_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
+           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
 }
 
 Element UIRenderer::render_bullet_button() {
     auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
     return hbox({text(" "), symbol, text(" Alt+[0-9] ")}) | 
-           bgcolor(Color(Color::Black)) |
-           color(Color(Color::White));
+           bgcolor(BULLET_BUTTON_BG) |
+           color(BULLET_BUTTON_FG);
 }
 
 // this requires more integration so I closed it for now
 Element UIRenderer::render_font_button() {
     auto symbol = text("F") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+F+Arrow ")}) | 
-           bgcolor(Color(Color::GrayDark)) | 
-           color(Color(Color::White));
+           bgcolor(FONT_BUTTON_BG) | 
+           color(FONT_BUTTON_FG);
 }
 
 Element UIRenderer::render_undo_button(bool available) {
     auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
     return hbox({text(" "), symbol, text(" Ctrl+Z ")}) | 
-           bgcolor(available ? Color(Color::DarkOrange) : Color(Color::GrayDark)) |
-           color(available ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(available ? UNDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
+           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
 }
 
 Element UIRenderer::render_redo_button(bool available) {
     auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
     return hbox({text(" "), symbol, text(" Ctrl+Y ")}) | 
-           bgcolor(available ? Color(Color::GreenLight) : Color(Color::Black)) |
-           color(available ? Color(Color::Black) : Color(Color::White)) |
+           bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
+           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
 }
 
 Element UIRenderer::render_close_button() {
     auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
     return hbox({text(" "), symbol, text(" Ctrl+Q ")}) | 
-           bgcolor(Color::GrayLight) | 
-           color(Color::RedLight) | 
+           bgcolor(CLOSE_BUTTON_BG) | 
+           color(CLOSE_BUTTON_FG) | 
            bold;
 }
