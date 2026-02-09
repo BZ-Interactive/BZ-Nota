@@ -38,21 +38,28 @@ bool UIRenderer::supports_emojis() const {
     static const bool emoji_capable = []() -> bool {
         const char* colorterm = std::getenv("COLORTERM");
         const char* term = std::getenv("TERM");
+        const char* wt_session = std::getenv("WT_SESSION");
+        const char* wt_profile = std::getenv("WT_PROFILE_ID");
         std::string term_str = term ? term : "";
 
-        // 1. Check for TrueColor. Almost all modern terminals with 24-bit color 
+        // 1. Windows Terminal detection - supports emojis well
+        if (wt_session || wt_profile) {
+            return true;
+        }
+
+        // 2. Check for TrueColor. Almost all modern terminals with 24-bit color 
         // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty).
         if (colorterm && (std::string(colorterm) == "truecolor" || 
                           std::string(colorterm) == "24bit")) {
             return true;
         }
 
-        // 2. Explicitly whitelist modern terminals that might not set COLORTERM
+        // 3. Explicitly whitelist modern terminals that might not set COLORTERM
         if (term_str == "alacritty" || term_str == "xterm-kitty" || term_str == "foot") {
             return true;
         }
 
-        // 3. Known "Legacy" environments (like UXTerm/Xterm)
+        // 4. Known "Legacy" environments (like UXTerm/Xterm, Windows CMD)
         // These are best served with your '⌼' and other safe Unicode symbols.
         return false; 
     }();
