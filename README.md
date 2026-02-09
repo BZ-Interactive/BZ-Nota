@@ -123,10 +123,16 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
 
 ### Installation
 
-1.  Clone the repo
+1.  Clone the repo (including submodules)
     ```sh
-    git clone https://github.com/BZ-Interactive/BZ-Nota.git
+    git clone --recursive https://github.com/BZ-Interactive/BZ-Nota.git
     ```
+
+    If you already cloned the repository without `--recursive`, initialize submodules with:
+    ```sh
+    git submodule update --init --recursive
+    ```
+
 2.  Create a build directory
     ```sh
     cd BZ-Nota
@@ -151,6 +157,8 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
     # Or run directly from build directory
     ./bznota
     ```
+
+**Note:** Windows or macOS systems follow the same steps.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
