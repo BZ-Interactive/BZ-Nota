@@ -8,38 +8,51 @@ BZ-Nota is a modern terminal-based text editor built with C++ and FTXUI. This do
 ```
 BZ-Nota/
 ├── src/
-│   ├── main.cpp           # Entry point
-│   ├── editor.hpp/cpp     # Main editor coordinator
-│   ├── text_buffer.hpp/cpp # Text storage and file I/O
-│   └── selection.hpp/cpp  # Selection state management
+│   ├── main.cpp                # Entry point
+│   ├── editor.hpp/cpp          # Main editor coordinator
+│   ├── selection.hpp/cpp       # Selection state
+│   ├── clipboard_manager.hpp/cpp   # System clipboard operations
+│   ├── selection_manager.hpp/cpp   # Selection logic and multi-line selection
+│   ├── editing_manager.hpp/cpp     # Insert/delete text logic
+│   ├── cursor_manager.hpp/cpp     # Cursor movement logic
+│   ├── undo_redo_manager.hpp/cpp  # Undo/redo history
+│   ├── format_manager.hpp/cpp     # Formatting state (bold, italic, etc.)
+│   ├── ui_renderer.hpp/cpp        # UI rendering logic
 ├── vendor/
-│   └── ftxui/            # Terminal UI library (submodule)
-└── CMakeLists.txt        # Build configuration
+│   └── ftxui/                 # Terminal UI library (submodule)
+└── CMakeLists.txt             # Build configuration
 ```
 
 ## Core Components
 
-### 1. TextBuffer Class (`text_buffer.hpp/cpp`)
-**Purpose**: Manages the text content - loading, saving, and line manipulation.
+### 1. Editor Class (`editor.hpp/cpp`)
+**Purpose**: Coordinates all components and handles user interaction.
 
 **Key Responsibilities**:
-- Load text from files
-- Save text to files
-- Insert/delete characters and lines
-- Provide access to text content
+- Handle keyboard input
+- Render the UI
+- Coordinate between buffer, selection, clipboard, and all manager classes
+- Manage cursor position and viewport
 
-**Why separate?**: Separating file I/O and text storage makes the code easier to test and modify. You can change how text is stored without touching the UI code.
+**Why keep it?**: The Editor class is the "conductor" - it knows how all the pieces work together but delegates the detailed work to specialized classes.
 
-**Example usage**:
-```cpp
-TextBuffer buffer;
-buffer.load_from_file("example.txt");
-size_t line_count = buffer.line_count();
-std::string first_line = buffer.get_line(0);
-```
+**Buffer Note**: The text buffer is implemented as a `std::vector<std::string>` (one string per line) within the Editor class, with editing operations delegated to EditingManager.
 
-### 2. Selection Class (`selection.hpp/cpp`)
-**Purpose**: Tracks which text is currently selected by the user.
+### 2. Manager Classes
+The editor is highly modular, with each aspect of editing delegated to a dedicated manager class:
+
+- **UIRenderer**: Handles all UI rendering logic
+- **SelectionManager**: Manages selection state, multi-line and reverse selections
+- **ClipboardManager**: Handles system clipboard operations (copy, paste, cut) across platforms
+- **EditingManager**: Handles text insertion, deletion, and line operations
+- **CursorManager**: Handles cursor movement and navigation
+- **UndoRedoManager**: Manages undo/redo history
+- **FormatManager**: Tracks formatting state (bold, italic, underline, etc.)
+
+This modular approach makes the codebase easier to maintain, test, and extend. Each manager encapsulates a single responsibility, following the Single Responsibility Principle.
+
+### 3. Selection Class (`selection.hpp/cpp`)
+**Purpose**: Tracks which text is currently selected by the user (used internally by SelectionManager).
 
 **Key Responsibilities**:
 - Track selection start and end positions
@@ -47,25 +60,6 @@ std::string first_line = buffer.get_line(0);
 - Provide normalized selection bounds
 
 **Why separate?**: Selection logic is complex (handling multi-line selections, reverse selections, etc.). Keeping it separate makes it easier to understand and fix bugs.
-
-**Example usage**:
-```cpp
-Selection selection;
-selection.start(0, 0);           // Start selecting at column 0, line 0
-selection.update(10, 2);         // Select to column 10, line 2
-bool selected = selection.is_char_selected(5, 1); // Check if position is selected
-```
-
-### 3. Editor Class (`editor.hpp/cpp`)
-**Purpose**: Coordinates all components and handles user interaction.
-
-**Key Responsibilities**:
-- Handle keyboard input
-- Render the UI
-- Coordinate between TextBuffer, Selection, and clipboard
-- Manage cursor position and viewport
-
-**Why keep it?**: The Editor class is the "conductor" - it knows how all the pieces work together but delegates the detailed work to specialized classes.
 
 ## Key Concepts for C++ Beginners
 
@@ -78,19 +72,19 @@ bool selected = selection.is_char_selected(5, 1); // Check if position is select
 
 #### 1. **Single Responsibility Principle**
 Each class has ONE main job:
-- `TextBuffer`: Store and manage text
+- `EditingManager`: Insert/delete text operations
 - `Selection`: Track selected text
-- `Editor`: Coordinate everything
+- `Editor`: Coordinate everything and store the buffer
 
 #### 2. **Encapsulation**
 Data is kept `private` and accessed through `public` methods. This prevents accidental misuse and makes the code safer.
 
 ```cpp
-class TextBuffer {
+class Editor {
 private:
-    std::vector<std::string> lines;  // Can't accidentally mess this up from outside
+    std::vector<std::string> buffer;  // Text buffer stored internally
 public:
-    const std::string& get_line(size_t index) const;  // Safe controlled access
+    const std::vector<std::string>& get_buffer() const;  // Safe controlled access
 };
 ```
 
@@ -113,22 +107,24 @@ editor.cpp (900+ lines)
 
 ### After Refactoring
 ```
-text_buffer.cpp (100 lines)
-  └── All text storage logic
-
-selection.cpp (100 lines)
-  └── All selection logic
-
-editor.cpp (700 lines)
-  └── Coordination and UI
+src/
+    selection.cpp (100 lines)           └── All selection logic
+    clipboard_manager.cpp               └── System clipboard logic
+    selection_manager.cpp               └── Selection operations
+    editing_manager.cpp                 └── Editing operations
+    cursor_manager.cpp                  └── Cursor movement
+    undo_redo_manager.cpp               └── Undo/redo logic
+    format_manager.cpp                  └── Formatting logic
+    ui_renderer.cpp                     └── UI rendering
+    editor.cpp (700 lines)              └── Coordination, buffer storage, and file I/O
 ```
 
 ### Benefits:
-1. **Easier to find code**: Need to fix selection? Look in `selection.cpp`
-2. **Easier to test**: Can test `TextBuffer` without the UI
-3. **Easier to understand**: Each file has a clear purpose
-4. **Easier to modify**: Changes to file format only affect `TextBuffer`
-5. **Better for teams**: Multiple people can work on different components
+1. **Easier to find code**: Need to fix selection? Look in `selection_manager.cpp` or `selection.cpp`
+2. **Easier to test**: Can test each manager or utility class independently
+3. **Easier to understand**: Each file has a clear, focused purpose
+4. **Easier to modify**: Changes to clipboard, formatting, or selection only affect the relevant manager
+5. **Better for teams**: Multiple people can work on different components without conflicts
 
 ## Common Patterns
 
@@ -166,20 +162,20 @@ make
 ### Example: Adding a Find Feature
 
 1. **Decide which component owns it**: 
-   - Finding is about TextBuffer content → add to `text_buffer.hpp`
+   - Finding is about searching text → add to `editor.hpp` or create a new manager
 
 2. **Add declaration to header**:
 ```cpp
-// In text_buffer.hpp
-bool find_text(const std::string& search_term, size_t& line, size_t& col);
+// In editor.hpp
+bool find_text(const std::string& search_term, int& line, int& col);
 ```
 
 3. **Implement in .cpp file**:
 ```cpp
-// In text_buffer.cpp
-bool TextBuffer::find_text(const std::string& search_term, size_t& line, size_t& col) {
-    for (size_t i = 0; i < lines.size(); ++i) {
-        size_t pos = lines[i].find(search_term);
+// In editor.cpp
+bool Editor::find_text(const std::string& search_term, int& line, int& col) {
+    for (size_t i = 0; i < buffer.size(); ++i) {
+        size_t pos = buffer[i].find(search_term);
         if (pos != std::string::npos) {
             line = i;
             col = pos;
@@ -194,8 +190,8 @@ bool TextBuffer::find_text(const std::string& search_term, size_t& line, size_t&
 ```cpp
 // In editor.cpp handle_event()
 if (event == Event::CtrlF) {
-    size_t found_line, found_col;
-    if (buffer.find_text("search term", found_line, found_col)) {
+    int found_line, found_col;
+    if (find_text("search term", found_line, found_col)) {
         cursor_x = found_col;
         cursor_y = found_line;
     }
