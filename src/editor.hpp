@@ -46,8 +46,22 @@ private:
     int scroll_y = 0;
     
     // Typing state for undo
+    enum class EditorAction {
+        NONE,
+        TYPING,
+        DELETE,
+        DELETE_FORWARD,
+        NEWLINE,
+        PASTE_SYSTEM,
+        UNDO,
+        REDO,
+        INSERT_LINE,
+        TAB,
+        UNTAB
+    };
+    
     bool typing_state_saved = false;
-    std::string last_action = "";
+    EditorAction last_action = EditorAction::NONE;
     
     // Screen reference for exiting
     ftxui::ScreenInteractive* screen = nullptr;

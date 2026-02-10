@@ -151,7 +151,7 @@ void Editor::copy_to_system_clipboard() {
 void Editor::paste_from_system_clipboard() {
     save_state();
     typing_state_saved = false;
-    last_action = "paste_system";
+    last_action = EditorAction::PASTE_SYSTEM;
     
     if (selection_manager.has_active_selection()) {
         delete_selection();
@@ -474,7 +474,7 @@ void Editor::insert_newline() {
     
     save_state();
     typing_state_saved = false;
-    last_action = "newline";
+    last_action = EditorAction::NEWLINE;
     editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
 }
@@ -485,9 +485,9 @@ void Editor::delete_char() {
         return;
     }
     
-    if (last_action != "delete") {
+    if (last_action != EditorAction::DELETE) {
         save_state();
-        last_action = "delete";
+        last_action = EditorAction::DELETE;
     }
     typing_state_saved = false;
     
@@ -501,9 +501,9 @@ void Editor::delete_forward() {
         return;
     }
     
-    if (last_action != "delete_forward") {
+    if (last_action != EditorAction::DELETE_FORWARD) {
         save_state();
-        last_action = "delete_forward";
+        last_action = EditorAction::DELETE_FORWARD;
     }
     typing_state_saved = false;
     
@@ -622,7 +622,7 @@ void Editor::undo() {
     }
     
     typing_state_saved = false;
-    last_action = "undo";
+    last_action = EditorAction::UNDO;
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Undo");
@@ -635,7 +635,7 @@ void Editor::redo() {
     }
     
     typing_state_saved = false;
-    last_action = "redo";
+    last_action = EditorAction::REDO;
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Redo");
@@ -686,6 +686,11 @@ Element Editor::render() {
 // ===== Event Handling =====
 
 bool Editor::handle_event(Event event) {
+    // Currently ignore all mouse events, will implement mouse later
+    if (event.is_mouse()) {
+        return true;
+    }
+
     // Reset status bar variables
     status_shown = false;
     status_bar_type = UIRenderer::StatusBarType::NORMAL;
@@ -695,11 +700,6 @@ bool Editor::handle_event(Event event) {
                      (unsigned char)event.input()[0] == 17;
     if (!is_ctrl_q) {
         confirm_quit = false; // Reset quit confirmation on any other key press
-    }
-    
-    // Ignore all mouse events
-    if (event.is_mouse()) {
-        return true;
     }
     
     // Check global Ctrl+C flag from signal handler
@@ -761,7 +761,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             delete_selection_if_active();
             save_state();
             typing_state_saved = false;
-            last_action = "insert_line";
+            last_action = EditorAction::INSERT_LINE;
             buffer.insert(buffer.begin() + cursor_y, "");
             cursor_x = 0;
             modified = true;
@@ -771,7 +771,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
             delete_selection_if_active();
             save_state();
             typing_state_saved = false;
-            last_action = "insert_line";
+            last_action = EditorAction::INSERT_LINE;
             buffer.insert(buffer.begin() + cursor_y + 1, "");
             cursor_y++;
             cursor_x = 0;
@@ -888,7 +888,7 @@ bool Editor::handle_navigation_sequences(const std::string& input) {
         if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
             save_state();
             typing_state_saved = false;
-            last_action = "untab";
+            last_action = EditorAction::UNTAB;
             buffer[cursor_y].erase(0, 1);
             if (cursor_x > 0) cursor_x--;
             modified = true;
@@ -920,7 +920,7 @@ bool Editor::handle_standard_keys(Event event) {
         delete_selection_if_active();
         save_state();
         typing_state_saved = false;
-        last_action = "tab";
+        last_action = EditorAction::TAB;
         buffer[cursor_y].insert(cursor_x, "\t");
         cursor_x++;
         modified = true;
@@ -939,10 +939,10 @@ bool Editor::handle_text_input(Event event) {
     if (input_str.empty()) return false;
     
     // Save state before typing if we haven't already for this typing session
-    if (!typing_state_saved || last_action != "typing") {
+    if (!typing_state_saved || last_action != EditorAction::TYPING) {
         save_state();
         typing_state_saved = true;
-        last_action = "typing";
+        last_action = EditorAction::TYPING;
     }
     
     // Insert the entire UTF-8 string (could be multi-byte character)
