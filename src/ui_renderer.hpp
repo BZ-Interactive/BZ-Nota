@@ -6,6 +6,13 @@
 /// @brief Handles all UI rendering for the editor
 class UIRenderer {
 public:
+    enum class StatusBarType {
+        NORMAL,
+        SUCCESS,
+        ERROR,
+        WARNING
+    };
+
     UIRenderer();
     
     /// @brief Render the complete editor UI
@@ -16,7 +23,7 @@ public:
     /// @param filename Current filename
     /// @param modified Whether the file has been modified
     /// @param status_message Status message to display
-    /// @param save_status_shown Whether to show status message
+    /// @param status_shown Whether to show status message
     /// @param can_undo Whether undo is available
     /// @param can_redo Whether redo is available
     /// @param bold_active Whether bold formatting is active
@@ -32,7 +39,8 @@ public:
         const std::string& filename,
         bool modified,
         const std::string& status_message,
-        bool save_status_shown,
+        bool status_shown,
+        StatusBarType status_type,
         bool can_undo,
         bool can_redo,
         bool bold_active,
@@ -67,7 +75,7 @@ private:
     ftxui::Element render_status_bar(
         int cursor_x, int cursor_y,
         const std::string& status_message,
-        bool save_status_shown
+        bool status_shown, StatusBarType status_type
     );
     
     /// @brief Render the shortcuts bar, the bar below the writing area.

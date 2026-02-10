@@ -29,6 +29,16 @@ static const Color REDO_BUTTON_ACTIVE_BG = Color::GreenLight;
 static const Color CLOSE_BUTTON_BG = Color::GrayLight;
 static const Color CLOSE_BUTTON_FG = Color::RedLight;
 
+// Status bar colors
+static const Color STATUS_BAR_BG = Color::GrayDark;
+static const Color STATUS_BAR_FG = Color::White;
+static const Color STATUS_BAR_SUCCESS_BG = Color::GreenLight;
+static const Color STATUS_BAR_SUCCESS_FG = Color::Black;
+static const Color STATUS_BAR_ERROR_BG = Color::Red3Bis;
+static const Color STATUS_BAR_ERROR_FG = Color::Black;
+static const Color STATUS_BAR_WARNING_BG = Color::Yellow3Bis;
+static const Color STATUS_BAR_WARNING_FG = Color::Black;
+
 static const auto PRE_SYMBOL_SPACE = text(" ") | nothing;
 
 UIRenderer::UIRenderer() {}
@@ -195,7 +205,8 @@ Element UIRenderer::render(
     const std::string& filename,
     bool modified,
     const std::string& status_message,
-    bool save_status_shown,
+    bool status_shown,
+    StatusBarType status_type,
     bool can_undo,
     bool can_redo,
     bool bold_active,
@@ -214,7 +225,7 @@ Element UIRenderer::render(
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
-        render_status_bar(cursor_x, cursor_y, status_message, save_status_shown),
+        render_status_bar(cursor_x, cursor_y, status_message, status_shown, status_type),
         render_shortcuts()
     });
 }
@@ -321,15 +332,42 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
 Element UIRenderer::render_status_bar(
     int cursor_x, int cursor_y,
     const std::string& status_message,
-    bool save_status_shown
+    bool status_shown, StatusBarType status_type
 ) {
+    Color background_color;
+    Color foreground_color;
+    switch (status_type)
+    {
+    case StatusBarType::NORMAL:
+        background_color = STATUS_BAR_BG;
+        foreground_color = STATUS_BAR_FG;
+        break;
+    case StatusBarType::SUCCESS:
+        background_color = STATUS_BAR_SUCCESS_BG;
+        foreground_color = STATUS_BAR_SUCCESS_FG;
+        break;
+    case StatusBarType::ERROR:
+        background_color = STATUS_BAR_ERROR_BG;
+        foreground_color = STATUS_BAR_ERROR_FG;
+        break;
+    case StatusBarType::WARNING:
+        background_color = STATUS_BAR_WARNING_BG;
+        foreground_color = STATUS_BAR_WARNING_FG;
+        break;
+    default: // not needed but just in case
+        background_color = STATUS_BAR_BG;
+        foreground_color = STATUS_BAR_FG;
+        break;
+    }
+
     std::string pos_info = "Line " + std::to_string(cursor_y + 1) + 
                           ", Col " + std::to_string(cursor_x + 1);
-    std::string status_display = save_status_shown ? status_message : pos_info;
+    std::string status_display = status_shown ? status_message : pos_info;
     
     return hbox({
         text(" " + status_display) | flex
-    }) | bgcolor(Color::GrayDark);
+    }) | bgcolor(background_color) |
+         color(foreground_color);
 }
 
 Element UIRenderer::render_shortcuts() {

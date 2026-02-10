@@ -64,7 +64,24 @@ void Editor::save_file() {
     
     std::ofstream ofs(filename);
     if (!ofs) {
-        set_status("Error: Could not save file!");
+        int err = errno;
+        if (err == EACCES) {
+            set_status("Error: Permission denied when saving file!, Save as sudo? (y/n)", UIRenderer::StatusBarType::ERROR);
+            // TODO: implement "save as sudo" flow - either pipe file or get permissions here with elevated permissions
+        } else if (err == ENOENT) {
+            set_status("Error: Directory does not exist!", UIRenderer::StatusBarType::ERROR);
+        } else  if(err == EAGAIN) {
+            set_status("Error: Try again!", UIRenderer::StatusBarType::WARNING);
+        } else if (err == EROFS) {
+            set_status("Error: Read-only file system!", UIRenderer::StatusBarType::ERROR);
+        } else {
+            set_status("Error: Could not save file! (" + std::string(strerror(err)) + ")", UIRenderer::StatusBarType::ERROR);
+        }
+        return;
+    }
+    // this basically means the IO is corrupt, good luck.
+    else if (ofs.bad()) {
+        set_status("Error: I/O error while saving file!", UIRenderer::StatusBarType::ERROR);
         return;
     }
     
@@ -73,7 +90,7 @@ void Editor::save_file() {
     }
     
     modified = false;
-    set_status("File saved successfully");
+    set_status("File saved successfully", UIRenderer::StatusBarType::SUCCESS);
 }
 
 // ===== Selection Operations =====
@@ -558,9 +575,25 @@ void Editor::ensure_cursor_visible(int screen_height) {
     cursor_manager.ensure_cursor_visible(cursor_y, scroll_y, screen_height);
 }
 
-void Editor::set_status(const std::string& message) {
+void Editor::set_status(const std::string& message, UIRenderer::StatusBarType type) {
+    switch (type) {
+        case UIRenderer::StatusBarType::NORMAL:
+            status_bar_type = UIRenderer::StatusBarType::NORMAL;
+            break;
+        case UIRenderer::StatusBarType::SUCCESS:
+            status_bar_type = UIRenderer::StatusBarType::SUCCESS;
+            break;
+        case UIRenderer::StatusBarType::ERROR:
+            status_bar_type = UIRenderer::StatusBarType::ERROR;
+            break;
+        case UIRenderer::StatusBarType::WARNING:
+            status_bar_type = UIRenderer::StatusBarType::WARNING;
+            break;
+        default: // not needed but just in case
+            status_bar_type = UIRenderer::StatusBarType::NORMAL;
+    }
     status_message = message;
-    save_status_shown = true;
+    status_shown = true;
 }
 
 void Editor::delete_selection_if_active() {
@@ -638,7 +671,8 @@ Element Editor::render() {
         filename,
         modified,
         status_message,
-        save_status_shown,
+        status_shown,
+        status_bar_type,
         undo_redo_manager.can_undo(),
         undo_redo_manager.can_redo(),
         show_bold,
@@ -652,7 +686,9 @@ Element Editor::render() {
 // ===== Event Handling =====
 
 bool Editor::handle_event(Event event) {
-    save_status_shown = false;
+    // Reset status bar variables
+    status_shown = false;
+    status_bar_type = UIRenderer::StatusBarType::NORMAL;
     
     // Don't reset confirm_quit if this is Ctrl+Q (char 17)
     bool is_ctrl_q = !event.is_character() && event.input().size() == 1 && 
@@ -714,7 +750,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
         
         case 17: // Ctrl+Q
             if (modified && !confirm_quit) {
-                set_status("Unsaved changes! Press Ctrl+Q again to quit.");
+                set_status("Unsaved changes! Press Ctrl+Q again to quit.", UIRenderer::StatusBarType::WARNING);
                 confirm_quit = true;
                 return true;
             }
