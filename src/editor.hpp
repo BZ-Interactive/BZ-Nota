@@ -30,11 +30,12 @@ public:
     
     /// @brief Start the editor main loop
     void run();
+    std::string filename; // Includes File path
     
 private:
     // Core data (std::vector = List<string>, std::string = string)
     std::vector<std::string> buffer; // Text buffer - each line is one string
-    std::string filename; // Includes File path
+    
     bool modified = false; // Has unsaved changes?
     bool status_shown = false; // Show status in UI?
     StatusBarType status_bar_type = StatusBarType::NORMAL; // Status bar type (normal, error, warning)
@@ -78,6 +79,7 @@ public:
     
     // ===== Public methods accessible by InputManager =====
     void save_file();
+    void rename_file(const std::string& new_filename);
     void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);
     void exit();
     

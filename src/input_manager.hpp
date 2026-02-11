@@ -60,6 +60,11 @@ public:
     );
     
 private:
+    bool is_renaming = false; // State for F2 rename operation
+    std::string rename_input; // Buffer for F2 rename input
+    bool is_confirming_overwrite = false; // State for overwrite confirmation
+    std::string pending_rename_target; // Full path of pending rename target
+
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(
         unsigned char ch,
@@ -82,9 +87,15 @@ private:
         bool debug_mode
     );
     
+    /// @brief Handle function keys (F1, F2, etc.)
+    bool handle_fn_keys(ftxui::Event event, Editor& editor);
+    
+    /// @brief Handle text input during rename mode (F2)
+    bool handle_rename_input(ftxui::Event event, Editor& editor);
+
     /// @brief Helper: Show debug info for key sequences
     void show_debug_info(const std::string& input, Editor& editor);
-    
+
     /// @brief Helper: Insert a new line and update cursor
     void insert_line(Editor& editor, std::vector<std::string>& buffer, int& cursor_x, int& cursor_y, bool& modified, bool above);
     

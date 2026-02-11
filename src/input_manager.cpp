@@ -2,6 +2,7 @@
 #include "editor.hpp"
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 using namespace ftxui;
 
@@ -88,6 +89,16 @@ bool InputManager::handle_event(
         }
     }
     
+    // Handle rename mode input
+    if (is_renaming) {
+        return handle_rename_input(event, editor);
+    }
+    
+    // Handle function keys (F1, F2, etc.)
+    if (handle_fn_keys(event, editor)) {
+        return true;
+    }
+
     // Handle navigation sequences (arrows with modifiers, word navigation)
     if (handle_navigation_sequences(event.input(), editor, buffer, cursor_x, cursor_y, modified, debug_mode)) {
         return true;
@@ -152,6 +163,141 @@ bool InputManager::handle_ctrl_keys(
         default:
             return false;
     }
+}
+
+bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
+    // F1: Help
+    if (event == Event::F1) {
+        editor.set_status("Help: Ctrl+S=Save, Ctrl+Q=Quit, F2=Rename, Ctrl+Z=Undo, Ctrl+Y=Redo", StatusBarType::NORMAL);
+        return true;
+    } 
+    
+    // F2: Start rename mode
+    if (event == Event::F2) {
+        // Extract just the filename (remove path)
+        std::string basename = editor.filename;
+        size_t last_slash = basename.find_last_of("/\\");
+        if (last_slash != std::string::npos) {
+            basename = basename.substr(last_slash + 1);
+        }
+        
+        // Initialize rename mode
+        is_renaming = true;
+        rename_input = basename;
+        editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
+        return true;
+    }
+    
+    return false;
+}
+
+bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
+    // Handle overwrite confirmation (y/n)
+    if (is_confirming_overwrite) {
+        if (event.is_character()) {
+            std::string input = event.input();
+            if (input == "y" || input == "Y") {
+                // User confirmed - proceed with rename
+                editor.rename_file(pending_rename_target);
+                is_renaming = false;
+                is_confirming_overwrite = false;
+                rename_input.clear();
+                pending_rename_target.clear();
+                return true;
+            } else if (input == "n" || input == "N" || event == Event::Escape) {
+                // User cancelled
+                editor.set_status("Rename cancelled", StatusBarType::NORMAL);
+                is_renaming = false;
+                is_confirming_overwrite = false;
+                rename_input.clear();
+                pending_rename_target.clear();
+                return true;
+            }
+        }
+        return true; // Ignore other keys during confirmation
+    }
+    
+    // Handle Enter - confirm rename
+    if (event == Event::Return) {
+        if (rename_input.empty()) {
+            editor.set_status("Cannot rename to empty filename!", StatusBarType::ERROR);
+            is_renaming = false;
+            rename_input.clear();
+            return true;
+        }
+        
+        // Get the directory path from the current filename
+        std::string dirpath = "";
+        size_t last_slash = editor.filename.find_last_of("/\\");
+        if (last_slash != std::string::npos) {
+            dirpath = editor.filename.substr(0, last_slash + 1);
+        }
+        
+        // Build full path for new filename
+        std::string new_fullpath = dirpath + rename_input;
+        
+        // Check if target file already exists
+        std::ifstream test_file(new_fullpath);
+        if (test_file.good()) {
+            test_file.close();
+            // File exists - ask for confirmation
+            pending_rename_target = new_fullpath;
+            is_confirming_overwrite = true;
+            editor.set_status("File '" + rename_input + "' already exists! Overwrite? (y/n)", StatusBarType::WARNING);
+            return true;
+        }
+        
+        // File doesn't exist - proceed with rename
+        editor.rename_file(new_fullpath);
+        
+        // Exit rename mode
+        is_renaming = false;
+        rename_input.clear();
+        return true;
+    }
+    
+    // Handle Escape - cancel rename
+    if (event == Event::Escape) {
+        editor.set_status("Rename cancelled", StatusBarType::NORMAL);
+        is_renaming = false;
+        is_confirming_overwrite = false;
+        rename_input.clear();
+        pending_rename_target.clear();
+        return true;
+    }
+    
+    // Handle Backspace
+    if (event == Event::Backspace) {
+        if (!rename_input.empty()) {
+            rename_input.pop_back();
+        }
+        // Always update status, even if empty (to show it's still in rename mode)
+        editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
+        return true;
+    }
+    
+    // Handle regular character input
+    if (event.is_character()) {
+        std::string input_str = event.input();
+        
+        // Filter out invalid filename characters (basic validation)
+        bool valid = true;
+        for (char c : input_str) {
+            if (c == '/' || c == '\\' || c == '\0') {
+                valid = false;
+                break;
+            }
+        }
+        
+        if (valid && !input_str.empty()) {
+            rename_input += input_str;
+            editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
+        }
+        return true;
+    }
+    
+    // Ignore other keys during rename mode
+    return true;
 }
 
 bool InputManager::handle_navigation_sequences(

@@ -336,12 +336,9 @@ Element UIRenderer::render_status_bar(
 ) {
     Color background_color;
     Color foreground_color;
+    bool is_bold = false;
     switch (status_type)
     {
-    case StatusBarType::NORMAL:
-        background_color = STATUS_BAR_BG;
-        foreground_color = STATUS_BAR_FG;
-        break;
     case StatusBarType::SUCCESS:
         background_color = STATUS_BAR_SUCCESS_BG;
         foreground_color = STATUS_BAR_SUCCESS_FG;
@@ -349,10 +346,12 @@ Element UIRenderer::render_status_bar(
     case StatusBarType::ERROR:
         background_color = STATUS_BAR_ERROR_BG;
         foreground_color = STATUS_BAR_ERROR_FG;
+        is_bold = true;
         break;
     case StatusBarType::WARNING:
         background_color = STATUS_BAR_WARNING_BG;
         foreground_color = STATUS_BAR_WARNING_FG;
+        is_bold = true;
         break;
     default: // not needed but just in case
         background_color = STATUS_BAR_BG;
@@ -367,7 +366,8 @@ Element UIRenderer::render_status_bar(
     return hbox({
         text(" " + status_display) | flex
     }) | bgcolor(background_color) |
-         color(foreground_color);
+         color(foreground_color)   |
+         (is_bold ? bold : nothing);
 }
 
 Element UIRenderer::render_shortcuts() {

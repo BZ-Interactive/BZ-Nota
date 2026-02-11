@@ -55,6 +55,15 @@ void Editor::save_file() {
         modified = false;
 }
 
+void Editor::rename_file(const std::string& new_filename) {
+    FileOperationResult result = file_manager.rename_file(filename, new_filename);
+    
+    set_status(result.message, result.status_type);
+    if (result.success) {
+        filename = new_filename;
+    }
+}
+
 // ===== Selection Operations =====
 
 void Editor::start_selection() {
