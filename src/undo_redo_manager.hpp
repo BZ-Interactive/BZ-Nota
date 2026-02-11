@@ -1,49 +1,76 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "shared_types.hpp"
 
-/// @brief Manages undo/redo history for the editor
-/// UndoRedo pattern,  manual implementation
+/// @brief Manages undo/redo history using the Command pattern.
+///
+/// Instead of storing full buffer snapshots on every edit, this stores
+/// only the lines that changed (a diff). Memory usage goes from
+/// O(history_depth * buffer_size) to O(buffer_size + sum_of_diffs).
+///
+/// The public API (save_state, undo, redo) is unchanged from the old
+/// snapshot-based approach, so callers don't need any modifications.
 class UndoRedoManager {
 public:
-    // Stores complete editor state for undo/redo
-    struct EditorState {
-        std::vector<std::string> buffer;  // Full text buffer copy
-        int cursor_x;                      // Cursor position
-        int cursor_y;
+    /// @brief Represents a single edit as a diff of the affected line range.
+    ///
+    /// To undo: replace new_lines with old_lines at start_line.
+    /// To redo: replace old_lines with new_lines at start_line.
+    struct EditCommand {
+        int start_line;                      // First line in the affected range
+        std::vector<std::string> old_lines;  // Lines *before* the edit
+        std::vector<std::string> new_lines;  // Lines *after*  the edit
+        int cursor_x_before, cursor_y_before;
+        int cursor_x_after,  cursor_y_after;
     };
-    
+
     UndoRedoManager();
-    
-    // Save current state to undo history (const& = readonly reference)
+
+    /// @brief Call before an edit begins. Captures a "before" snapshot.
+    ///
+    /// If a previous edit was still pending (not yet committed), this
+    /// commits it first by diffing the pending snapshot against the
+    /// current buffer, then stores that diff as an EditCommand.
     void save_state(
         const std::vector<std::string>& buffer,
         int cursor_x,
         int cursor_y
     );
-    
-    // Undo - restores previous state, returns success
-    // '&' on parameters = modify original values
+
+    /// @brief Undo the most recent edit.
     bool undo(
         std::vector<std::string>& buffer,
         int& cursor_x,
         int& cursor_y
     );
-    
-    // Redo - restores next state, returns success
+
+    /// @brief Redo the most recently undone edit.
     bool redo(
         std::vector<std::string>& buffer,
         int& cursor_x,
         int& cursor_y
     );
-    
-    // Inline getters
-    bool can_undo() const { return !undo_history.empty(); }
-    bool can_redo() const { return !redo_history.empty(); }
+
+    bool can_undo() const { return has_pending || !undo_stack.empty(); }
+    bool can_redo() const { return !redo_stack.empty(); }
 
 private:
-    std::vector<EditorState> undo_history;
-    std::vector<EditorState> redo_history;
-    constexpr static uint8_t max_history = std::numeric_limits<uint8_t>::max();  // 255 is plenty, one may never reach it in practice
+    /// @brief Diff pending_buffer vs current buffer, push result to undo_stack.
+    void commit_pending(
+        const std::vector<std::string>& current_buffer,
+        int cursor_x,
+        int cursor_y
+    );
+
+    // --- Pending edit tracking ---
+    bool has_pending = false;
+    std::vector<std::string> pending_buffer;  // Temporary "before" snapshot
+    int pending_cx = 0;
+    int pending_cy = 0;
+
+    // --- Command stacks ---
+    std::vector<EditCommand> undo_stack;
+    std::vector<EditCommand> redo_stack;
+
+    static constexpr size_t max_history = 255;
 };

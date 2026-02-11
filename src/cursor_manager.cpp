@@ -68,7 +68,6 @@ void CursorManager::move_left(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -97,7 +96,6 @@ void CursorManager::move_right(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -126,7 +124,6 @@ void CursorManager::move_up(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -149,7 +146,6 @@ void CursorManager::move_down(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int& cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -172,7 +168,6 @@ void CursorManager::move_word_left(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -193,7 +188,6 @@ void CursorManager::move_word_right(
     const std::vector<std::string>& buffer,
     int& cursor_x,
     int cursor_y,
-    [[maybe_unused]] std::function<void()> start_selection_fn,  // Unused - Editor handles it
     std::function<void()> update_selection_fn,
     std::function<void()> clear_selection_fn,
     bool select
@@ -213,17 +207,29 @@ void CursorManager::move_word_right(
 int CursorManager::find_word_start(const std::string& line, int x) {
     if (x == 0) return 0;
     
-    // Skip whitespace
-    while (x > 0 && !std::isalnum(line[x - 1]) && line[x - 1] != '_') {
-        x--;
+    // Move to previous character boundary first
+    size_t pos = UTF8Utils::prev_char_boundary(line, x);
+    
+    // Skip whitespace/non-word characters (check first byte of each UTF-8 char)
+    while (pos > 0) {
+        int char_len = UTF8Utils::get_char_length(line, pos);
+        // Only treat single-byte ASCII as word characters
+        if (char_len == 1 && (std::isalnum((unsigned char)line[pos]) || line[pos] == '_')) break;
+        pos = UTF8Utils::prev_char_boundary(line, pos);
     }
     
     // Skip word characters
-    while (x > 0 && (std::isalnum(line[x - 1]) || line[x - 1] == '_')) {
-        x--;
+    while (pos > 0) {
+        size_t prev = UTF8Utils::prev_char_boundary(line, pos);
+        int char_len = UTF8Utils::get_char_length(line, prev);
+        if (char_len == 1 && (std::isalnum((unsigned char)line[prev]) || line[prev] == '_')) {
+            pos = prev;
+        } else {
+            break;
+        }
     }
     
-    return x;
+    return pos;
 }
 
 int CursorManager::find_word_end(const std::string& line, int x) {
@@ -231,17 +237,25 @@ int CursorManager::find_word_end(const std::string& line, int x) {
     
     if (x >= len) return len;
     
-    // Skip whitespace
-    while (x < len && !std::isalnum(line[x]) && line[x] != '_') {
-        x++;
+    // Skip whitespace/non-word characters using UTF-8 boundaries
+    size_t pos = x;
+    while (pos < (size_t)len) {
+        int char_len = UTF8Utils::get_char_length(line, pos);
+        if (char_len == 1 && (std::isalnum((unsigned char)line[pos]) || line[pos] == '_')) break;
+        pos = UTF8Utils::next_char_boundary(line, pos);
     }
     
     // Skip word characters
-    while (x < len && (std::isalnum(line[x]) || line[x] == '_')) {
-        x++;
+    while (pos < (size_t)len) {
+        int char_len = UTF8Utils::get_char_length(line, pos);
+        if (char_len == 1 && (std::isalnum((unsigned char)line[pos]) || line[pos] == '_')) {
+            pos = UTF8Utils::next_char_boundary(line, pos);
+        } else {
+            break;
+        }
     }
     
-    return x;
+    return pos;
 }
 
 void CursorManager::move_home(

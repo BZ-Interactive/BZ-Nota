@@ -197,7 +197,7 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         editor.screen_reset(); 
         return true;
     } else if (event == Event::F7) {
-        int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 5; // Cycle through modes
+        int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 4; // Cycle through modes
         editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode));
     }
     

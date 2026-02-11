@@ -136,7 +136,8 @@ private:
     int find_word_start(int x, int y);
     int find_word_end(int x, int y);
     void ensure_cursor_visible(int screen_height);
-    std::tuple<std::function<void()>, std::function<void()>, std::function<void()>> get_selection_callbacks();
+    void clamp_cursor_and_scroll();
+    std::tuple<std::function<void()>, std::function<void()>> get_selection_callbacks();
     
     // ===== UI Rendering =====
     ftxui::Element render();

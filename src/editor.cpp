@@ -116,6 +116,7 @@ void Editor::delete_selection() {
     
     save_state();
     selection_manager.delete_selection(buffer, cursor_x, cursor_y);
+    clamp_cursor_and_scroll();
     modified = true;
 }
 
@@ -496,6 +497,7 @@ void Editor::delete_char() {
     typing_state_saved = false;
     
     editing_manager.delete_char(buffer, cursor_x, cursor_y);
+    clamp_cursor_and_scroll();
     modified = true;
 }
 
@@ -512,56 +514,57 @@ void Editor::delete_forward() {
     typing_state_saved = false;
     
     editing_manager.delete_forward(buffer, cursor_x, cursor_y);
+    clamp_cursor_and_scroll();
     modified = true;
 }
 
 // ===== Cursor Movement =====
 
 void Editor::move_cursor_left(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_left(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_right(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_right(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_up(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_up(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_up(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_down(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_down(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_down(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_left(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_word_left(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_word_left(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_word_right(bool select) {
-    auto [start_sel, update_sel, clear_sel] = get_selection_callbacks();
-    if (select && !selection_manager.has_active_selection()) start_sel();
-    cursor_manager.move_word_right(buffer, cursor_x, cursor_y, start_sel, update_sel, clear_sel, select);
+    auto [update_sel, clear_sel] = get_selection_callbacks();
+    if (select && !selection_manager.has_active_selection()) start_selection();
+    cursor_manager.move_word_right(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_home(bool select) {
     if (select && !selection_manager.has_active_selection()) start_selection();
-    auto [_, update_sel, clear_sel] = get_selection_callbacks();
+    auto [update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_home(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
 void Editor::move_cursor_end(bool select) {
     if (select && !selection_manager.has_active_selection()) start_selection();
-    auto [_, update_sel, clear_sel] = get_selection_callbacks();
+    auto [update_sel, clear_sel] = get_selection_callbacks();
     cursor_manager.move_end(buffer, cursor_x, cursor_y, update_sel, clear_sel, select);
 }
 
@@ -579,6 +582,23 @@ void Editor::ensure_cursor_visible(int screen_height) {
     cursor_manager.ensure_cursor_visible(cursor_y, scroll_y, screen_height);
 }
 
+void Editor::clamp_cursor_and_scroll() {
+    // Ensure buffer is never empty
+    if (buffer.empty()) buffer.push_back("");
+    
+    // Clamp cursor_y
+    if (cursor_y < 0) cursor_y = 0;
+    if (cursor_y >= (int)buffer.size()) cursor_y = (int)buffer.size() - 1;
+    
+    // Clamp cursor_x
+    if (cursor_x < 0) cursor_x = 0;
+    if (cursor_x > (int)buffer[cursor_y].length()) cursor_x = (int)buffer[cursor_y].length();
+    
+    // Clamp scroll_y
+    if (scroll_y < 0) scroll_y = 0;
+    if (scroll_y >= (int)buffer.size()) scroll_y = std::max(0, (int)buffer.size() - 1);
+}
+
 void Editor::set_status(const std::string& message, StatusBarType type) {
     status_bar_type = type;
     status_message = message;
@@ -591,11 +611,10 @@ void Editor::delete_selection_if_active() {
     }
 }
 
-std::tuple<std::function<void()>, std::function<void()>, std::function<void()>> Editor::get_selection_callbacks() {
-    auto start_sel = [this]() { start_selection(); };
+std::tuple<std::function<void()>, std::function<void()>> Editor::get_selection_callbacks() {
     auto update_sel = [this]() { update_selection(); };
     auto clear_sel = [this]() { clear_selection(); };
-    return std::make_tuple(start_sel, update_sel, clear_sel);
+    return std::make_tuple(update_sel, clear_sel);
 }
 
 // ===== Undo/Redo =====
@@ -613,6 +632,7 @@ void Editor::undo() {
     typing_state_saved = false;
     last_action = EditorAction::UNDO;
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
+    clamp_cursor_and_scroll();
     modified = true;
     set_status("Undo");
 }
@@ -626,6 +646,7 @@ void Editor::redo() {
     typing_state_saved = false;
     last_action = EditorAction::REDO;
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
+    clamp_cursor_and_scroll();
     modified = true;
     set_status("Redo");
 }
@@ -633,6 +654,7 @@ void Editor::redo() {
 // ===== UI Rendering =====
 
 Element Editor::render() {
+    clamp_cursor_and_scroll();
     int screen_height = Terminal::Size().dimy;
     ensure_cursor_visible(screen_height);
     

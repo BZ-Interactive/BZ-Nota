@@ -58,14 +58,14 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
         return FileOperationResult(false, error_msg, err, status_type);
     }
     
-    // Check for I/O corruption
-    if (ofs.bad()) {
-        return FileOperationResult(false, "I/O error while saving file!", 0, StatusBarType::ERROR);
-    }
-    
     // Write all lines to file
     for (const auto& line : buffer) {
         ofs << line << '\n';
+    }
+    
+    // Check for I/O errors AFTER writing
+    if (!ofs.good()) {
+        return FileOperationResult(false, "I/O error while saving file!", 0, StatusBarType::ERROR);
     }
     
     return FileOperationResult(true, "File saved successfully", 0, StatusBarType::SUCCESS);

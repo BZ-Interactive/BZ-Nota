@@ -9,13 +9,10 @@ class CursorManager {
 public:
     CursorManager();
     
-    // std::function<void()> = Action in C# (delegate with no return value)
-    // bool select = optional parameter with default value (like C# optional params)
     void move_left(
-        const std::vector<std::string>& buffer,  // const& = readonly reference
-        int& cursor_x,                           // & = modifies original (like 'ref')
+        const std::vector<std::string>& buffer,
+        int& cursor_x,
         int& cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
@@ -25,7 +22,6 @@ public:
         const std::vector<std::string>& buffer,
         int& cursor_x,
         int& cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
@@ -35,7 +31,6 @@ public:
         const std::vector<std::string>& buffer,
         int& cursor_x,
         int& cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
@@ -45,7 +40,6 @@ public:
         const std::vector<std::string>& buffer,
         int& cursor_x,
         int& cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
@@ -55,7 +49,6 @@ public:
         const std::vector<std::string>& buffer,
         int& cursor_x,
         int cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
@@ -65,7 +58,6 @@ public:
         const std::vector<std::string>& buffer,
         int& cursor_x,
         int cursor_y,
-        std::function<void()> start_selection_fn,
         std::function<void()> update_selection_fn,
         std::function<void()> clear_selection_fn,
         bool select
