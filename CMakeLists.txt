@@ -40,6 +40,8 @@ add_executable(bznota
     src/format_manager.hpp
     src/file_manager.cpp
     src/file_manager.hpp
+    src/input_manager.cpp
+    src/input_manager.hpp
     src/formatter.cpp
     src/formatter.hpp
     src/utf8_utils.cpp

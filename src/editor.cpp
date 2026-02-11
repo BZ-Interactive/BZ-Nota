@@ -112,8 +112,8 @@ void Editor::copy_to_system_clipboard() {
 
 void Editor::paste_from_system_clipboard() {
     save_state();
-    typing_state_saved = false;
-    last_action = EditorAction::PASTE_SYSTEM;
+    input_manager.typing_state_saved = false;
+    input_manager.last_action = EditorAction::PASTE_SYSTEM;
     
     if (selection_manager.has_active_selection()) {
         delete_selection();
@@ -435,8 +435,8 @@ void Editor::insert_newline() {
     delete_selection_if_active();
     
     save_state();
-    typing_state_saved = false;
-    last_action = EditorAction::NEWLINE;
+    input_manager.typing_state_saved = false;
+    input_manager.last_action = EditorAction::NEWLINE;
     editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
 }
@@ -447,11 +447,11 @@ void Editor::delete_char() {
         return;
     }
     
-    if (last_action != EditorAction::DELETE) {
+    if (input_manager.last_action != EditorAction::DELETE) {
         save_state();
-        last_action = EditorAction::DELETE;
+        input_manager.last_action = EditorAction::DELETE;
     }
-    typing_state_saved = false;
+    input_manager.typing_state_saved = false;
     
     editing_manager.delete_char(buffer, cursor_x, cursor_y);
     modified = true;
@@ -463,11 +463,11 @@ void Editor::delete_forward() {
         return;
     }
     
-    if (last_action != EditorAction::DELETE_FORWARD) {
+    if (input_manager.last_action != EditorAction::DELETE_FORWARD) {
         save_state();
-        last_action = EditorAction::DELETE_FORWARD;
+        input_manager.last_action = EditorAction::DELETE_FORWARD;
     }
-    typing_state_saved = false;
+    input_manager.typing_state_saved = false;
     
     editing_manager.delete_forward(buffer, cursor_x, cursor_y);
     modified = true;
@@ -568,8 +568,8 @@ void Editor::undo() {
         return;
     }
     
-    typing_state_saved = false;
-    last_action = EditorAction::UNDO;
+    input_manager.typing_state_saved = false;
+    input_manager.last_action = EditorAction::UNDO;
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Undo");
@@ -581,8 +581,8 @@ void Editor::redo() {
         return;
     }
     
-    typing_state_saved = false;
-    last_action = EditorAction::REDO;
+    input_manager.typing_state_saved = false;
+    input_manager.last_action = EditorAction::REDO;
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Redo");
@@ -633,269 +633,15 @@ Element Editor::render() {
 // ===== Event Handling =====
 
 bool Editor::handle_event(Event event) {
-    // Currently ignore all mouse events, will implement mouse later
-    if (event.is_mouse()) {
-        return true;
-    }
-
-    // Reset status bar variables
-    status_shown = false;
-    status_bar_type = StatusBarType::NORMAL;
-    
-    // Don't reset confirm_quit if this is Ctrl+Q (char 17)
-    bool is_ctrl_q = !event.is_character() && event.input().size() == 1 && 
-                     (unsigned char)event.input()[0] == 17;
-    if (!is_ctrl_q) {
-        confirm_quit = false; // Reset quit confirmation on any other key press
-    }
-    
-    // Check global Ctrl+C flag from signal handler
-    if (ctrl_c_pressed) {
-        ctrl_c_pressed = 0;
-        copy_to_system_clipboard();
-        return true;
-    }
-    
-    // Handle Ctrl key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
-    if (!event.is_character() && event.input().size() == 1) {
-        if (handle_ctrl_keys(event.input()[0])) {
-            return true;
-        }
-    }
-    
-    // Handle navigation sequences (arrows with modifiers, word navigation)
-    if (handle_navigation_sequences(event.input())) {
-        return true;
-    }
-    
-    // Handle standard keys (arrows, backspace, delete, enter, tab)
-    if (handle_standard_keys(event)) {
-        return true;
-    }
-    
-    // Handle regular text input
-    if (handle_text_input(event)) {
-        return true;
-    }
-    
-    return false;
+    return input_manager.handle_event(
+        event, *this, buffer, cursor_x, cursor_y,
+        modified, status_shown, status_bar_type, confirm_quit,
+        debug_mode, ctrl_c_pressed
+    );
 }
 
-bool Editor::handle_ctrl_keys(unsigned char ch) {
-    switch (ch) {
-        case 1:  select_all(); return true;  // Ctrl+A
-        case 3:  copy_to_system_clipboard(); return true;  // Ctrl+C
-        case 22: paste_from_system_clipboard(); return true;  // Ctrl+V
-        case 24: cut_to_system_clipboard(); return true;  // Ctrl+X
-        case 26: undo(); return true;  // Ctrl+Z
-        case 25: redo(); return true;  // Ctrl+Y
-        case 19: save_file(); return true;  // Ctrl+S
-        case 2:  toggle_bold(); return true;  // Ctrl+B
-        case 9:  toggle_italic(); return true;  // Ctrl+I
-        case 21: toggle_underline(); return true;  // Ctrl+U
-        case 20: toggle_strikethrough(); return true;  // Ctrl+T
-        
-        case 17: // Ctrl+Q
-            if (modified && !confirm_quit) {
-                set_status("Unsaved changes! Press Ctrl+Q again to quit.", StatusBarType::WARNING);
-                confirm_quit = true;
-                return true;
-            }
-            screen->Exit();
-            return true;
-            
-        case 15: // Ctrl+O - insert line above
-            delete_selection_if_active();
-            save_state();
-            typing_state_saved = false;
-            last_action = EditorAction::INSERT_LINE;
-            buffer.insert(buffer.begin() + cursor_y, "");
-            cursor_x = 0;
-            modified = true;
-            return true;
-            
-        case 11: // Ctrl+K - insert line below
-            delete_selection_if_active();
-            save_state();
-            typing_state_saved = false;
-            last_action = EditorAction::INSERT_LINE;
-            buffer.insert(buffer.begin() + cursor_y + 1, "");
-            cursor_y++;
-            cursor_x = 0;
-            modified = true;
-            return true;
-            
-        default:
-            return false;
-    }
-}
-
-bool Editor::handle_navigation_sequences(const std::string& input) {
-
-    // debug mode: CTRL + key
-    if (debug_mode && input.length() == 1 && (uint8_t) input[0] <= 26) {
-        std::string hex_str;
-        for (unsigned char c : input) {
-            char buf[8];
-            snprintf(buf, sizeof(buf), "%02x ", c);
-            hex_str += buf;
-        }
-        set_status("CTRL Key: " + hex_str);
-    } else if (debug_mode && input.length() > 1 && input[0] == '\x1b') { // Debug mode: Show escape sequences for Alt+Key and others
-        std::string hex_str;
-        for (unsigned char c : input) {
-            char buf[8];
-            snprintf(buf, sizeof(buf), "%02x ", c);
-            hex_str += buf;
-        }
-        set_status("Alt Key: " + hex_str);
-    }
-    
-    // Shift + Arrow keys (selection)
-    if (input == "\x1b[1;2D") { move_cursor_left(true); return true; }   // Shift+Left
-    if (input == "\x1b[1;2C") { move_cursor_right(true); return true; }  // Shift+Right
-    if (input == "\x1b[1;2A") { move_cursor_up(true); return true; }     // Shift+Up
-    if (input == "\x1b[1;2B") { move_cursor_down(true); return true; }   // Shift+Down
-    
-    // Ctrl+Shift+Home/End (selection) - Works in Alacritty
-    if (input == "\x1b[1;6H") { move_cursor_home(true); return true; }   // Ctrl+Shift+Home
-    if (input == "\x1b[1;6F") { move_cursor_end(true); return true; }    // Ctrl+Shift+End
-    if (input == "\x1b[1;5H") { move_cursor_home(true); return true; }   // Ctrl+Home with selection
-    if (input == "\x1b[1;5F") { move_cursor_end(true); return true; }    // Ctrl+End with selection
-    
-    // Alt+Shift+Home/End (selection) - Alternative for GNOME Terminal/Kitty
-    if (input == "\x1b[1;4H") { move_cursor_home(true); return true; }   // Alt+Shift+Home
-    if (input == "\x1b[1;4F") { move_cursor_end(true); return true; }    // Alt+Shift+End
-    if (input == "\x1b[1;3H") { move_cursor_home(true); return true; }   // Alt+Home
-    if (input == "\x1b[1;3F") { move_cursor_end(true); return true; }    // Alt+End
-    
-    // NOTE: GNOME Terminal may intercept these keys for its own shortcuts.
-    // To use in GNOME Terminal, you may need to disable terminal keybindings:
-    // Preferences → Shortcuts → disable conflicting shortcuts
-    
-    // Shift + Home/End (selection) - May not work if terminal intercepts for scrollback
-    if (input == "\x1b[1;2H") { move_cursor_home(true); return true; }   // Shift+Home (xterm)
-    if (input == "\x1b[1;2F") { move_cursor_end(true); return true; }    // Shift+End (xterm)
-    if (input == "\x1b[1;2~") { move_cursor_home(true); return true; }   // Shift+Home (vt100)
-    if (input == "\x1b[4;2~") { move_cursor_end(true); return true; }    // Shift+End (vt100)
-    
-    // Ctrl+Shift+Arrow (word selection) - Alacritty
-    if (input == "\x1b[1;6D") { move_word_left(true); return true; }     // Ctrl+Shift+Left
-    if (input == "\x1b[1;6C") { move_word_right(true); return true; }    // Ctrl+Shift+Right
-    
-    // Alt+Shift+Arrow (word selection) - Universal fallback, specifically for GNOME Terminal/Kitty
-    if (input == "\x1b[1;4D") { move_word_left(true); return true; }     // Alt+Shift+Left
-    if (input == "\x1b[1;4C") { move_word_right(true); return true; }    // Alt+Shift+Right
-    
-    // Ctrl+Arrow (word navigation without selection)
-    if (input == "\x1b[1;5D") { move_word_left(false); return true; }    // Ctrl+Left
-    if (input == "\x1b[1;5C") { move_word_right(false); return true; }   // Ctrl+Right
-    
-    // ===== System Clipboard Shortcuts =====
-    
-    // Ctrl+Shift+V - paste from system clipboard (CSI u sequence - modern terminals)
-    if (input == "\x1b[86;5u" || input == "\x1b[86;6u") {
-        paste_from_system_clipboard();
-        return true;
-    }
-    
-    // Ctrl+Shift+C - copy to system clipboard (CSI u sequence - modern terminals)
-    if (input == "\x1b[67;5u" || input == "\x1b[67;6u") {
-        copy_to_system_clipboard();
-        return true;
-    }
-    
-    // Alt+Shift+V - paste from system clipboard (CSI u sequence)
-    if (input == "\x1b[86;4u") {
-        paste_from_system_clipboard();
-        return true;
-    }
-    
-    // Alt+Shift+C - copy to system clipboard (CSI u sequence)
-    if (input == "\x1b[67;4u") {
-        copy_to_system_clipboard();
-        return true;
-    }
-    
-    // Shift+Insert - paste from system clipboard (traditional, widely supported)
-    if (input == "\x1b[2;2~") {
-        paste_from_system_clipboard();
-        return true;
-    }
-    
-    // Ctrl+Insert - copy to system clipboard (traditional, widely supported)
-    if (input == "\x1b[2;5~") {
-        copy_to_system_clipboard();
-        return true;
-    }
-    
-    // Shift+Tab - unindent
-    if (input == "\x1b[Z") {
-        clear_selection();
-        if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
-            save_state();
-            typing_state_saved = false;
-            last_action = EditorAction::UNTAB;
-            buffer[cursor_y].erase(0, 1);
-            if (cursor_x > 0) cursor_x--;
-            modified = true;
-        }
-        return true;
-    }
-    
-    return false;
-}
-
-bool Editor::handle_standard_keys(Event event) {
-    // Arrow keys
-    if (event == Event::ArrowLeft)  { move_cursor_left(false); return true; }
-    if (event == Event::ArrowRight) { move_cursor_right(false); return true; }
-    if (event == Event::ArrowUp)    { move_cursor_up(false); return true; }
-    if (event == Event::ArrowDown)  { move_cursor_down(false); return true; }
-    
-    // Home/End keys
-    if (event == Event::Home) { move_cursor_home(false); return true; }
-    if (event == Event::End)  { move_cursor_end(false); return true; }
-    
-    // Editing keys
-    if (event == Event::Backspace) { delete_char(); return true; }
-    if (event == Event::Delete)    { delete_forward(); return true; }
-    if (event == Event::Return)    { insert_newline(); return true; }
-    
-    // Tab key
-    if (event == Event::Tab) {
-        delete_selection_if_active();
-        save_state();
-        typing_state_saved = false;
-        last_action = EditorAction::TAB;
-        buffer[cursor_y].insert(cursor_x, "\t");
-        cursor_x++;
-        modified = true;
-        return true;
-    }
-    
-    return false;
-}
-
-bool Editor::handle_text_input(Event event) {
-    if (!event.is_character()) return false;
-    
-    std::string input_str = event.input();
-    
-    // Skip empty input
-    if (input_str.empty()) return false;
-    
-    // Save state before typing if we haven't already for this typing session
-    if (!typing_state_saved || last_action != EditorAction::TYPING) {
-        save_state();
-        typing_state_saved = true;
-        last_action = EditorAction::TYPING;
-    }
-    
-    // Insert the entire UTF-8 string (could be multi-byte character)
-    insert_string(input_str);
-    
-    return true;
+void Editor::exit() {
+    screen->Exit();
 }
 
 // ===== Main Loop =====
