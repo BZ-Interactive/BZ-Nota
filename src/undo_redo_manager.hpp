@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "shared_types.hpp"
 
 /// @brief Manages undo/redo history for the editor
 /// UndoRedo pattern,  manual implementation
@@ -44,5 +45,5 @@ public:
 private:
     std::vector<EditorState> undo_history;
     std::vector<EditorState> redo_history;
-    const static unsigned int max_history = 100;  // 100 is plenty, one may never reach it in practice
+    const static uint8_t max_history = std::numeric_limits<uint8_t>::max();  // 255 is plenty, one may never reach it in practice
 };
