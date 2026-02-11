@@ -112,8 +112,8 @@ void Editor::copy_to_system_clipboard() {
 
 void Editor::paste_from_system_clipboard() {
     save_state();
-    input_manager.typing_state_saved = false;
-    input_manager.last_action = EditorAction::PASTE_SYSTEM;
+    typing_state_saved = false;
+    last_action = EditorAction::PASTE_SYSTEM;
     
     if (selection_manager.has_active_selection()) {
         delete_selection();
@@ -435,8 +435,8 @@ void Editor::insert_newline() {
     delete_selection_if_active();
     
     save_state();
-    input_manager.typing_state_saved = false;
-    input_manager.last_action = EditorAction::NEWLINE;
+    typing_state_saved = false;
+    last_action = EditorAction::NEWLINE;
     editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
 }
@@ -447,11 +447,11 @@ void Editor::delete_char() {
         return;
     }
     
-    if (input_manager.last_action != EditorAction::DELETE) {
+    if (last_action != EditorAction::DELETE) {
         save_state();
-        input_manager.last_action = EditorAction::DELETE;
+        last_action = EditorAction::DELETE;
     }
-    input_manager.typing_state_saved = false;
+    typing_state_saved = false;
     
     editing_manager.delete_char(buffer, cursor_x, cursor_y);
     modified = true;
@@ -463,11 +463,11 @@ void Editor::delete_forward() {
         return;
     }
     
-    if (input_manager.last_action != EditorAction::DELETE_FORWARD) {
+    if (last_action != EditorAction::DELETE_FORWARD) {
         save_state();
-        input_manager.last_action = EditorAction::DELETE_FORWARD;
+        last_action = EditorAction::DELETE_FORWARD;
     }
-    input_manager.typing_state_saved = false;
+    typing_state_saved = false;
     
     editing_manager.delete_forward(buffer, cursor_x, cursor_y);
     modified = true;
@@ -568,8 +568,8 @@ void Editor::undo() {
         return;
     }
     
-    input_manager.typing_state_saved = false;
-    input_manager.last_action = EditorAction::UNDO;
+    typing_state_saved = false;
+    last_action = EditorAction::UNDO;
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Undo");
@@ -581,8 +581,8 @@ void Editor::redo() {
         return;
     }
     
-    input_manager.typing_state_saved = false;
-    input_manager.last_action = EditorAction::REDO;
+    typing_state_saved = false;
+    last_action = EditorAction::REDO;
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
     modified = true;
     set_status("Redo");

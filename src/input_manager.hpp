@@ -59,10 +59,6 @@ public:
         volatile sig_atomic_t& ctrl_c_pressed
     );
     
-    // Typing state for undo grouping (public so editor can access if needed)
-    bool typing_state_saved = false;
-    EditorAction last_action = EditorAction::NONE;
-    
 private:
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(

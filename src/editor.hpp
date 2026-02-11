@@ -72,6 +72,10 @@ private:
     void load_file();
     
 public:
+    // ===== Undo grouping state (public so InputManager can access) =====
+    bool typing_state_saved = false;
+    EditorAction last_action = EditorAction::NONE;
+    
     // ===== Public methods accessible by InputManager =====
     void save_file();
     void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);

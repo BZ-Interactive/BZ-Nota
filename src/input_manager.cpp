@@ -29,8 +29,8 @@ void InputManager::insert_line(Editor& editor, std::vector<std::string>& buffer,
                                int& cursor_x, int& cursor_y, bool& modified, bool above) {
     editor.delete_selection_if_active();
     editor.save_state();
-    typing_state_saved = false;
-    last_action = EditorAction::INSERT_LINE;
+    editor.typing_state_saved = false;
+    editor.last_action = EditorAction::INSERT_LINE;
     
     if (above) {
         buffer.insert(buffer.begin() + cursor_y, "");
@@ -235,8 +235,8 @@ bool InputManager::handle_navigation_sequences(
         editor.clear_selection();
         if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
             editor.save_state();
-            typing_state_saved = false;
-            last_action = EditorAction::UNTAB;
+            editor.typing_state_saved = false;
+            editor.last_action = EditorAction::UNTAB;
             buffer[cursor_y].erase(0, 1);
             if (cursor_x > 0) cursor_x--;
             modified = true;
@@ -274,8 +274,8 @@ bool InputManager::handle_standard_keys(
     if (event == Event::Tab) {
         editor.delete_selection_if_active();
         editor.save_state();
-        typing_state_saved = false;
-        last_action = EditorAction::TAB;
+        editor.typing_state_saved = false;
+        editor.last_action = EditorAction::TAB;
         buffer[cursor_y].insert(cursor_x, "\t");
         cursor_x++;
         modified = true;
@@ -297,10 +297,10 @@ bool InputManager::handle_text_input(
     if (input_str.empty()) return false;
     
     // Save state before typing if we haven't already for this typing session
-    if (!typing_state_saved || last_action != EditorAction::TYPING) {
+    if (!editor.typing_state_saved || editor.last_action != EditorAction::TYPING) {
         editor.save_state();
-        typing_state_saved = true;
-        last_action = EditorAction::TYPING;
+        editor.typing_state_saved = true;
+        editor.last_action = EditorAction::TYPING;
     }
     
     // Insert the entire UTF-8 string (could be multi-byte character)
