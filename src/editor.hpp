@@ -40,6 +40,8 @@ private:
     bool status_shown = false; // Show status in UI?
     StatusBarType status_bar_type = StatusBarType::NORMAL; // Status bar type (normal, error, warning)
     std::string status_message = "";
+
+    EditorMode editor_mode = EditorMode::FANCY; // Default to FANCY mode with formatting
     
     // Cursor position
     int cursor_x = 0;
@@ -76,6 +78,9 @@ public:
     // ===== Undo grouping state (public so InputManager can access) =====
     bool typing_state_saved = false;
     EditorAction last_action = EditorAction::NONE;
+
+    EditorMode get_editor_mode() const { return editor_mode; }
+    bool set_editor_mode(EditorMode mode);
     
     // ===== Public methods accessible by InputManager =====
     void save_file();

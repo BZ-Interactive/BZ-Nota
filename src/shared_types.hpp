@@ -24,3 +24,11 @@ enum class EditorAction {
     TAB,
     UNTAB
 };
+
+/// @brief Enum for tracking the current editor mode
+enum class EditorMode {
+    BASIC, // Basic with no formatting etc. Will show **Bold** as is.
+    FANCY, // has formatting like bold/italic, etc. Will show *Italic* with italic tilt.
+    CODE, // syntax highlighting, no formatting. Will show **Bold** as is, but keywords in color, for future implementation.
+    DOCUMENT // like fancy but with support for dictionary and grammar features, for future implementation.
+};

@@ -35,6 +35,7 @@ public:
         const std::string& status_message,
         bool status_shown,
         StatusBarType status_type,
+        EditorMode editor_mode,
         bool can_undo,
         bool can_redo,
         bool bold_active,
@@ -63,7 +64,8 @@ private:
 
     /// @brief Render the header bar
     ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
-                                 bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active);
+                                 bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active,
+                                 EditorMode editor_mode);
     
     /// @brief Render the status bar
     ftxui::Element render_status_bar(
@@ -87,6 +89,8 @@ private:
     ftxui::Element render_undo_button(bool available);
     ftxui::Element render_redo_button(bool available);
     
+    ftxui::Element render_editor_mode_dropdown(EditorMode mode);
+
     /// @brief Render the close button
     ftxui::Element render_close_button();
     
@@ -96,6 +100,7 @@ private:
         int cursor_x, int cursor_y,
         int scroll_y,
         int visible_lines,
-        std::function<bool(int, int)> is_char_selected_fn
+        std::function<bool(int, int)> is_char_selected_fn,
+        EditorMode editor_mode
     );
 };

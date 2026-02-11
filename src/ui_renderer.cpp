@@ -2,7 +2,7 @@
 #include "utf8_utils.hpp"
 #include "ftxui/component/component.hpp"
 #include "ftxui/screen/terminal.hpp"
-#include <algorithm>
+//#include <shared_types.hpp>
 
 using namespace ftxui;
 
@@ -38,6 +38,16 @@ static const Color STATUS_BAR_ERROR_BG = Color::Red3Bis;
 static const Color STATUS_BAR_ERROR_FG = Color::Black;
 static const Color STATUS_BAR_WARNING_BG = Color::Yellow3Bis;
 static const Color STATUS_BAR_WARNING_FG = Color::Black;
+
+
+static const Color EDITOR_MODE_BASIC_BG = Color::White;
+static const Color EDITOR_MODE_BASIC_FG = Color::Black;
+static const Color EDITOR_MODE_FANCY_BG = Color::SeaGreen1Bis;
+static const Color EDITOR_MODE_FANCY_FG = Color::Black;
+static const Color EDITOR_MODE_CODE_BG = Color::Magenta2Bis;
+static const Color EDITOR_MODE_CODE_FG = Color::White;
+static const Color EDITOR_MODE_DOCUMENT_BG = Color::NavyBlue;
+static const Color EDITOR_MODE_DOCUMENT_FG = Color::White;
 
 static const auto PRE_SYMBOL_SPACE = text(" ") | nothing;
 
@@ -207,6 +217,7 @@ Element UIRenderer::render(
     const std::string& status_message,
     bool status_shown,
     StatusBarType status_type,
+    EditorMode editor_mode,
     bool can_undo,
     bool can_redo,
     bool bold_active,
@@ -218,10 +229,10 @@ Element UIRenderer::render(
     int screen_height = Terminal::Size().dimy;
     int visible_lines = screen_height - 3;
     
-    auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn);
+    auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn, editor_mode);
     
     return vbox({
-        render_header(filename, modified, can_undo, can_redo, bold_active, italic_active, underline_active, strikethrough_active),
+        render_header(filename, modified, can_undo, can_redo, bold_active, italic_active, underline_active, strikethrough_active, editor_mode),
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
@@ -235,7 +246,8 @@ Elements UIRenderer::render_lines(
     int cursor_x, int cursor_y,
     int scroll_y,
     int visible_lines,
-    std::function<bool(int, int)> is_char_selected_fn
+    std::function<bool(int, int)> is_char_selected_fn,
+    EditorMode editor_mode
 ) {
     Elements lines_display;
     int max_line_num_width = std::to_string(buffer.size()).length();
@@ -270,18 +282,31 @@ Elements UIRenderer::render_lines(
                     line_elements.push_back(elem);
                     byte_pos++;
                 } else {
-                    // Parse markdown and apply formatting
-                    // Pass cursor_x if this is the cursor line, -1 otherwise
-                    int cursor_x_for_parse = (line_idx == cursor_y) ? cursor_x : -1;
-                    auto parse_result = parse_markdown_segment(line_content, byte_pos, is_selected, cursor_x_for_parse);
-                    
-                    for (auto& elem : parse_result.elements) {
+                    // Only parse markdown in FANCY and DOCUMENT modes
+                    if (editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT) {
+                        // Parse markdown and apply formatting
+                        // Pass cursor_x if this is the cursor line, -1 otherwise
+                        int cursor_x_for_parse = (line_idx == cursor_y) ? cursor_x : -1;
+                        auto parse_result = parse_markdown_segment(line_content, byte_pos, is_selected, cursor_x_for_parse);
+                        
+                        for (auto& elem : parse_result.elements) {
+                            line_elements.push_back(elem);
+                        }
+                        byte_pos += parse_result.bytes_consumed;
+                        if (parse_result.bytes_consumed == 0) {
+                            // Fallback - advance by one character to avoid infinite loop
+                            byte_pos++;
+                        }
+                    } else {
+                        // BASIC or CODE mode - render plain text without markdown parsing
+                        int char_len = UTF8Utils::get_char_length(line_content, byte_pos);
+                        std::string ch_str = line_content.substr(byte_pos, char_len);
+                        bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
+                        auto elem = text(ch_str);
+                        if (is_cursor) elem = elem | inverted | bold;
+                        else if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
                         line_elements.push_back(elem);
-                    }
-                    byte_pos += parse_result.bytes_consumed;
-                    if (parse_result.bytes_consumed == 0) {
-                        // Fallback - advance by one character to avoid infinite loop
-                        byte_pos++;
+                        byte_pos += char_len;
                     }
                 }
             } else {
@@ -308,15 +333,16 @@ Elements UIRenderer::render_lines(
 }
 
 Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
-                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active) {
+                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active, 
+                                  EditorMode editor_mode) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
         text(" "),
         render_save_button(modified),
-        render_bold_button(bold_active),
-        render_italic_button(italic_active),
-        render_underline_button(underline_active),
-        render_strikethrough_button(strikethrough_active),
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_bold_button(bold_active) : text(""),
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_italic_button(italic_active) : text(""),
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_underline_button(underline_active) : text(""),
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_strikethrough_button(strikethrough_active) : text(""),
         render_bullet_button(),
         //render_font_button(),
         text(" ") | flex,
@@ -324,6 +350,7 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
         text(" ") | flex,
         render_undo_button(can_undo),
         render_redo_button(can_redo),
+        render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
         render_close_button(),
         text(" ")
     }) | bgcolor(Color::DarkBlue);
@@ -447,6 +474,41 @@ Element UIRenderer::render_redo_button(bool available) {
            bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
+}
+
+// not really a dropdown consider and change to button if need be
+Element UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
+    std::string mode_text;
+    Color bg_color;
+    Color fg_color;
+
+    switch (mode) {
+        case EditorMode::BASIC:
+            mode_text = "Mode: Basic";
+            bg_color = EDITOR_MODE_BASIC_BG;
+            fg_color = EDITOR_MODE_BASIC_FG;
+            break;
+        case EditorMode::FANCY:
+            mode_text = "Mode: Fancy";
+            bg_color = EDITOR_MODE_FANCY_BG;
+            fg_color = EDITOR_MODE_FANCY_FG;
+            break;
+        case EditorMode::CODE:
+            mode_text = "Mode: Code";
+            bg_color = EDITOR_MODE_CODE_BG;
+            fg_color = EDITOR_MODE_CODE_FG;
+            break;
+        case EditorMode::DOCUMENT:
+            mode_text = "Mode: Document";
+            bg_color = EDITOR_MODE_DOCUMENT_BG;
+            fg_color = EDITOR_MODE_DOCUMENT_FG;
+            break;
+    }
+
+    return hbox({PRE_SYMBOL_SPACE, text(mode_text), text(" F7 ") | blink}) |
+           bgcolor(bg_color) |
+           color(fg_color) |
+           bold;
 }
 
 Element UIRenderer::render_close_button() {

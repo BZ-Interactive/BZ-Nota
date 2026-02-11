@@ -185,8 +185,7 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         rename_input = basename;
         editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
         return true;
-    }
-    else if (event == Event::F5) {
+    } else if (event == Event::F5) {
         // 1. Reset all 'locked' UI states
         is_renaming = false;
         rename_input = "";
@@ -196,9 +195,10 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         // 2. Clear visual glitches
         // This forces the terminal to wipe and redraw the whole grid
         editor.screen_reset(); 
-
-
         return true;
+    } else if (event == Event::F7) {
+        int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 5; // Cycle through modes
+        editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode));
     }
     
     return false;

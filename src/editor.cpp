@@ -38,6 +38,39 @@ Editor::~Editor() {
     }
 }
 
+bool Editor::set_editor_mode(EditorMode mode) {
+    if (mode == editor_mode) return false; // No change
+    
+    if (mode == EditorMode::CODE || mode == EditorMode::DOCUMENT) {
+        // check for supported languages ONLY APPLICABLE AFTER SYNTAX HIGHLIGHTING IMPLEMENTED
+        
+        // temporary
+        if (editor_mode == EditorMode::FANCY) {
+            editor_mode = EditorMode::BASIC;
+            set_status("Switched editor mode to BASIC");
+        }
+        else if (editor_mode == EditorMode::BASIC) {
+            editor_mode = EditorMode::FANCY;
+            set_status("Switched editor mode to FANCY");
+        }
+        return true;
+        // Temporary end
+
+        set_status("This mode is not implemented yet", StatusBarType::WARNING);
+        return false;
+        
+        // Check if supported coding language via file extention
+        // if so return true;
+
+        // check if supported language in document
+        // if so return true;
+    }
+
+    editor_mode = mode;
+    set_status("Switched editor mode to " + std::to_string(static_cast<int>(mode)));
+    return true;
+}
+
 // ===== File Operations =====
 
 void Editor::load_file() {
@@ -629,6 +662,7 @@ Element Editor::render() {
         status_message,
         status_shown,
         status_bar_type,
+        editor_mode,
         undo_redo_manager.can_undo(),
         undo_redo_manager.can_redo(),
         show_bold,
