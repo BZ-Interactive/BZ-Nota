@@ -45,5 +45,5 @@ public:
 private:
     std::vector<EditorState> undo_history;
     std::vector<EditorState> redo_history;
-    const static uint8_t max_history = std::numeric_limits<uint8_t>::max();  // 255 is plenty, one may never reach it in practice
+    constexpr static uint8_t max_history = std::numeric_limits<uint8_t>::max();  // 255 is plenty, one may never reach it in practice
 };

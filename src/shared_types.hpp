@@ -9,3 +9,18 @@ enum class StatusBarType {
     ERROR,
     WARNING
 };
+
+/// @brief Enum for tracking the last editor action (used by undo grouping)
+enum class EditorAction {
+    NONE,
+    TYPING,
+    DELETE,
+    DELETE_FORWARD,
+    NEWLINE,
+    PASTE_SYSTEM,
+    UNDO,
+    REDO,
+    INSERT_LINE,
+    TAB,
+    UNTAB
+};

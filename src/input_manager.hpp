@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <functional>
 #include <csignal>
 #include "ftxui/component/event.hpp"
 #include "shared_types.hpp"
@@ -9,20 +8,23 @@
 // Forward declaration to avoid circular dependency
 class Editor;
 
-/// @brief Enum for tracking the last editor action (used by undo grouping)
-enum class EditorAction {
-    NONE,
-    TYPING,
-    DELETE,
-    DELETE_FORWARD,
-    NEWLINE,
-    PASTE_SYSTEM,
-    UNDO,
-    REDO,
-    INSERT_LINE,
-    TAB,
-    UNTAB
-};
+/// @brief Control character constants for Ctrl+Key combinations
+namespace CtrlKey {
+    constexpr unsigned char A = 1;
+    constexpr unsigned char B = 2;
+    constexpr unsigned char C = 3;
+    constexpr unsigned char I = 9;
+    constexpr unsigned char K = 11;
+    constexpr unsigned char O = 15;
+    constexpr unsigned char Q = 17;
+    constexpr unsigned char S = 19;
+    constexpr unsigned char T = 20;
+    constexpr unsigned char U = 21;
+    constexpr unsigned char V = 22;
+    constexpr unsigned char X = 24;
+    constexpr unsigned char Y = 25;
+    constexpr unsigned char Z = 26;
+}
 
 /// @brief Manages keyboard/mouse input events and dispatches to editor actions
 /// Similar to file_manager/undo_redo_manager pattern - takes editor state as parameters
@@ -83,6 +85,12 @@ private:
         bool& modified,
         bool debug_mode
     );
+    
+    /// @brief Helper: Show debug info for key sequences
+    void show_debug_info(const std::string& input, Editor& editor);
+    
+    /// @brief Helper: Insert a new line and update cursor
+    void insert_line(Editor& editor, std::vector<std::string>& buffer, int& cursor_x, int& cursor_y, bool& modified, bool above);
     
     /// @brief Handle standard keys (arrows, backspace, delete, enter, tab)
     bool handle_standard_keys(
