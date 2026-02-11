@@ -40,11 +40,9 @@ public:
     // Inline getters
     bool can_undo() const { return !undo_history.empty(); }
     bool can_redo() const { return !redo_history.empty(); }
-    
-    void set_max_history(int max) { max_history = max; }
 
 private:
     std::vector<EditorState> undo_history;
     std::vector<EditorState> redo_history;
-    int max_history = 100;  // Default value
+    const static unsigned int max_history = 100;  // 100 is plenty, one may never reach it in practice
 };
