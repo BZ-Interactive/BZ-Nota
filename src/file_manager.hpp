@@ -31,4 +31,6 @@ public:
     /// @param buffer Buffer containing lines to save
     /// @return Result indicating success or failure
     [[nodiscard]] FileOperationResult save_file(const std::string& filename, const std::vector<std::string>& buffer);
+
+    [[nodiscard]] FileOperationResult rename_file(const std::string& old_filename, const std::string& new_filename);
 };

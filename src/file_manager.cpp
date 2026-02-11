@@ -70,3 +70,30 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
     
     return FileOperationResult(true, "File saved successfully", 0, StatusBarType::SUCCESS);
 }
+
+FileOperationResult FileManager::rename_file(const std::string& old_filename, const std::string& new_filename) {
+    if (std::rename(old_filename.c_str(), new_filename.c_str()) != 0) {
+        int err = errno;
+        std::string error_msg;
+        StatusBarType status_type = StatusBarType::ERROR;
+        
+        if (err == EACCES) {
+            error_msg = "Permission denied when renaming file!";
+        } else if (err == ENOENT) {
+            error_msg = "File does not exist!";
+        } else if (err == EAGAIN) {
+            error_msg = "Try again!";
+            status_type = StatusBarType::WARNING; 
+        } else if (err == EEXIST) {
+            error_msg = "A file with the new name already exists!";
+        } else if (err == EISDIR || err == ENOTDIR) {
+            error_msg = "Invalid file or directory!";
+        } else {
+            error_msg = "Could not rename file! (" + std::string(strerror(err)) + ")";
+        }
+        
+        return FileOperationResult(false, error_msg, err, status_type);
+    }
+    
+    return FileOperationResult(true, "File renamed to \"" + new_filename + "\"", 0, StatusBarType::SUCCESS);
+}
