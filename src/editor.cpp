@@ -653,7 +653,7 @@ Element Editor::render() {
         return this->is_char_selected(x, y);
     };
     
-    return ui_renderer.render(
+    RenderParams params{
         buffer,
         cursor_x, cursor_y,
         scroll_y,
@@ -670,7 +670,9 @@ Element Editor::render() {
         show_underline,
         show_strikethrough,
         is_char_selected_fn
-    );
+    };
+    
+    return ui_renderer.render(params);
 }
 
 // ===== Event Handling =====

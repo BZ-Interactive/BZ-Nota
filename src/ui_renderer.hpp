@@ -10,40 +10,9 @@ public:
     UIRenderer();
     
     /// @brief Render the complete editor UI
-    /// @param buffer The text buffer lines
-    /// @param cursor_x Current cursor X position
-    /// @param cursor_y Current cursor Y position
-    /// @param scroll_y Current scroll position
-    /// @param filename Current filename
-    /// @param modified Whether the file has been modified
-    /// @param status_message Status message to display
-    /// @param status_shown Whether to show status message
-    /// @param can_undo Whether undo is available
-    /// @param can_redo Whether redo is available
-    /// @param bold_active Whether bold formatting is active
-    /// @param italic_active Whether italic formatting is active
-    /// @param underline_active Whether underline formatting is active
-    /// @param strikethrough_active Whether strikethrough formatting is active
-    /// @param is_char_selected_fn Function to check if a character is selected
+    /// @param params All rendering parameters bundled in a struct
     /// @return The rendered FTXUI Element
-    ftxui::Element render(
-        const std::vector<std::string>& buffer,
-        int cursor_x, int cursor_y,
-        int scroll_y,
-        const std::string& filename,
-        bool modified,
-        const std::string& status_message,
-        bool status_shown,
-        StatusBarType status_type,
-        EditorMode editor_mode,
-        bool can_undo,
-        bool can_redo,
-        bool bold_active,
-        bool italic_active,
-        bool underline_active,
-        bool strikethrough_active,
-        std::function<bool(int, int)> is_char_selected_fn
-    );
+    ftxui::Element render(const RenderParams& params);
 
 private:
     /// @brief Check if the terminal supports emojis

@@ -208,35 +208,18 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
     return result;
 }
 
-Element UIRenderer::render(
-    const std::vector<std::string>& buffer,
-    int cursor_x, int cursor_y,
-    int scroll_y,
-    const std::string& filename,
-    bool modified,
-    const std::string& status_message,
-    bool status_shown,
-    StatusBarType status_type,
-    EditorMode editor_mode,
-    bool can_undo,
-    bool can_redo,
-    bool bold_active,
-    bool italic_active,
-    bool underline_active,
-    bool strikethrough_active,
-    std::function<bool(int, int)> is_char_selected_fn
-) {
+Element UIRenderer::render(const RenderParams& params) {
     int screen_height = Terminal::Size().dimy;
     int visible_lines = screen_height - 3;
     
-    auto lines = render_lines(buffer, cursor_x, cursor_y, scroll_y, visible_lines, is_char_selected_fn, editor_mode);
+    auto lines = render_lines(params.buffer, params.cursor_x, params.cursor_y, params.scroll_y, visible_lines, params.is_char_selected_fn, params.editor_mode);
     
     return vbox({
-        render_header(filename, modified, can_undo, can_redo, bold_active, italic_active, underline_active, strikethrough_active, editor_mode),
+        render_header(params.filename, params.modified, params.can_undo, params.can_redo, params.bold_active, params.italic_active, params.underline_active, params.strikethrough_active, params.editor_mode),
         separator(),
         vbox(std::move(lines)) | flex,
         separator(),
-        render_status_bar(cursor_x, cursor_y, status_message, status_shown, status_type),
+        render_status_bar(params.cursor_x, params.cursor_y, params.status_message, params.status_shown, params.status_type),
         render_shortcuts()
     });
 }
