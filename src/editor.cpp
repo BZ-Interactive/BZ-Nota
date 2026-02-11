@@ -649,6 +649,14 @@ bool Editor::handle_event(Event event) {
     );
 }
 
+/// @brief Clear the UI and redraw, if the file isn't modified reload it from disk.
+void Editor::screen_reset() {
+    screen->Clear();
+    if (!is_modified())
+        load_file();
+    set_status("UI Reset.", StatusBarType::NORMAL);
+}
+
 void Editor::exit() {
     screen->Exit();
 }

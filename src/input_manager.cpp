@@ -168,12 +168,11 @@ bool InputManager::handle_ctrl_keys(
 bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
     // F1: Help
     if (event == Event::F1) {
-        editor.set_status("Help: Ctrl+S=Save, Ctrl+Q=Quit, F2=Rename, Ctrl+Z=Undo, Ctrl+Y=Redo", StatusBarType::NORMAL);
+        editor.set_status("Fn Help: F1-Help, F2-Rename, F5-Reload", StatusBarType::NORMAL);
         return true;
     } 
-    
     // F2: Start rename mode
-    if (event == Event::F2) {
+    else if (event == Event::F2) {
         // Extract just the filename (remove path)
         std::string basename = editor.filename;
         size_t last_slash = basename.find_last_of("/\\");
@@ -185,6 +184,20 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         is_renaming = true;
         rename_input = basename;
         editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
+        return true;
+    }
+    else if (event == Event::F5) {
+        // 1. Reset all 'locked' UI states
+        is_renaming = false;
+        rename_input = "";
+        is_confirming_overwrite = false;
+        pending_rename_target = "";
+        
+        // 2. Clear visual glitches
+        // This forces the terminal to wipe and redraw the whole grid
+        editor.screen_reset(); 
+
+
         return true;
     }
     

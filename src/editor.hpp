@@ -81,6 +81,7 @@ public:
     void save_file();
     void rename_file(const std::string& new_filename);
     void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);
+    void screen_reset();
     void exit();
     
     // Selection
@@ -94,7 +95,6 @@ public:
     bool is_char_selected(int x, int y);
     
     // Clipboard
-
     void copy_to_system_clipboard();
     void paste_from_system_clipboard();
     void cut_to_system_clipboard();
