@@ -41,56 +41,18 @@ Editor::~Editor() {
 // ===== File Operations =====
 
 void Editor::load_file() {
-    std::ifstream ifs(filename);
-    if (!ifs) {
-        buffer.push_back("");
-        return;
-    }
-    std::string line;
-    while (std::getline(ifs, line)) {
-        buffer.push_back(line);
-    }
-    if (buffer.empty()) {
-        buffer.push_back("");
+    FileOperationResult result = file_manager.load_file(filename, buffer);
+    if(!result.success) {
+        set_status(result.message, result.status_type);
     }
 }
 
 void Editor::save_file() {
-    // Create directory if needed
-    char* filename_copy = strdup(filename.c_str());
-    char* dir = dirname(filename_copy);
-    mkdir(dir, 0755);
-    free(filename_copy);
-    
-    std::ofstream ofs(filename);
-    if (!ofs) {
-        int err = errno;
-        if (err == EACCES) {
-            set_status("Error: Permission denied when saving file!, Save as sudo? (y/n)", UIRenderer::StatusBarType::ERROR);
-            // TODO: implement "save as sudo" flow - either pipe file or get permissions here with elevated permissions
-        } else if (err == ENOENT) {
-            set_status("Error: Directory does not exist!", UIRenderer::StatusBarType::ERROR);
-        } else  if(err == EAGAIN) {
-            set_status("Error: Try again!", UIRenderer::StatusBarType::WARNING);
-        } else if (err == EROFS) {
-            set_status("Error: Read-only file system!", UIRenderer::StatusBarType::ERROR);
-        } else {
-            set_status("Error: Could not save file! (" + std::string(strerror(err)) + ")", UIRenderer::StatusBarType::ERROR);
-        }
-        return;
-    }
-    // this basically means the IO is corrupt, good luck.
-    else if (ofs.bad()) {
-        set_status("Error: I/O error while saving file!", UIRenderer::StatusBarType::ERROR);
-        return;
-    }
-    
-    for (const auto& line : buffer) {
-        ofs << line << '\n';
-    }
-    
-    modified = false;
-    set_status("File saved successfully", UIRenderer::StatusBarType::SUCCESS);
+    FileOperationResult result = file_manager.save_file(filename, buffer);
+
+    set_status(result.message, result.status_type);
+    if (result.success)
+        modified = false;
 }
 
 // ===== Selection Operations =====
@@ -575,23 +537,8 @@ void Editor::ensure_cursor_visible(int screen_height) {
     cursor_manager.ensure_cursor_visible(cursor_y, scroll_y, screen_height);
 }
 
-void Editor::set_status(const std::string& message, UIRenderer::StatusBarType type) {
-    switch (type) {
-        case UIRenderer::StatusBarType::NORMAL:
-            status_bar_type = UIRenderer::StatusBarType::NORMAL;
-            break;
-        case UIRenderer::StatusBarType::SUCCESS:
-            status_bar_type = UIRenderer::StatusBarType::SUCCESS;
-            break;
-        case UIRenderer::StatusBarType::ERROR:
-            status_bar_type = UIRenderer::StatusBarType::ERROR;
-            break;
-        case UIRenderer::StatusBarType::WARNING:
-            status_bar_type = UIRenderer::StatusBarType::WARNING;
-            break;
-        default: // not needed but just in case
-            status_bar_type = UIRenderer::StatusBarType::NORMAL;
-    }
+void Editor::set_status(const std::string& message, StatusBarType type) {
+    status_bar_type = type;
     status_message = message;
     status_shown = true;
 }
@@ -693,7 +640,7 @@ bool Editor::handle_event(Event event) {
 
     // Reset status bar variables
     status_shown = false;
-    status_bar_type = UIRenderer::StatusBarType::NORMAL;
+    status_bar_type = StatusBarType::NORMAL;
     
     // Don't reset confirm_quit if this is Ctrl+Q (char 17)
     bool is_ctrl_q = !event.is_character() && event.input().size() == 1 && 
@@ -750,7 +697,7 @@ bool Editor::handle_ctrl_keys(unsigned char ch) {
         
         case 17: // Ctrl+Q
             if (modified && !confirm_quit) {
-                set_status("Unsaved changes! Press Ctrl+Q again to quit.", UIRenderer::StatusBarType::WARNING);
+                set_status("Unsaved changes! Press Ctrl+Q again to quit.", StatusBarType::WARNING);
                 confirm_quit = true;
                 return true;
             }

@@ -2,17 +2,11 @@
 #include <string>
 #include <vector>
 #include "ftxui/dom/elements.hpp"
+#include "shared_types.hpp"
 
 /// @brief Handles all UI rendering for the editor
 class UIRenderer {
 public:
-    enum class StatusBarType {
-        NORMAL,
-        SUCCESS,
-        ERROR,
-        WARNING
-    };
-
     UIRenderer();
     
     /// @brief Render the complete editor UI

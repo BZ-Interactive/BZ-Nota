@@ -19,6 +19,7 @@
 #include "cursor_manager.hpp"
 #include "undo_redo_manager.hpp"
 #include "format_manager.hpp"
+#include "file_manager.hpp"
 
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
@@ -35,7 +36,7 @@ private:
     std::string filename; // Includes File path
     bool modified = false; // Has unsaved changes?
     bool status_shown = false; // Show status in UI?
-    UIRenderer::StatusBarType status_bar_type = UIRenderer::StatusBarType::NORMAL; // Status bar type (normal, error, warning)
+    StatusBarType status_bar_type = StatusBarType::NORMAL; // Status bar type (normal, error, warning)
     std::string status_message = "";
     
     // Cursor position
@@ -81,6 +82,7 @@ private:
     CursorManager cursor_manager;           // Cursor movement
     UndoRedoManager undo_redo_manager;      // History management
     FormatManager format_manager;           // Formatting state (bold, italic, etc.)
+    FileManager file_manager;               // File I/O operations
     
     // ===== File Operations =====
     void load_file();
@@ -129,7 +131,7 @@ private:
     void ensure_cursor_visible(int screen_height);
     
     // Internal helpers
-    void set_status(const std::string& message, UIRenderer::StatusBarType type = UIRenderer::StatusBarType::NORMAL);
+    void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);
     void delete_selection_if_active();
     std::tuple<std::function<void()>, std::function<void()>, std::function<void()>> get_selection_callbacks();
     

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(BZ-Nota VERSION 0.6.4 LANGUAGES CXX)
+project(BZ-Nota VERSION 0.6.5 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -38,6 +38,8 @@ add_executable(bznota
     src/undo_redo_manager.hpp
     src/format_manager.cpp
     src/format_manager.hpp
+    src/file_manager.cpp
+    src/file_manager.hpp
     src/formatter.cpp
     src/formatter.hpp
     src/utf8_utils.cpp
