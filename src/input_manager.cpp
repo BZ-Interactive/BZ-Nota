@@ -94,6 +94,11 @@ bool InputManager::handle_event(
         return handle_rename_input(event, editor);
     }
     
+    // Handle search mode input
+    if (is_searching) {
+        return handle_search_input(event, editor);
+    }
+    
     // Handle function keys (F1, F2, etc.)
     if (handle_fn_keys(event, editor)) {
         return true;
@@ -150,6 +155,15 @@ bool InputManager::handle_ctrl_keys(
         case CtrlKey::O: insert_line(editor, buffer, cursor_x, cursor_y, modified, true); return true;
         case CtrlKey::K: insert_line(editor, buffer, cursor_x, cursor_y, modified, false); return true;
         
+        // Search
+        case CtrlKey::F:
+            is_searching = true;
+            search_input.clear();
+            search_start_x = cursor_x;
+            search_start_y = cursor_y;
+            editor.set_status("Search: " + search_input + " (Enter to find, Esc to cancel)", StatusBarType::NORMAL);
+            return true;
+
         // Quit
         case CtrlKey::Q:
             if (modified && !confirm_quit) {
@@ -186,6 +200,26 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
         return true;
     }
+    // F3: Find next (works even outside search mode if there's a previous search)
+    else if (event == Event::F3) {
+        if (search_input.empty()) {
+            editor.set_status("No active search query. Press Ctrl+F to search.", StatusBarType::WARNING);
+            return true;
+        }
+        
+        // Move cursor forward by 1 to avoid finding the same match
+        editor.move_cursor_right(false);
+        
+        int result_x, result_y;
+        if (editor.search_forward(search_input, result_x, result_y)) {
+            editor.jump_to_search_result(result_x, result_y, search_input);
+            editor.set_status("Found: \"" + search_input + "\" (F3 for next)", StatusBarType::NORMAL);
+        } else {
+            editor.set_status("No more matches for: \"" + search_input + "\"", StatusBarType::WARNING);
+        }
+        
+        return true;
+    }
     else if (event == Event::F5) {
         // 1. Reset all 'locked' UI states
         is_renaming = false;
@@ -198,6 +232,9 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         editor.screen_reset(); 
 
 
+        return true;
+    } else if (event == Event::F7) { // change editor mode (enable md preview or basic text mode)
+        editor.set_status("Editor mode changed to: new Mode here", StatusBarType::NORMAL);
         return true;
     }
     
@@ -310,6 +347,83 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
     }
     
     // Ignore other keys during rename mode
+    return true;
+}
+
+bool InputManager::handle_search_input(ftxui::Event event, Editor& editor) {
+    // Handle Enter - perform search
+    if (event == Event::Return) {
+        if (search_input.empty()) {
+            editor.set_status("Search cancelled (empty query)", StatusBarType::NORMAL);
+            is_searching = false;
+            search_input.clear();
+            return true;
+        }
+        
+        // Perform search from current cursor position
+        int result_x, result_y;
+        if (editor.search_forward(search_input, result_x, result_y)) {
+            editor.jump_to_search_result(result_x, result_y, search_input);
+            editor.set_status("Found: \"" + search_input + "\" (F3 for next)", StatusBarType::NORMAL);
+        } else {
+            editor.set_status("Not found: \"" + search_input + "\"", StatusBarType::WARNING);
+        }
+        
+        // Stay in search mode to allow searching again with F3
+        return true;
+    }
+    
+    // Handle F3 - find next occurrence (without re-entering search query)
+    if (event == Event::F3) {
+        if (search_input.empty()) {
+            editor.set_status("No active search query", StatusBarType::WARNING);
+            return true;
+        }
+        
+        // Move cursor forward by 1 to avoid finding the same match
+        editor.move_cursor_right(false);
+        
+        int result_x, result_y;
+        if (editor.search_forward(search_input, result_x, result_y)) {
+            editor.jump_to_search_result(result_x, result_y, search_input);
+            editor.set_status("Found: \"" + search_input + "\" (F3 for next)", StatusBarType::NORMAL);
+        } else {
+            editor.set_status("No more matches for: \"" + search_input + "\"", StatusBarType::WARNING);
+        }
+        
+        return true;
+    }
+    
+    // Handle Escape - cancel search
+    if (event == Event::Escape) {
+        editor.set_status("Search cancelled", StatusBarType::NORMAL);
+        is_searching = false;
+        search_input.clear();
+        return true;
+    }
+    
+    // Handle Backspace
+    if (event == Event::Backspace) {
+        if (!search_input.empty()) {
+            search_input.pop_back();
+        }
+        // Always update status to show current search query
+        editor.set_status("Search: " + search_input + " (Enter to find, Esc to cancel)", StatusBarType::NORMAL);
+        return true;
+    }
+    
+    // Handle regular character input
+    if (event.is_character()) {
+        std::string input_str = event.input();
+        
+        if (!input_str.empty()) {
+            search_input += input_str;
+            editor.set_status("Search: " + search_input + " (Enter to find, Esc to cancel)", StatusBarType::NORMAL);
+        }
+        return true;
+    }
+    
+    // Ignore other keys during search mode
     return true;
 }
 

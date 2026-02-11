@@ -649,6 +649,100 @@ bool Editor::handle_event(Event event) {
     );
 }
 
+// ===== Search Operations =====
+
+/// @brief Search forward from current position for the given query
+/// @param query The search string to find
+/// @param result_x Will be set to the X position of the match
+/// @param result_y Will be set to the Y position (line number) of the match
+/// @return true if found, false otherwise
+bool Editor::search_forward(const std::string& query, int& result_x, int& result_y) {
+    if (query.empty() || buffer.empty()) {
+        return false;
+    }
+    
+    // Convert query to lowercase for case-insensitive search
+    std::string query_lower = query;
+    std::transform(query_lower.begin(), query_lower.end(), query_lower.begin(), ::tolower);
+    
+    // Start from current cursor position
+    int start_y = cursor_y;
+    int start_x = cursor_x;
+    
+    // Search from cursor position to end of current line
+    if (start_y < static_cast<int>(buffer.size())) {
+        std::string line_lower = buffer[start_y];
+        std::transform(line_lower.begin(), line_lower.end(), line_lower.begin(), ::tolower);
+        
+        size_t pos = line_lower.find(query_lower, start_x);
+        if (pos != std::string::npos) {
+            result_x = static_cast<int>(pos);
+            result_y = start_y;
+            return true;
+        }
+    }
+    
+    // Search from next line to end of buffer
+    for (int y = start_y + 1; y < static_cast<int>(buffer.size()); ++y) {
+        std::string line_lower = buffer[y];
+        std::transform(line_lower.begin(), line_lower.end(), line_lower.begin(), ::tolower);
+        
+        size_t pos = line_lower.find(query_lower);
+        if (pos != std::string::npos) {
+            result_x = static_cast<int>(pos);
+            result_y = y;
+            return true;
+        }
+    }
+    
+    // Wrap around: search from beginning of buffer to cursor position
+    for (int y = 0; y < start_y; ++y) {
+        std::string line_lower = buffer[y];
+        std::transform(line_lower.begin(), line_lower.end(), line_lower.begin(), ::tolower);
+        
+        size_t pos = line_lower.find(query_lower);
+        if (pos != std::string::npos) {
+            result_x = static_cast<int>(pos);
+            result_y = y;
+            return true;
+        }
+    }
+    
+    // Search beginning of current line (up to cursor position)
+    if (start_y < static_cast<int>(buffer.size()) && start_x > 0) {
+        std::string line_lower = buffer[start_y];
+        std::transform(line_lower.begin(), line_lower.end(), line_lower.begin(), ::tolower);
+        
+        size_t pos = line_lower.find(query_lower);
+        if (pos != std::string::npos && pos < static_cast<size_t>(start_x)) {
+            result_x = static_cast<int>(pos);
+            result_y = start_y;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/// @brief Jump to search result and select the matched text
+/// @param x X position of the match
+/// @param y Y position (line number) of the match
+/// @param query The search query (used to determine selection length)
+void Editor::jump_to_search_result(int x, int y, const std::string& query) {
+    cursor_x = x;
+    cursor_y = y;
+    
+    // Select the matched text
+    clear_selection();
+    selection_manager.start_selection(x, y);
+    cursor_x = x + query.length();
+    selection_manager.update_selection(cursor_x, cursor_y);
+    
+    // Ensure the match is visible on screen
+    int screen_height = 24; // Will be updated by renderer
+    ensure_cursor_visible(screen_height);
+}
+
 /// @brief Clear the UI and redraw, if the file isn't modified reload it from disk.
 void Editor::screen_reset() {
     screen->Clear();

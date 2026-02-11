@@ -13,6 +13,7 @@ namespace CtrlKey {
     constexpr unsigned char A = 1;
     constexpr unsigned char B = 2;
     constexpr unsigned char C = 3;
+    constexpr unsigned char F = 6;
     constexpr unsigned char I = 9;
     constexpr unsigned char K = 11;
     constexpr unsigned char O = 15;
@@ -64,6 +65,11 @@ private:
     std::string rename_input; // Buffer for F2 rename input
     bool is_confirming_overwrite = false; // State for overwrite confirmation
     std::string pending_rename_target; // Full path of pending rename target
+    
+    bool is_searching = false; // State for Ctrl+F search operation
+    std::string search_input; // Buffer for search query input
+    int search_start_x = 0; // Starting cursor position for search
+    int search_start_y = 0; // Starting cursor line for search
 
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(
@@ -92,6 +98,9 @@ private:
     
     /// @brief Handle text input during rename mode (F2)
     bool handle_rename_input(ftxui::Event event, Editor& editor);
+    
+    /// @brief Handle text input during search mode (Ctrl+F)
+    bool handle_search_input(ftxui::Event event, Editor& editor);
 
     /// @brief Helper: Show debug info for key sequences
     void show_debug_info(const std::string& input, Editor& editor);

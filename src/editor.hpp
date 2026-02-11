@@ -125,6 +125,10 @@ public:
     void save_state();
     void undo();
     void redo();
+    
+    // Search
+    bool search_forward(const std::string& query, int& result_x, int& result_y);
+    void jump_to_search_result(int x, int y, const std::string& query);
 
 private:
     // ===== Helper Functions =====
