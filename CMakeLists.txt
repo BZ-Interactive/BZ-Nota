@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(BZ-Nota VERSION 0.6.5 LANGUAGES CXX)
+project(BZ-Nota VERSION 0.6.6 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)

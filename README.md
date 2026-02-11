@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.6.5-orange)
+![Version](https://img.shields.io/badge/version-0.6.6-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
@@ -77,9 +77,12 @@ BZ-Nota is a terminal-based text editor that aims to provide a modern and effici
 
 Key Features:
 *   **Intuitive Editing**: Familiar keybindings and a focus on simplicity.
-*   **Modern TUI**: A dashboard for file navigation, project statistics, and more.
+*   **Modern TUI**: Clear and modern looks with emoji support.
 *   **High Performance**: Built with C++ for speed and low resource usage.
-*   **Minimal Resource Usage**: Uses less than 2MB and close to zero CPU when editing an empty file.
+*   **Minimal Resource Usage**: Uses less than 2MB on an empty file and close to zero CPU usage when editing.
+*   **Safe Renaming & Saving**: Prompts before overwriting existing files and privilege elevation to save files requiring elevated permissions.
+
+(Privilege elevation is currently being worked on)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
