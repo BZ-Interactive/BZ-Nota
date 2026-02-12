@@ -45,19 +45,7 @@ public:
     /// @param debug_mode Debug mode flag (readonly)
     /// @param ctrl_c_pressed Signal flag for Ctrl+C (modifiable)
     /// @return true if event was handled, false otherwise
-    bool handle_event(
-        ftxui::Event event,
-        Editor& editor,
-        std::vector<std::string>& buffer,
-        int& cursor_x,
-        int& cursor_y,
-        bool& modified,
-        bool& status_shown,
-        StatusBarType& status_bar_type,
-        bool& confirm_quit,
-        bool debug_mode,
-        volatile sig_atomic_t& ctrl_c_pressed
-    );
+    bool handle_event(ftxui::Event event, Editor& editor, volatile sig_atomic_t& ctrl_c_pressed);
     
 private:
     bool is_renaming = false; // State for F2 rename operation
@@ -66,26 +54,10 @@ private:
     std::string pending_rename_target; // Full path of pending rename target
 
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
-    bool handle_ctrl_keys(
-        unsigned char ch,
-        Editor& editor,
-        std::vector<std::string>& buffer,
-        int& cursor_x,
-        int& cursor_y,
-        bool& modified,
-        bool& confirm_quit
-    );
+    bool handle_ctrl_keys(unsigned char ch, Editor& editor);
     
     /// @brief Handle escape/navigation sequences (arrows with modifiers, word navigation)
-    bool handle_navigation_sequences(
-        const std::string& input,
-        Editor& editor,
-        std::vector<std::string>& buffer,
-        int& cursor_x,
-        int& cursor_y,
-        bool& modified,
-        bool debug_mode
-    );
+    bool handle_navigation_sequences(const std::string& input, Editor& editor, bool debug_mode);
     
     /// @brief Handle function keys (F1, F2, etc.)
     bool handle_fn_keys(ftxui::Event event, Editor& editor);
@@ -96,22 +68,10 @@ private:
     /// @brief Helper: Show debug info for key sequences
     void show_debug_info(const std::string& input, Editor& editor);
 
-    /// @brief Helper: Insert a new line and update cursor
-    void insert_line(Editor& editor, std::vector<std::string>& buffer, int& cursor_x, int& cursor_y, bool& modified, bool above);
-    
     /// @brief Handle standard keys (arrows, backspace, delete, enter, tab)
-    bool handle_standard_keys(
-        ftxui::Event event,
-        Editor& editor,
-        std::vector<std::string>& buffer,
-        int& cursor_x,
-        int& cursor_y,
-        bool& modified
-    );
+    bool handle_standard_keys(ftxui::Event event, Editor& editor);
     
     /// @brief Handle regular text input (UTF-8 characters)
-    bool handle_text_input(
-        ftxui::Event event,
-        Editor& editor
-    );
+    bool handle_text_input(ftxui::Event event, Editor& editor);
+
 };

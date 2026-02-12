@@ -4,6 +4,17 @@
 
 SelectionManager::SelectionManager() {}
 
+void SelectionManager::get_normalized_bounds(int& sx, int& sy, int& ex, int& ey) const {
+    sx = selection_start_x;
+    sy = selection_start_y;
+    ex = selection_end_x;
+    ey = selection_end_y;
+    if (sy > ey || (sy == ey && sx > ex)) {
+        std::swap(sx, ex);
+        std::swap(sy, ey);
+    }
+}
+
 void SelectionManager::start_selection(int cursor_x, int cursor_y) {
     has_selection = true;
     selection_start_x = cursor_x;
@@ -37,18 +48,10 @@ void SelectionManager::delete_selection(
     int& cursor_y
 ) {
     if (!has_selection) return;
-    
-    // std::min/std::max
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
+
+    int start_x, start_y, end_x, end_y;
+    get_normalized_bounds(start_x, start_y, end_x, end_y);
+
     if (start_y == end_y) {
         // Single line deletion
         buffer[start_y].erase(start_x, end_x - start_x);
@@ -64,23 +67,16 @@ void SelectionManager::delete_selection(
         cursor_x = start_x;
         cursor_y = start_y;
     }
-    
+
     clear_selection();
 }
 
 std::string SelectionManager::get_selected_text(const std::vector<std::string>& buffer) const {
     if (!has_selection) return "";
-    
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
+
+    int start_x, start_y, end_x, end_y;
+    get_normalized_bounds(start_x, start_y, end_x, end_y);
+
     if (start_y == end_y) {
         // Single line
         return buffer[start_y].substr(start_x, end_x - start_x);
@@ -97,17 +93,10 @@ std::string SelectionManager::get_selected_text(const std::vector<std::string>& 
 
 bool SelectionManager::is_char_selected(int x, int y) const {
     if (!has_selection) return false;
-    
-    int start_y = std::min(selection_start_y, selection_end_y);
-    int end_y = std::max(selection_start_y, selection_end_y);
-    int start_x = selection_start_x;
-    int end_x = selection_end_x;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-    }
-    
+
+    int start_x, start_y, end_x, end_y;
+    get_normalized_bounds(start_x, start_y, end_x, end_y);
+
     if (y < start_y || y > end_y) return false;
     if (y == start_y && y == end_y) {
         return x >= start_x && x < end_x;
@@ -130,30 +119,21 @@ void SelectionManager::get_bounds(int& start_x, int& start_y, int& end_x, int& e
 
 void SelectionManager::adjust_selection_for_formatting(const std::vector<std::string>& buffer) {
     if (!has_selection) return;
-    
-    // Determine which is the start position
-    int start_x = selection_start_x;
-    int start_y = selection_start_y;
-    int end_x = selection_end_x;
-    int end_y = selection_end_y;
-    
-    if (selection_start_y > selection_end_y || 
-        (selection_start_y == selection_end_y && selection_start_x > selection_end_x)) {
-        std::swap(start_x, end_x);
-        std::swap(start_y, end_y);
-    }
-    
+
+    int start_x, start_y, end_x, end_y;
+    get_normalized_bounds(start_x, start_y, end_x, end_y);
+
     // Only adjust single-line selections for now
     if (start_y != end_y || start_y >= (int)buffer.size()) return;
-    
+
     const std::string& line = buffer[start_y];
-    
+
     // Use the object-oriented formatter approach
     adjust_selection_bounds(line, start_x, end_x);
-    
-    // Update the selection bounds
-    if (selection_start_y == start_y && 
-        (selection_start_y < selection_end_y || 
+
+    // Update the selection bounds preserving original direction
+    if (selection_start_y == start_y &&
+        (selection_start_y < selection_end_y ||
          (selection_start_y == selection_end_y && selection_start_x <= selection_end_x))) {
         selection_start_x = start_x;
         selection_end_x = end_x;

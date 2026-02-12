@@ -11,11 +11,11 @@ void CursorManager::skip_formatting_markers(const std::string& line, int& cursor
     // Check for markdown markers and skip over them
     if (direction < 0) {  // Moving left
         // Check if we're at the end of a closing marker
-        if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "**") {
+        if (cursor_x >= 2 && line.compare(cursor_x - 2, 2, "**") == 0) {
             cursor_x -= 2;
-        } else if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "~~") {
+        } else if (cursor_x >= 2 && line.compare(cursor_x - 2, 2, "~~") == 0) {
             cursor_x -= 2;
-        } else if (cursor_x >= 4 && line.substr(cursor_x - 4, 4) == "</u>") {
+        } else if (cursor_x >= 4 && line.compare(cursor_x - 4, 4, "</u>") == 0) {
             cursor_x -= 4;
         } else if (cursor_x >= 1 && cursor_x < (int)line.length() && line[cursor_x - 1] == '*') {
             // Single * for italic - but avoid double-counting **
@@ -24,11 +24,11 @@ void CursorManager::skip_formatting_markers(const std::string& line, int& cursor
             }
         }
         // Check if we jumped onto an opening marker, skip that too
-        if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "**") {
+        if (cursor_x >= 2 && line.compare(cursor_x - 2, 2, "**") == 0) {
             cursor_x -= 2;
-        } else if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "~~") {
+        } else if (cursor_x >= 2 && line.compare(cursor_x - 2, 2, "~~") == 0) {
             cursor_x -= 2;
-        } else if (cursor_x >= 3 && line.substr(cursor_x - 3, 3) == "<u>") {
+        } else if (cursor_x >= 3 && line.compare(cursor_x - 3, 3, "<u>") == 0) {
             cursor_x -= 3;
         } else if (cursor_x >= 1 && line[cursor_x - 1] == '*') {
             if (!(cursor_x >= 2 && line[cursor_x - 2] == '*')) {
@@ -37,11 +37,11 @@ void CursorManager::skip_formatting_markers(const std::string& line, int& cursor
         }
     } else {  // Moving right
         // Check if we're at the start of an opening marker
-        if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "**") {
+        if (cursor_x + 2 <= (int)line.length() && line.compare(cursor_x, 2, "**") == 0) {
             cursor_x += 2;
-        } else if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "~~") {
+        } else if (cursor_x + 2 <= (int)line.length() && line.compare(cursor_x, 2, "~~") == 0) {
             cursor_x += 2;
-        } else if (cursor_x + 3 <= (int)line.length() && line.substr(cursor_x, 3) == "<u>") {
+        } else if (cursor_x + 3 <= (int)line.length() && line.compare(cursor_x, 3, "<u>") == 0) {
             cursor_x += 3;
         } else if (cursor_x < (int)line.length() && line[cursor_x] == '*') {
             // Single * for italic
@@ -50,11 +50,11 @@ void CursorManager::skip_formatting_markers(const std::string& line, int& cursor
             }
         }
         // Check if we jumped onto a closing marker, skip that too
-        if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "**") {
+        if (cursor_x + 2 <= (int)line.length() && line.compare(cursor_x, 2, "**") == 0) {
             cursor_x += 2;
-        } else if (cursor_x + 2 <= (int)line.length() && line.substr(cursor_x, 2) == "~~") {
+        } else if (cursor_x + 2 <= (int)line.length() && line.compare(cursor_x, 2, "~~") == 0) {
             cursor_x += 2;
-        } else if (cursor_x + 4 <= (int)line.length() && line.substr(cursor_x, 4) == "</u>") {
+        } else if (cursor_x + 4 <= (int)line.length() && line.compare(cursor_x, 4, "</u>") == 0) {
             cursor_x += 4;
         } else if (cursor_x < (int)line.length() && line[cursor_x] == '*') {
             if (!(cursor_x + 1 < (int)line.length() && line[cursor_x + 1] == '*')) {

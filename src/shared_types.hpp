@@ -56,3 +56,11 @@ struct RenderParams {
     bool strikethrough_active;
     std::function<bool(int, int)> is_char_selected_fn;
 };
+
+/// @brief format type to be used for toggling formatting and checking active formatting at cursor
+enum class FormatType {
+    BOLD,
+    ITALIC,
+    UNDERLINE,
+    STRIKETHROUGH
+};

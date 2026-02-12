@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "shared_types.hpp"
 
 /// @brief Manages text formatting state (bold, italic, underline, strikethrough, bullets)
 class FormatManager {
@@ -95,7 +96,7 @@ public:
     /// @param cursor_x Cursor X position (will be modified)
     /// @param cursor_y Cursor Y position
     /// @param format_type "bold", "italic", "underline", or "strikethrough"
-    void split_formatting_at_cursor(std::vector<std::string>& buffer, int& cursor_x, int cursor_y, const std::string& format_type);
+    void split_formatting_at_cursor(std::vector<std::string>& buffer, int& cursor_x, int cursor_y, FormatType format_type);
     
     // ===== Session Management =====
     

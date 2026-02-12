@@ -96,8 +96,8 @@ public:
     void delete_selection();
     void select_all();
     void delete_selection_if_active();
-    std::string get_selected_text();
-    bool is_char_selected(int x, int y);
+    std::string get_selected_text() const;
+    bool is_char_selected(int x, int y) const;
     
     // Clipboard
     void copy_to_system_clipboard();
@@ -115,7 +115,7 @@ public:
     void toggle_italic();
     void toggle_underline();
     void toggle_strikethrough();
-    
+
     // Cursor movement
     void move_cursor_left(bool select = false);
     void move_cursor_right(bool select = false);
@@ -130,6 +130,22 @@ public:
     void save_state();
     void undo();
     void redo();
+
+    // Additional editor helper methods (refactor inputs)
+    void insert_line_above();
+    void insert_line_below();
+    void insert_tab();
+    void unindent_current_line();
+    bool get_confirm_quit() const { return confirm_quit; }
+    void set_confirm_quit(bool v) { confirm_quit = v; }
+    bool is_debug_mode() const { return debug_mode; }
+
+    // Status helpers
+    void reset_status();
+
+private:
+    // Common helper to reduce duplication in toggle_* methods
+    void toggle_format(FormatType format_type);
 
 private:
     // ===== Helper Functions =====
@@ -149,5 +165,7 @@ private:
     // 'const &' returns reference without copying (not to self: like 'ref readonly' in C#)
     // Trailing 'const' means method doesn't modify object
     const std::vector<std::string>& get_buffer() const { return buffer; }
+
+public:
     bool is_modified() const { return modified; }
 };

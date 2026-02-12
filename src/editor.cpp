@@ -42,7 +42,7 @@ bool Editor::set_editor_mode(EditorMode mode) {
     if (mode == editor_mode) return false; // No change
     
     if (mode == EditorMode::CODE || mode == EditorMode::DOCUMENT) {
-        // check for supported languages ONLY APPLICABLE AFTER SYNTAX HIGHLIGHTING IMPLEMENTED
+        // check for supported languages ONLY APPLICABLE AFTER SYNTAX HIGHLIGHTING IS IMPLEMENTED
         
         // temporary
         if (editor_mode == EditorMode::FANCY) {
@@ -56,10 +56,12 @@ bool Editor::set_editor_mode(EditorMode mode) {
         return true;
         // Temporary end
 
+        #if 0
         set_status("This mode is not implemented yet", StatusBarType::WARNING);
         return false;
-        
-        // Check if supported coding language via file extention
+        #endif
+
+        // Check if supported coding language via file extension
         // if so return true;
 
         // check if supported language in document
@@ -89,6 +91,18 @@ void Editor::save_file() {
 }
 
 void Editor::rename_file(const std::string& new_filename) {
+    // If the current file doesn't exist on disk yet (unsaved/new file),
+    // just adopt the new name and save directly — there's nothing to rename.
+    std::ifstream source_check(filename);
+    bool source_exists = source_check.good();
+    source_check.close();
+
+    if (!source_exists) {
+        filename = new_filename;
+        save_file();
+        return;
+    }
+
     FileOperationResult result = file_manager.rename_file(filename, new_filename);
     
     set_status(result.message, result.status_type);
@@ -129,11 +143,11 @@ void Editor::select_all() {
     set_status("Selected all");
 }
 
-std::string Editor::get_selected_text() {
+std::string Editor::get_selected_text() const {
     return selection_manager.get_selected_text(buffer);
 }
 
-bool Editor::is_char_selected(int x, int y) {
+bool Editor::is_char_selected(int x, int y) const {
     return selection_manager.is_char_selected(x, y);
 }
 
@@ -192,251 +206,129 @@ void Editor::cut_to_system_clipboard() {
 
 // ===== Formatting Operations =====
 
-void Editor::toggle_bold() {
-    // If there's an active selection, wrap it with bold markers
+void Editor::toggle_bold() { toggle_format(FormatType::BOLD); }
+
+void Editor::toggle_italic() { toggle_format(FormatType::ITALIC); }
+
+void Editor::toggle_underline() { toggle_format(FormatType::UNDERLINE); }
+
+void Editor::toggle_strikethrough() { toggle_format(FormatType::STRIKETHROUGH); }
+
+/// @brief Helper to get a human-readable name for a FormatType
+static const char* format_type_name(FormatType ft) {
+    switch (ft) {
+        case FormatType::BOLD:          return "Bold";
+        case FormatType::ITALIC:        return "Italic";
+        case FormatType::UNDERLINE:     return "Underline";
+        case FormatType::STRIKETHROUGH: return "Strikethrough";
+    }
+    return "";
+}
+
+void Editor::toggle_format(FormatType format_type) {
+    // If there's an active selection, wrap/unwrap it with markers
     if (selection_manager.has_active_selection()) {
-        // Adjust selection to include opening formatting markers
         selection_manager.adjust_selection_for_formatting(buffer);
-        
         std::string selected_text = get_selected_text();
         if (!selected_text.empty()) {
-            // Extract existing formatting from selected text
             bool has_bold, has_italic, has_underline, has_strikethrough;
             std::string plain_text = format_manager.extract_formatting_from_text(
                 selected_text, has_bold, has_italic, has_underline, has_strikethrough);
-            
+
             delete_selection();
-            
-            // Rebuild: wrap plain text with existing formatting, excluding bold
+
             std::string rebuilt = plain_text;
-            if (has_italic) rebuilt = format_manager.wrap_with_italic(rebuilt);
-            if (has_underline) rebuilt = format_manager.wrap_with_underline(rebuilt);
-            if (has_strikethrough) rebuilt = format_manager.wrap_with_strikethrough(rebuilt);
-            
-            // Only apply bold if it wasn't already present (toggle behavior)
-            if (!has_bold) {
-                rebuilt = format_manager.wrap_with_bold(rebuilt);
+            // Preserve other formatting
+            if (format_type != FormatType::BOLD && has_bold) rebuilt = format_manager.wrap_with_bold(rebuilt);
+            if (format_type != FormatType::ITALIC && has_italic) rebuilt = format_manager.wrap_with_italic(rebuilt);
+            if (format_type != FormatType::UNDERLINE && has_underline) rebuilt = format_manager.wrap_with_underline(rebuilt);
+            if (format_type != FormatType::STRIKETHROUGH && has_strikethrough) rebuilt = format_manager.wrap_with_strikethrough(rebuilt);
+
+            bool had = false;
+            switch (format_type) {
+                case FormatType::BOLD:          had = has_bold; break;
+                case FormatType::ITALIC:        had = has_italic; break;
+                case FormatType::UNDERLINE:     had = has_underline; break;
+                case FormatType::STRIKETHROUGH: had = has_strikethrough; break;
             }
-            
+
+            // Toggle behavior: apply format only if it wasn't present
+            if (!had) {
+                switch (format_type) {
+                    case FormatType::BOLD:          rebuilt = format_manager.wrap_with_bold(rebuilt); break;
+                    case FormatType::ITALIC:        rebuilt = format_manager.wrap_with_italic(rebuilt); break;
+                    case FormatType::UNDERLINE:     rebuilt = format_manager.wrap_with_underline(rebuilt); break;
+                    case FormatType::STRIKETHROUGH: rebuilt = format_manager.wrap_with_strikethrough(rebuilt); break;
+                }
+            }
+
             editing_manager.insert_string(buffer, cursor_x, cursor_y, rebuilt);
             modified = true;
-            set_status(has_bold ? "Bold formatting removed" : "Bold formatting applied to selection");
+            std::string name = format_type_name(format_type);
+            set_status(had ? (name + " formatting removed") : (name + " formatting applied to selection"));
             return;
         }
     }
-    
-    // Check if cursor is inside bold markers
+
+    // No selection: act on formatting at cursor
     bool bold_at_cursor, italic_at_cursor, underline_at_cursor, strikethrough_at_cursor;
-    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x, 
-                                           bold_at_cursor, italic_at_cursor, 
+    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x,
+                                           bold_at_cursor, italic_at_cursor,
                                            underline_at_cursor, strikethrough_at_cursor);
-    
-    // If cursor is inside bold markers
-    if (bold_at_cursor) {
-        // Check if cursor is right at the closing marker (end of formatted text)
+
+    bool is_active = false;
+    switch (format_type) {
+        case FormatType::BOLD:          is_active = bold_at_cursor; break;
+        case FormatType::ITALIC:        is_active = italic_at_cursor; break;
+        case FormatType::UNDERLINE:     is_active = underline_at_cursor; break;
+        case FormatType::STRIKETHROUGH: is_active = strikethrough_at_cursor; break;
+    }
+
+    if (is_active) {
         const std::string& line = buffer[cursor_y];
-        size_t closing = line.find("**", cursor_x);
-        if (closing == (size_t)cursor_x) {
-            // Just move cursor past the closing marker and disable bold
-            cursor_x += 2;
-            format_manager.toggle_bold();
+        size_t closing_pos = std::string::npos;
+        size_t marker_len = 0;
+        switch (format_type) {
+            case FormatType::BOLD:          marker_len = 2; closing_pos = line.find("**", cursor_x); break;
+            case FormatType::ITALIC:        marker_len = 1; closing_pos = line.find("*", cursor_x); break;
+            case FormatType::UNDERLINE:     marker_len = 4; closing_pos = line.find("</u>", cursor_x); break;
+            case FormatType::STRIKETHROUGH: marker_len = 2; closing_pos = line.find("~~", cursor_x); break;
+        }
+
+        if (closing_pos == (size_t)cursor_x) {
+            cursor_x += marker_len;
+            switch (format_type) {
+                case FormatType::BOLD:          format_manager.toggle_bold(); break;
+                case FormatType::ITALIC:        format_manager.toggle_italic(); break;
+                case FormatType::UNDERLINE:     format_manager.toggle_underline(); break;
+                case FormatType::STRIKETHROUGH: format_manager.toggle_strikethrough(); break;
+            }
             set_status(format_manager.get_status_message());
             return;
         }
-        
-        // Cursor is in the middle - split the formatting
-        format_manager.split_formatting_at_cursor(buffer, cursor_x, cursor_y, "bold");
+
+        // Cursor is in middle - split formatting
+        format_manager.split_formatting_at_cursor(buffer, cursor_x, cursor_y, format_type);
         modified = true;
-        set_status("Bold formatting split");
+        set_status(std::string(format_type_name(format_type)) + " formatting split");
         return;
     }
-    
-    format_manager.toggle_bold();
+
+    // Otherwise, enable formatting session globally
+    switch (format_type) {
+        case FormatType::BOLD:          format_manager.toggle_bold(); break;
+        case FormatType::ITALIC:        format_manager.toggle_italic(); break;
+        case FormatType::UNDERLINE:     format_manager.toggle_underline(); break;
+        case FormatType::STRIKETHROUGH: format_manager.toggle_strikethrough(); break;
+    }
     set_status(format_manager.get_status_message());
 }
 
-void Editor::toggle_italic() {
-    // If there's an active selection, wrap it with italic markers
-    if (selection_manager.has_active_selection()) {
-        // Adjust selection to include opening formatting markers
-        selection_manager.adjust_selection_for_formatting(buffer);
-        
-        std::string selected_text = get_selected_text();
-        if (!selected_text.empty()) {
-            // Extract existing formatting from selected text
-            bool has_bold, has_italic, has_underline, has_strikethrough;
-            std::string plain_text = format_manager.extract_formatting_from_text(
-                selected_text, has_bold, has_italic, has_underline, has_strikethrough);
-            
-            delete_selection();
-            
-            // Rebuild: wrap plain text with existing formatting, excluding italic
-            std::string rebuilt = plain_text;
-            if (has_bold) rebuilt = format_manager.wrap_with_bold(rebuilt);
-            if (has_underline) rebuilt = format_manager.wrap_with_underline(rebuilt);
-            if (has_strikethrough) rebuilt = format_manager.wrap_with_strikethrough(rebuilt);
-            
-            // Only apply italic if it wasn't already present (toggle behavior)
-            if (!has_italic) {
-                rebuilt = format_manager.wrap_with_italic(rebuilt);
-            }
-            
-            editing_manager.insert_string(buffer, cursor_x, cursor_y, rebuilt);
-            modified = true;
-            set_status(has_italic ? "Italic formatting removed" : "Italic formatting applied to selection");
-            return;
-        }
-    }
-    
-    // Check if cursor is inside formatting markers
-    bool bold_at_cursor, italic_at_cursor, underline_at_cursor, strikethrough_at_cursor;
-    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x, 
-                                           bold_at_cursor, italic_at_cursor, 
-                                           underline_at_cursor, strikethrough_at_cursor);
-    
-    // If cursor is inside italic markers
-    if (italic_at_cursor) {
-        const std::string& line = buffer[cursor_y];
-        size_t closing = line.find("*", cursor_x);
-        // Make sure it's not part of **
-        if (closing == (size_t)cursor_x && 
-            (closing == 0 || line[closing - 1] != '*') && 
-            (closing + 1 >= line.length() || line[closing + 1] != '*')) {
-            cursor_x += 1;
-            format_manager.toggle_italic();
-            set_status(format_manager.get_status_message());
-            return;
-        }
-        
-        format_manager.split_formatting_at_cursor(buffer, cursor_x, cursor_y, "italic");
-        modified = true;
-        set_status("Italic formatting split");
-        return;
-    }
-    
-    format_manager.toggle_italic();
-    set_status(format_manager.get_status_message());
-}
+// Deprecated duplicate implementation removed - now handled by toggle_format("italic");
 
-void Editor::toggle_underline() {
-    // If there's an active selection, wrap it with underline markers
-    if (selection_manager.has_active_selection()) {
-        // Adjust selection to include opening formatting markers
-        selection_manager.adjust_selection_for_formatting(buffer);
-        
-        std::string selected_text = get_selected_text();
-        if (!selected_text.empty()) {
-            // Extract existing formatting from selected text
-            bool has_bold, has_italic, has_underline, has_strikethrough;
-            std::string plain_text = format_manager.extract_formatting_from_text(
-                selected_text, has_bold, has_italic, has_underline, has_strikethrough);
-            
-            delete_selection();
-            
-            // Rebuild: wrap plain text with existing formatting, excluding underline
-            std::string rebuilt = plain_text;
-            if (has_italic) rebuilt = format_manager.wrap_with_italic(rebuilt);
-            if (has_bold) rebuilt = format_manager.wrap_with_bold(rebuilt);
-            if (has_strikethrough) rebuilt = format_manager.wrap_with_strikethrough(rebuilt);
-            
-            // Only apply underline if it wasn't already present (toggle behavior)
-            if (!has_underline) {
-                rebuilt = format_manager.wrap_with_underline(rebuilt);
-            }
-            
-            editing_manager.insert_string(buffer, cursor_x, cursor_y, rebuilt);
-            modified = true;
-            set_status(has_underline ? "Underline formatting removed" : "Underline formatting applied to selection");
-            return;
-        }
-    }
-    
-    // Check if cursor is inside formatting markers
-    bool bold_at_cursor, italic_at_cursor, underline_at_cursor, strikethrough_at_cursor;
-    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x, 
-                                           bold_at_cursor, italic_at_cursor, 
-                                           underline_at_cursor, strikethrough_at_cursor);
-    
-    // If cursor is inside underline markers
-    if (underline_at_cursor) {
-        const std::string& line = buffer[cursor_y];
-        size_t closing = line.find("</u>", cursor_x);
-        if (closing == (size_t)cursor_x) {
-            cursor_x += 4;
-            format_manager.toggle_underline();
-            set_status(format_manager.get_status_message());
-            return;
-        }
-        
-        format_manager.split_formatting_at_cursor(buffer, cursor_x, cursor_y, "underline");
-        modified = true;
-        set_status("Underline formatting split");
-        return;
-    }
-    
-    format_manager.toggle_underline();
-    set_status(format_manager.get_status_message());
-}
+// Deprecated duplicate implementation removed - now handled by toggle_format("underline");
 
-void Editor::toggle_strikethrough() {
-    // If there's an active selection, wrap it with strikethrough markers
-    if (selection_manager.has_active_selection()) {
-        // Adjust selection to include opening formatting markers
-        selection_manager.adjust_selection_for_formatting(buffer);
-        
-        std::string selected_text = get_selected_text();
-        if (!selected_text.empty()) {
-            // Extract existing formatting from selected text
-            bool has_bold, has_italic, has_underline, has_strikethrough;
-            std::string plain_text = format_manager.extract_formatting_from_text(
-                selected_text, has_bold, has_italic, has_underline, has_strikethrough);
-            
-            delete_selection();
-            
-            // Rebuild: wrap plain text with existing formatting, excluding strikethrough
-            std::string rebuilt = plain_text;
-            if (has_italic) rebuilt = format_manager.wrap_with_italic(rebuilt);
-            if (has_bold) rebuilt = format_manager.wrap_with_bold(rebuilt);
-            if (has_underline) rebuilt = format_manager.wrap_with_underline(rebuilt);
-            
-            // Only apply strikethrough if it wasn't already present (toggle behavior)
-            if (!has_strikethrough) {
-                rebuilt = format_manager.wrap_with_strikethrough(rebuilt);
-            }
-            
-            editing_manager.insert_string(buffer, cursor_x, cursor_y, rebuilt);
-            modified = true;
-            set_status(has_strikethrough ? "Strikethrough formatting removed" : "Strikethrough formatting applied to selection");
-            return;
-        }
-    }
-    
-    // Check if cursor is inside formatting markers
-    bool bold_at_cursor, italic_at_cursor, underline_at_cursor, strikethrough_at_cursor;
-    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x, 
-                                           bold_at_cursor, italic_at_cursor, 
-                                           underline_at_cursor, strikethrough_at_cursor);
-    
-    // If cursor is inside strikethrough markers
-    if (strikethrough_at_cursor) {
-        const std::string& line = buffer[cursor_y];
-        size_t closing = line.find("~~", cursor_x);
-        if (closing == (size_t)cursor_x) {
-            cursor_x += 2;
-            format_manager.toggle_strikethrough();
-            set_status(format_manager.get_status_message());
-            return;
-        }
-        
-        format_manager.split_formatting_at_cursor(buffer, cursor_x, cursor_y, "strikethrough");
-        modified = true;
-        set_status("Strikethrough formatting split");
-        return;
-    }
-    
-    format_manager.toggle_strikethrough();
-    set_status(format_manager.get_status_message());
-}
+// Deprecated duplicate implementation removed - now handled by toggle_format("strikethrough");
 
 // ===== Editing Operations =====
 
@@ -482,6 +374,55 @@ void Editor::insert_newline() {
     last_action = EditorAction::NEWLINE;
     editing_manager.insert_newline(buffer, cursor_x, cursor_y);
     modified = true;
+}
+
+// --- New helper methods to encapsulate input-related buffer edits ---
+void Editor::insert_line_above() {
+    delete_selection_if_active();
+    save_state();
+    typing_state_saved = false;
+    last_action = EditorAction::INSERT_LINE;
+    buffer.insert(buffer.begin() + cursor_y, "");
+    cursor_x = 0;
+    modified = true;
+}
+
+void Editor::insert_line_below() {
+    delete_selection_if_active();
+    save_state();
+    typing_state_saved = false;
+    last_action = EditorAction::INSERT_LINE;
+    buffer.insert(buffer.begin() + cursor_y + 1, "");
+    cursor_y++;
+    cursor_x = 0;
+    modified = true;
+}
+
+void Editor::insert_tab() {
+    delete_selection_if_active();
+    save_state();
+    typing_state_saved = false;
+    last_action = EditorAction::TAB;
+    buffer[cursor_y].insert(cursor_x, "\t");
+    cursor_x++;
+    modified = true;
+}
+
+void Editor::unindent_current_line() {
+    delete_selection_if_active();
+    if (!buffer[cursor_y].empty() && buffer[cursor_y][0] == '\t') {
+        save_state();
+        typing_state_saved = false;
+        last_action = EditorAction::UNTAB;
+        buffer[cursor_y].erase(0, 1);
+        if (cursor_x > 0) cursor_x--;
+        modified = true;
+    }
+}
+
+void Editor::reset_status() {
+    status_shown = false;
+    status_bar_type = StatusBarType::NORMAL;
 }
 
 void Editor::delete_char() {
@@ -700,11 +641,7 @@ Element Editor::render() {
 // ===== Event Handling =====
 
 bool Editor::handle_event(Event event) {
-    return input_manager.handle_event(
-        event, *this, buffer, cursor_x, cursor_y,
-        modified, status_shown, status_bar_type, confirm_quit,
-        debug_mode, ctrl_c_pressed
-    );
+    return input_manager.handle_event(event, *this, ctrl_c_pressed);
 }
 
 /// @brief Clear the UI and redraw, if the file isn't modified reload it from disk.

@@ -1,8 +1,5 @@
-#ifndef UTF8_UTILS_HPP
-#define UTF8_UTILS_HPP
-
+#pragma once
 #include <string>
-#include <cstdint>
 
 namespace UTF8Utils {
     // Get the number of bytes in a UTF-8 character starting at the given position
@@ -26,5 +23,3 @@ namespace UTF8Utils {
     // Move to the previous character boundary
     size_t prev_char_boundary(const std::string& str, size_t pos);
 }
-
-#endif // UTF8_UTILS_HPP

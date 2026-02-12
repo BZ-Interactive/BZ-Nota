@@ -83,27 +83,18 @@ void FormatManager::insert_formatting_markers(std::vector<std::string>& buffer, 
     cursor_x += opening.length();
 }
 
-void FormatManager::split_formatting_at_cursor(std::vector<std::string>& buffer, int& cursor_x, int cursor_y, const std::string& format_type) {
+void FormatManager::split_formatting_at_cursor(std::vector<std::string>& buffer, int& cursor_x, int cursor_y, FormatType format_type) {
     if (cursor_y >= (int)buffer.size()) return;
     std::string& line = buffer[cursor_y];
     if (cursor_x < 0 || cursor_x > (int)line.length()) return;
     
     std::string opening_marker, closing_marker;
     
-    if (format_type == "bold") {
-        opening_marker = "**";
-        closing_marker = "**";
-    } else if (format_type == "italic") {
-        opening_marker = "*";
-        closing_marker = "*";
-    } else if (format_type == "underline") {
-        opening_marker = "<u>";
-        closing_marker = "</u>";
-    } else if (format_type == "strikethrough") {
-        opening_marker = "~~";
-        closing_marker = "~~";
-    } else {
-        return;
+    switch (format_type) {
+        case FormatType::BOLD:          opening_marker = "**";  closing_marker = "**";   break;
+        case FormatType::ITALIC:        opening_marker = "*";   closing_marker = "*";    break;
+        case FormatType::UNDERLINE:     opening_marker = "<u>"; closing_marker = "</u>"; break;
+        case FormatType::STRIKETHROUGH: opening_marker = "~~";  closing_marker = "~~";   break;
     }
     
     // Find opening marker before cursor
