@@ -49,8 +49,6 @@ static const Color EDITOR_MODE_CODE_FG = Color::White;
 static const Color EDITOR_MODE_DOCUMENT_BG = Color::NavyBlue;
 static const Color EDITOR_MODE_DOCUMENT_FG = Color::White;
 
-static const auto PRE_SYMBOL_SPACE = text(" ") | nothing;
-
 UIRenderer::UIRenderer() {}
 
 bool UIRenderer::supports_emojis() const {
@@ -259,7 +257,7 @@ Elements UIRenderer::render_lines(
                 // Handle tabs specially
                 if (line_content[byte_pos] == '\t') {
                     bool is_cursor = (line_idx == cursor_y && (int)byte_pos == cursor_x);
-                    auto elem = text("➡️   ");  // 4 spaces to represent a tab
+                    auto elem = text(tab_symbol);  // 4 spaces to represent a tab
                     if (is_cursor) elem = elem | inverted | bold;
                     else if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
                     line_elements.push_back(elem);
@@ -320,22 +318,22 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
                                   EditorMode editor_mode) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
-        text(" "),
+        spacing,
         render_save_button(modified),
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_bold_button(bold_active) : text(""),
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_italic_button(italic_active) : text(""),
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_underline_button(underline_active) : text(""),
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_strikethrough_button(strikethrough_active) : text(""),
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_bold_button(bold_active) : empty,
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_italic_button(italic_active) : empty,
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_underline_button(underline_active) : empty,
+        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_strikethrough_button(strikethrough_active) : empty,
         render_bullet_button(),
         //render_font_button(),
-        text(" ") | flex,
+        spacing | flex,
         text(title) | bold | center, // center line, where title is displayed
-        text(" ") | flex,
+        spacing | flex,
         render_undo_button(can_undo),
         render_redo_button(can_redo),
         render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
         render_close_button(),
-        text(" ")
+        spacing
     }) | bgcolor(Color::DarkBlue);
 }
 
@@ -382,15 +380,15 @@ Element UIRenderer::render_status_bar(
 
 Element UIRenderer::render_shortcuts() {
     return hbox({
-        text(" ") | flex,
+        spacing | flex,
         text("Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
-        text(" ") | flex
+        spacing | flex
     }) | bgcolor(Color::Black);
 }
 
 Element UIRenderer::render_save_button(bool modified) {
     auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+S ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+S ") | nothing}) | 
            bgcolor(modified ? SAVE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(modified ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (modified ? bold : nothing);
@@ -398,7 +396,7 @@ Element UIRenderer::render_save_button(bool modified) {
 
 Element UIRenderer::render_bold_button(bool active) {
     auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+B ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+B ") | nothing}) | 
            bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -406,7 +404,7 @@ Element UIRenderer::render_bold_button(bool active) {
 
 Element UIRenderer::render_italic_button(bool active) {
     auto symbol = text("I") | bold | italic;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+I ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+I ") | nothing}) | 
            bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -414,7 +412,7 @@ Element UIRenderer::render_italic_button(bool active) {
 
 Element UIRenderer::render_underline_button(bool active) {
     auto symbol = text("U") | bold | underlined;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+U ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+U ") | nothing}) | 
            bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -430,7 +428,7 @@ Element UIRenderer::render_strikethrough_button(bool active) {
 
 Element UIRenderer::render_bullet_button() {
     auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Alt+[0-9] ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Alt+[0-9] ") | nothing}) | 
            bgcolor(BULLET_BUTTON_BG) |
            color(BULLET_BUTTON_FG);
 }
@@ -438,14 +436,14 @@ Element UIRenderer::render_bullet_button() {
 // this requires more integration so I closed it for now
 Element UIRenderer::render_font_button() {
     auto symbol = text("F") | bold;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+F+Arrow ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+F+Arrow ") | nothing}) | 
            bgcolor(FONT_BUTTON_BG) | 
            color(FONT_BUTTON_FG);
 }
 
 Element UIRenderer::render_undo_button(bool available) {
     auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Z ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+Z ") | nothing}) | 
            bgcolor(available ? UNDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
@@ -453,7 +451,7 @@ Element UIRenderer::render_undo_button(bool available) {
 
 Element UIRenderer::render_redo_button(bool available) {
     auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Y ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+Y ") | nothing}) | 
            bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (available ? bold : nothing);
@@ -488,7 +486,7 @@ Element UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
             break;
     }
 
-    return hbox({PRE_SYMBOL_SPACE, text(mode_text), text(" F7 ") | blink}) |
+    return hbox({spacing, text(mode_text), text(" F7 ") | nothing}) |
            bgcolor(bg_color) |
            color(fg_color) |
            bold;
@@ -496,7 +494,7 @@ Element UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
 
 Element UIRenderer::render_close_button() {
     auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
-    return hbox({PRE_SYMBOL_SPACE, symbol, text(" Ctrl+Q ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Ctrl+Q ") | nothing}) | 
            bgcolor(CLOSE_BUTTON_BG) | 
            color(CLOSE_BUTTON_FG) | 
            bold;

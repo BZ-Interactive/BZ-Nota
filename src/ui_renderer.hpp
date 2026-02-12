@@ -31,6 +31,10 @@ private:
     };
     ParseResult parse_markdown_segment(const std::string& text, size_t start_pos, bool is_selected, int cursor_x_in_line);
 
+    inline static const std::string tab_symbol = { "➡️   " };
+    inline static const ftxui::Element spacing = { ftxui::text(" ") };
+    inline static const ftxui::Element empty = ftxui::emptyElement();
+
     /// @brief Render the header bar
     ftxui::Element render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active,
