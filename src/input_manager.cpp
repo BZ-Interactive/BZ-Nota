@@ -54,6 +54,9 @@ bool InputManager::handle_event(Event event, Editor& editor, volatile sig_atomic
         if (handle_ctrl_keys(event.input()[0], editor)) return true;
     }
 
+    // Handle Alt key combinations
+    if (handle_alt_keys(event, editor)) return true;
+
     // Handle rename mode input
     if (is_renaming) return handle_rename_input(event, editor);
 
@@ -87,12 +90,6 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
         // File operations
         case CtrlKey::S: editor.save_file(); return true;
 
-        // Formatting
-        case CtrlKey::B: editor.toggle_bold(); return true;
-        case CtrlKey::I: editor.toggle_italic(); return true;
-        case CtrlKey::U: editor.toggle_underline(); return true;
-        case CtrlKey::T: editor.toggle_strikethrough(); return true;
-
         // Line operations
         case CtrlKey::O: editor.insert_line_above(); return true;
         case CtrlKey::K: editor.insert_line_below(); return true;
@@ -110,6 +107,18 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
         default:
             return false;
     }
+}
+
+bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
+    using namespace ftxui;
+    
+    // Formatting shortcuts
+    if (event == Event::AltB) { editor.toggle_bold(); return true; }
+    if (event == Event::AltI) { editor.toggle_italic(); return true; }
+    if (event == Event::AltU) { editor.toggle_underline(); return true; }
+    if (event == Event::AltT) { editor.toggle_strikethrough(); return true; }
+    
+    return false;
 }
 
 bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {

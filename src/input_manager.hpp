@@ -56,6 +56,9 @@ private:
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(unsigned char ch, Editor& editor);
     
+    /// @brief Handle Alt+key combinations (Alt+B, Alt+I, Alt+U, Alt+T for formatting)
+    bool handle_alt_keys(ftxui::Event event, Editor& editor);
+    
     /// @brief Handle escape/navigation sequences (arrows with modifiers, word navigation)
     bool handle_navigation_sequences(const std::string& input, Editor& editor, bool debug_mode);
     
