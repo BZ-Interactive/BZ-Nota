@@ -40,6 +40,9 @@
 # debug information files
 *.dwo
 
+# AI Context
+AI_CONTEXT/
+
 # Build directory
 build/
 
