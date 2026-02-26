@@ -209,6 +209,7 @@ To launch the editor, run the executable with a file path:
 **File Operations:**
 *   `Ctrl+S` — Save file
 *   `Ctrl+Q` — Quit (prompts if unsaved changes)
+*   `F2` — Rename file (interactive)
 
 **Editing:**
 *   `Ctrl+A` — Select All
