@@ -396,7 +396,7 @@ Element UIRenderer::render_save_button(bool modified) {
 
 Element UIRenderer::render_bold_button(bool active) {
     auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+B ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Alt+B ") | nothing}) | 
            bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -404,7 +404,7 @@ Element UIRenderer::render_bold_button(bool active) {
 
 Element UIRenderer::render_italic_button(bool active) {
     auto symbol = text("I") | bold | italic;
-    return hbox({spacing, symbol, text(" Ctrl+I ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Alt+I ") | nothing}) | 
            bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -412,7 +412,7 @@ Element UIRenderer::render_italic_button(bool active) {
 
 Element UIRenderer::render_underline_button(bool active) {
     auto symbol = text("U") | bold | underlined;
-    return hbox({spacing, symbol, text(" Ctrl+U ") | nothing}) | 
+    return hbox({spacing, symbol, text(" Alt+U ") | nothing}) | 
            bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
@@ -420,7 +420,7 @@ Element UIRenderer::render_underline_button(bool active) {
 
 Element UIRenderer::render_strikethrough_button(bool active) {
     auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
-    return hbox({symbol, text(" Ctrl+T ") | nothing}) | 
+    return hbox({symbol, text(" Alt+T ") | nothing}) | 
            bgcolor(active ? STRIKETHROUGH_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
            color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
            (active ? bold : nothing);
