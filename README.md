@@ -32,6 +32,7 @@
 [![CPP][CPP-shield]][CPP-url]
 ![Version](https://img.shields.io/badge/version-0.6.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Git LFS](https://img.shields.io/badge/Git-LFS-blue)
 
 </div>
 
@@ -293,8 +294,10 @@ These are short-term items planned as next priorities; the editor will focus on 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 📖 Documentation
+
 - **[Technical Design Document (PDF)](https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.pdf)**
 - **[TDD Source (.tex)](https://raw.githubusercontent.com/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.tex)**
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
 ## 🤝 Contributing
