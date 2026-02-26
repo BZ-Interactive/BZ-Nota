@@ -292,6 +292,10 @@ These are short-term items planned as next priorities; the editor will focus on 
 - Language dictionary and spell checking for 'Text Editing' mode (implementation may change)
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## 📖 Documentation
+- **[Technical Design Document (PDF)](https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.pdf)**
+- **[TDD Source (.tex)](https://raw.githubusercontent.com/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.tex)**
+
 <!-- CONTRIBUTING -->
 ## 🤝 Contributing
 
