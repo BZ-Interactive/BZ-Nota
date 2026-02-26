@@ -73,3 +73,14 @@ vendor/ftxui/Makefile
 *.bak
 *.tmp
 *.log
+
+# LaTeX temporary files
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.log
+*.out
+*.lof
+*.lot

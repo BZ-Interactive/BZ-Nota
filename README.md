@@ -224,10 +224,10 @@ To launch the editor, run the executable with a file path:
 
 **Formatting**
 
-*   `Ctrl+B` — Bold
-*   `Ctrl+I` — Italic
-*   `Ctrl+U` — Underline
-*   `Ctrl+T` — Strikethrough
+*   `Alt+B` — Bold
+*   `Alt+I` — Italic
+*   `Alt+U` — Underline
+*   `Alt+T` — Strikethrough
 
 All work on selection, can use this to write formatted or apply any format to a pre-written text.
 
