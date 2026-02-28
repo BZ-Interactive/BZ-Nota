@@ -1,6 +1,8 @@
 #include "ui_button.hpp"
 #include "ftxui/dom/elements.hpp"
 
+const ftxui::Element UIButton::spacing = ftxui::text(" ");
+
 UIButton::UIButton(const std::string& label, ftxui::Color on_color, ftxui::Color off_color, bool active, std::function<void()> on_click)
     : label_(label),
     on_color_(on_color),
@@ -69,9 +71,9 @@ ftxui::Element UIButton::create_element() const {
     
     // Add padding and border
     ftxui::Element button = ftxui::hbox({
-        ftxui::text(" "),
+        spacing,
         button_text,
-        ftxui::text(" ")
+        spacing
     })  | ftxui::bgcolor(active_ ? on_color_ : off_color_)
         | ftxui::bold;
     

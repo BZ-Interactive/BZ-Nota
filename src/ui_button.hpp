@@ -67,4 +67,6 @@ private:
         bool active;
     };
     PreviousState previous_state_;
+
+    static const ftxui::Element spacing; // Add spacing to prevent layout issues when label changes
 };
