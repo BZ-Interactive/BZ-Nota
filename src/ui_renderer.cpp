@@ -378,83 +378,98 @@ Element UIRenderer::render_status_bar(
          (is_bold ? bold : nothing);
 }
 
+// this is where we can display available shortcuts or tips that doesn't fit on the upper bar.
+// its created once on 
 Element UIRenderer::render_shortcuts() {
-    return hbox({
+    static const Element shortcuts = hbox({
         spacing | flex,
         text("Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
         spacing | flex
-    }) | bgcolor(Color::Black);
+    }) | bgcolor(Color::GrayDark) | color(Color::White);
+    return shortcuts;
 }
 
 Element UIRenderer::render_save_button(bool modified) {
-    auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+S ") | nothing}) | 
-           bgcolor(modified ? SAVE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(modified ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (modified ? bold : nothing);
+    if (!save_button_) {
+        std::string label = supports_emojis() ? "💾 Ctrl+S" : "⌼ Ctrl+S";
+        save_button_ = std::make_unique<UIButton>(label, SAVE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+    }
+    
+    save_button_->set_active(modified);
+    return save_button_->render();
 }
 
 Element UIRenderer::render_bold_button(bool active) {
-    auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
-    return hbox({spacing, symbol, text(" Alt+B ") | nothing}) | 
-           bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
+    if (!bold_button_) {
+        std::string label = supports_emojis() ? "🅱️ Alt+B" : "Ⓑ Alt+B";
+        bold_button_ = std::make_unique<UIButton>(label, BOLD_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+    }
+    
+    bold_button_->set_active(active);
+    return bold_button_->render();
 }
 
 Element UIRenderer::render_italic_button(bool active) {
-    auto symbol = text("I") | bold | italic;
-    return hbox({spacing, symbol, text(" Alt+I ") | nothing}) | 
-           bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
+    if (!italic_button_) {
+        italic_button_ = std::make_unique<UIButton>("I Alt+I", ITALIC_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+    }
+    
+    italic_button_->set_active(active);
+    return italic_button_->render();
 }
 
 Element UIRenderer::render_underline_button(bool active) {
-    auto symbol = text("U") | bold | underlined;
-    return hbox({spacing, symbol, text(" Alt+U ") | nothing}) | 
-           bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
+    if (!underline_button_) {
+        underline_button_ = std::make_unique<UIButton>("U̲ Alt+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+    }
+    
+    underline_button_->set_active(active);
+    return underline_button_->render();
 }
 
 Element UIRenderer::render_strikethrough_button(bool active) {
-    auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
-    return hbox({symbol, text(" Alt+T ") | nothing}) | 
-           bgcolor(active ? STRIKETHROUGH_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
+    if (!strikethrough_button_) {
+        strikethrough_button_ = std::make_unique<UIButton>("x̶ Alt+T", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+    }
+    
+    strikethrough_button_->set_active(active);
+    return strikethrough_button_->render();
 }
 
 Element UIRenderer::render_bullet_button() {
-    auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
-    return hbox({spacing, symbol, text(" Alt+[0-9] ") | nothing}) | 
-           bgcolor(BULLET_BUTTON_BG) |
-           color(BULLET_BUTTON_FG);
+    if (!bullet_button_) {
+        bullet_button_ = std::make_unique<UIButton>("•", Color::White, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+    }
+    
+    return bullet_button_->render();
 }
 
-// this requires more integration so I closed it for now
 Element UIRenderer::render_font_button() {
-    auto symbol = text("F") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+F+Arrow ") | nothing}) | 
-           bgcolor(FONT_BUTTON_BG) | 
-           color(FONT_BUTTON_FG);
+    if (!font_button_) {
+        font_button_ = std::make_unique<UIButton>("F", Color::White, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+    }
+    
+    return font_button_->render();
 }
 
 Element UIRenderer::render_undo_button(bool available) {
-    auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
-    return hbox({spacing, symbol, text(" Ctrl+Z ") | nothing}) | 
-           bgcolor(available ? UNDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (available ? bold : nothing);
+    if (!undo_button_) {
+        std::string label = supports_emojis() ? "↩️ Ctrl+Z" : "↺ Ctrl+Z";
+        undo_button_ = std::make_unique<UIButton>(label, UNDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+    }
+    
+    undo_button_->set_active(available);
+    return undo_button_->render();
 }
 
 Element UIRenderer::render_redo_button(bool available) {
-    auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
-    return hbox({spacing, symbol, text(" Ctrl+Y ") | nothing}) | 
-           bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (available ? bold : nothing);
+    if (!redo_button_) {
+        std::string label = supports_emojis() ? "↪️ Ctrl+Y" : "↻ Ctrl+Y";
+        redo_button_ = std::make_unique<UIButton>(label, REDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+    }
+    
+    redo_button_->set_active(available);
+    return redo_button_->render();
 }
 
 // not really a dropdown consider and change to button if need be
