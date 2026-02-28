@@ -211,7 +211,9 @@ The BZ-Nota application consists of the following core components:
 \hline
 \textbf{Editor} & Central orchestrator managing the editing session and component coordination \\
 \hline
-\textbf{UI Renderer} & Renders the user interface using FTXUI framework \\
+\textbf{UI Renderer} & Renders the user interface using FTXUI framework with btop-style dashboard \\
+\hline
+\textbf{UI Button} & Implements dirty flag pattern for efficient button rendering \\
 \hline
 \textbf{Input Manager} & Handles user input events and key bindings \\
 \hline
@@ -223,11 +225,17 @@ The BZ-Nota application consists of the following core components:
 \hline
 \textbf{Clipboard Manager} & Manages copy/paste operations and system clipboard integration \\
 \hline
-\textbf{Format Manager} & Handles text formatting and syntax highlighting \\
+\textbf{Format Manager} & Handles text formatting and Markdown marker management \\
+\hline
+\textbf{Formatter} & Parses and manages formatting regions with precise marker positioning \\
 \hline
 \textbf{File Manager} & Handles file I/O operations and file state management \\
 \hline
 \textbf{Undo/Redo Manager} & Implements undo/redo functionality with command pattern \\
+\hline
+\textbf{UTF8 Utils} & Provides UTF-8 string utilities for text processing \\
+\hline
+\textbf{Shared Types} & Common enums and data structures (StatusBarType, EditorMode, etc.) \\
 \hline
 \end{tabular}
 \end{table}
@@ -1183,7 +1191,9 @@ sudo cmake --install . --prefix /usr/local
 \hline
 editor.hpp/cpp & Main editor and event loop orchestrator \\
 \hline
-ui\_renderer.hpp/cpp & FTXUI rendering engine; parses markdown formatting \\
+ui\_renderer.hpp/cpp & FTXUI rendering engine; parses markdown formatting; implements btop-style dashboard \\
+\hline
+ui\_button.hpp/cpp & Implements dirty flag pattern for efficient button rendering \\
 \hline
 input\_manager.hpp/cpp & Keyboard/mouse event handling and key binding dispatch \\
 \hline
@@ -1196,6 +1206,8 @@ editing\_manager.hpp/cpp & Text insertion/deletion and buffer modifications \\
 clipboard\_manager.hpp/cpp & System clipboard integration (X11/Wayland) \\
 \hline
 format\_manager.hpp/cpp & Text formatting state and markdown marker management \\
+\hline
+formatter.hpp/cpp & Parses and manages formatting regions with precise marker positioning \\
 \hline
 file\_manager.hpp/cpp & File I/O operations and error handling \\
 \hline
@@ -1217,6 +1229,7 @@ version.hpp.in & Version number template (filled by CMake) \\
 \begin{tikzpicture}[->, very thick, node distance=2.2cm]
     \node (editor) [draw, very thick, rectangle, fill=purple!30] {Editor};
     \node (ui) [draw, rectangle, fill=cyan!20, below left=2cm and 2.5cm of editor] {UIRenderer};
+    \node (ui_button) [draw, rectangle, fill=cyan!20, below=1.5cm of ui] {UIButton};
     \node (input) [draw, rectangle, fill=yellow!20, below=2cm of editor] {InputManager};
     \node (cursor) [draw, rectangle, fill=yellow!20, below right=2cm and 2.5cm of editor] {CursorManager};
     
@@ -1225,10 +1238,14 @@ version.hpp.in & Version number template (filled by CMake) \\
     \node (clipboard) [draw, rectangle, fill=green!20, below=2.5cm of editing] {ClipboardManager};
     
     \node (format) [draw, rectangle, fill=orange!20, below=2.5cm of selection] {FormatManager};
+    \node (formatter) [draw, rectangle, fill=orange!20, right=3cm of format] {Formatter};
     \node (file) [draw, rectangle, fill=green!20, below=2.5cm of format] {FileManager};
     \node (undo) [draw, rectangle, fill=green!20, below=2.5cm of file] {UndoRedoManager};
+    \node (utf8) [draw, rectangle, fill=blue!20, below=2.5cm of clipboard] {UTF8 Utils};
+    \node (shared) [draw, rectangle, fill=blue!20, below=2.5cm of undo] {Shared Types};
     
     \draw (editor) -- (ui);
+    \draw (ui) -- (ui_button);
     \draw (editor) -- (input);
     \draw (editor) -- (cursor);
     \draw (editor) -- (editing);
@@ -1237,11 +1254,11 @@ version.hpp.in & Version number template (filled by CMake) \\
     \draw (editing) -- (clipboard);
     \draw (editing) -- (selection);
     \draw (cursor) -- (selection);
-    \draw (editor) -- (ui);
-    \draw (editor) -- (input);
-    \draw (editor) -- (cursor);
-    \draw (editor) -- (editing);
-    \draw (editor) -- (file);
+    \draw (format) -- (formatter);
+    \draw (clipboard) -- (utf8);
+    \draw (editor) -- (shared);
+    \draw (ui) -- (shared);
+    \draw (format) -- (shared);
 \end{tikzpicture}
 \caption{Component Dependency Graph}
 \label{fig:dependencies}
@@ -1259,9 +1276,15 @@ FTXUI compilation error & Update FTXUI submodule: \texttt{git submodule update -
 \hline
 Terminal size issues & SIGWINCH handler automatically manages resize events \\
 \hline
-Clipboard not working & Verify xclip/wl-copy installed; check $\$DISPLAY$ or Wayland setup \\
+Clipboard not working & Verify xclip/wl-copy installed; check \$DISPLAY or Wayland setup \\
 \hline
 Formatting not displaying & Ensure editor mode is FANCY or DOCUMENT (not BASIC or CODE) \\
+\hline
+Button rendering issues & Check UIButton dirty flag implementation; verify FTXUI element caching \\
+\hline
+Markdown parsing errors & Verify formatter.hpp/cpp implementation; check marker positioning logic \\
+\hline
+UTF-8 text display problems & Check utf8\_utils.hpp/cpp for proper encoding handling \\
 \hline
 High latency & Profile input event handling; check for slow file operations \\
 \hline
