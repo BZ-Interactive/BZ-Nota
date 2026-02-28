@@ -6,29 +6,6 @@
 
 using namespace ftxui;
 
-// UI Color Constants - Disabled/Inactive State
-static const Color BUTTON_DISABLED_BG_PRIMARY = Color::GrayDark;
-static const Color BUTTON_DISABLED_BG_SECONDARY = Color::Black;
-static const Color BUTTON_DISABLED_FG = Color::White;
-
-// UI Color Constants - Active State
-static const Color BUTTON_ACTIVE_FG = Color::Black;
-
-// Button-Specific Colors (Active/Enabled State)
-static const Color SAVE_BUTTON_ACTIVE_BG = Color::BlueLight;
-static const Color BOLD_BUTTON_ACTIVE_BG = Color::Orange3;
-static const Color ITALIC_BUTTON_ACTIVE_BG = Color::Pink3;
-static const Color UNDERLINE_BUTTON_ACTIVE_BG = Color::Green4;
-static const Color STRIKETHROUGH_BUTTON_ACTIVE_BG = Color::Red3;
-static const Color BULLET_BUTTON_BG = Color::Black;
-static const Color BULLET_BUTTON_FG = Color::White;
-static const Color FONT_BUTTON_BG = Color::GrayDark;
-static const Color FONT_BUTTON_FG = Color::White;
-static const Color UNDO_BUTTON_ACTIVE_BG = Color::DarkOrange;
-static const Color REDO_BUTTON_ACTIVE_BG = Color::GreenLight;
-static const Color CLOSE_BUTTON_BG = Color::GrayLight;
-static const Color CLOSE_BUTTON_FG = Color::RedLight;
-
 // Status bar colors
 static const Color STATUS_BAR_BG = Color::GrayDark;
 static const Color STATUS_BAR_FG = Color::White;
@@ -40,50 +17,7 @@ static const Color STATUS_BAR_WARNING_BG = Color::Yellow3Bis;
 static const Color STATUS_BAR_WARNING_FG = Color::Black;
 
 
-static const Color EDITOR_MODE_BASIC_BG = Color::White;
-static const Color EDITOR_MODE_BASIC_FG = Color::Black;
-static const Color EDITOR_MODE_FANCY_BG = Color::SeaGreen1Bis;
-static const Color EDITOR_MODE_FANCY_FG = Color::Black;
-static const Color EDITOR_MODE_CODE_BG = Color::Magenta2Bis;
-static const Color EDITOR_MODE_CODE_FG = Color::White;
-static const Color EDITOR_MODE_DOCUMENT_BG = Color::NavyBlue;
-static const Color EDITOR_MODE_DOCUMENT_FG = Color::White;
-
 UIRenderer::UIRenderer() {}
-
-bool UIRenderer::supports_emojis() const {
-    // The 'static' keyword ensures this block runs ONLY the first time the function is called.
-    static const bool emoji_capable = []() -> bool {
-        const char* colorterm = std::getenv("COLORTERM");
-        const char* term = std::getenv("TERM");
-        const char* wt_session = std::getenv("WT_SESSION");
-        const char* wt_profile = std::getenv("WT_PROFILE_ID");
-        std::string term_str = term ? term : "";
-
-        // 1. Windows Terminal detection - supports emojis well
-        if (wt_session || wt_profile) {
-            return true;
-        }
-
-        // 2. Check for TrueColor. Almost all modern terminals with 24-bit color 
-        // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty).
-        if (colorterm && (std::string(colorterm) == "truecolor" || 
-                          std::string(colorterm) == "24bit")) {
-            return true;
-        }
-
-        // 3. Explicitly whitelist modern terminals that might not set COLORTERM
-        if (term_str == "alacritty" || term_str == "xterm-kitty" || term_str == "foot") {
-            return true;
-        }
-
-        // 4. Known "Legacy" environments (like UXTerm/Xterm, Windows CMD)
-        // These are best served with your '⌼' and other safe Unicode symbols.
-        return false; 
-    }();
-
-    return emoji_capable;
-}
 
 UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& line_text, size_t start_pos, bool is_selected, int cursor_x_in_line) {
     ParseResult result;
@@ -314,25 +248,36 @@ Elements UIRenderer::render_lines(
 }
 
 Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
-                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active, 
+                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active,
                                   EditorMode editor_mode) {
+    // Update each button's state – they only rebuild their ftxui element when state actually changed.
+    _btn_save.set_modified(modified);
+    _btn_bold.set_active(bold_active);
+    _btn_italic.set_active(italic_active);
+    _btn_underline.set_active(underline_active);
+    _btn_strikethrough.set_active(strikethrough_active);
+    _btn_undo.set_available(can_undo);
+    _btn_redo.set_available(can_redo);
+    _btn_editor_mode.set_mode(editor_mode);
+
+    bool show_format_buttons = (editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT);
+
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
         spacing,
-        render_save_button(modified),
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_bold_button(bold_active) : empty,
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_italic_button(italic_active) : empty,
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_underline_button(underline_active) : empty,
-        editor_mode == EditorMode::FANCY || editor_mode == EditorMode::DOCUMENT ? render_strikethrough_button(strikethrough_active) : empty,
-        render_bullet_button(),
-        //render_font_button(),
+        _btn_save.get_element(),
+        show_format_buttons ? _btn_bold.get_element()          : empty,
+        show_format_buttons ? _btn_italic.get_element()        : empty,
+        show_format_buttons ? _btn_underline.get_element()     : empty,
+        show_format_buttons ? _btn_strikethrough.get_element() : empty,
+        _btn_bullet.get_element(),
         spacing | flex,
-        text(title) | bold | center, // center line, where title is displayed
+        text(title) | bold | center,
         spacing | flex,
-        render_undo_button(can_undo),
-        render_redo_button(can_redo),
-        render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
-        render_close_button(),
+        _btn_undo.get_element(),
+        _btn_redo.get_element(),
+        _btn_editor_mode.get_element(),
+        _btn_close.get_element(),
         spacing
     }) | bgcolor(Color::DarkBlue);
 }
@@ -386,116 +331,3 @@ Element UIRenderer::render_shortcuts() {
     }) | bgcolor(Color::Black);
 }
 
-Element UIRenderer::render_save_button(bool modified) {
-    auto symbol = supports_emojis() ? text("💾") | nothing : text("⌼") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+S ") | nothing}) | 
-           bgcolor(modified ? SAVE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(modified ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (modified ? bold : nothing);
-}
-
-Element UIRenderer::render_bold_button(bool active) {
-    auto symbol = supports_emojis() ? text("🅱️") | nothing : text("B") | bold;
-    return hbox({spacing, symbol, text(" Alt+B ") | nothing}) | 
-           bgcolor(active ? BOLD_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
-}
-
-Element UIRenderer::render_italic_button(bool active) {
-    auto symbol = text("I") | bold | italic;
-    return hbox({spacing, symbol, text(" Alt+I ") | nothing}) | 
-           bgcolor(active ? ITALIC_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
-}
-
-Element UIRenderer::render_underline_button(bool active) {
-    auto symbol = text("U") | bold | underlined;
-    return hbox({spacing, symbol, text(" Alt+U ") | nothing}) | 
-           bgcolor(active ? UNDERLINE_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
-}
-
-Element UIRenderer::render_strikethrough_button(bool active) {
-    auto symbol = text(" S ") | bold | strikethrough; // strike on the whole symbol for better visibility
-    return hbox({symbol, text(" Alt+T ") | nothing}) | 
-           bgcolor(active ? STRIKETHROUGH_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(active ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (active ? bold : nothing);
-}
-
-Element UIRenderer::render_bullet_button() {
-    auto symbol = text("•") | bold; // this works on all terminals and is visually distinct, so no need for emoji fallback
-    return hbox({spacing, symbol, text(" Alt+[0-9] ") | nothing}) | 
-           bgcolor(BULLET_BUTTON_BG) |
-           color(BULLET_BUTTON_FG);
-}
-
-// this requires more integration so I closed it for now
-Element UIRenderer::render_font_button() {
-    auto symbol = text("F") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+F+Arrow ") | nothing}) | 
-           bgcolor(FONT_BUTTON_BG) | 
-           color(FONT_BUTTON_FG);
-}
-
-Element UIRenderer::render_undo_button(bool available) {
-    auto symbol = text("↩️"); // This works for UXTerm or simple text fallback.
-    return hbox({spacing, symbol, text(" Ctrl+Z ") | nothing}) | 
-           bgcolor(available ? UNDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_PRIMARY) |
-           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (available ? bold : nothing);
-}
-
-Element UIRenderer::render_redo_button(bool available) {
-    auto symbol = text("↪️"); // This works for UXTerm or simple text fallback.
-    return hbox({spacing, symbol, text(" Ctrl+Y ") | nothing}) | 
-           bgcolor(available ? REDO_BUTTON_ACTIVE_BG : BUTTON_DISABLED_BG_SECONDARY) |
-           color(available ? BUTTON_ACTIVE_FG : BUTTON_DISABLED_FG) |
-           (available ? bold : nothing);
-}
-
-// not really a dropdown consider and change to button if need be
-Element UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
-    std::string mode_text;
-    Color bg_color;
-    Color fg_color;
-
-    switch (mode) {
-        case EditorMode::BASIC:
-            mode_text = "Mode: Basic";
-            bg_color = EDITOR_MODE_BASIC_BG;
-            fg_color = EDITOR_MODE_BASIC_FG;
-            break;
-        case EditorMode::FANCY:
-            mode_text = "Mode: Fancy";
-            bg_color = EDITOR_MODE_FANCY_BG;
-            fg_color = EDITOR_MODE_FANCY_FG;
-            break;
-        case EditorMode::CODE:
-            mode_text = "Mode: Code";
-            bg_color = EDITOR_MODE_CODE_BG;
-            fg_color = EDITOR_MODE_CODE_FG;
-            break;
-        case EditorMode::DOCUMENT:
-            mode_text = "Mode: Document";
-            bg_color = EDITOR_MODE_DOCUMENT_BG;
-            fg_color = EDITOR_MODE_DOCUMENT_FG;
-            break;
-    }
-
-    return hbox({spacing, text(mode_text), text(" F7 ") | nothing}) |
-           bgcolor(bg_color) |
-           color(fg_color) |
-           bold;
-}
-
-Element UIRenderer::render_close_button() {
-    auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+Q ") | nothing}) | 
-           bgcolor(CLOSE_BUTTON_BG) | 
-           color(CLOSE_BUTTON_FG) | 
-           bold;
-}

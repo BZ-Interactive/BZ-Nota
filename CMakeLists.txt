@@ -44,6 +44,8 @@ add_executable(bznota
     src/formatter.hpp
     src/utf8_utils.cpp
     src/utf8_utils.hpp
+    src/ui_button.cpp
+    src/ui_button.hpp
 )
 
 # Link ftxui libraries
