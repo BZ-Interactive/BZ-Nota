@@ -378,17 +378,21 @@ Element UIRenderer::render_status_bar(
          (is_bold ? bold : nothing);
 }
 
+// this is where we can display available shortcuts or tips that doesn't fit on the upper bar.
+// its created once on 
 Element UIRenderer::render_shortcuts() {
-    return hbox({
+    static const Element shortcuts = hbox({
         spacing | flex,
         text("Shift+arrow:Select by Char | Ctrl(Alt)+Shift+arrow:Select by Word | Ctrl+O:Insert new line above | Ctrl+K:Insert new line below") | center,
         spacing | flex
-    }) | bgcolor(Color::Black);
+    }) | bgcolor(Color::GrayDark) | color(Color::White);
+    return shortcuts;
 }
 
 Element UIRenderer::render_save_button(bool modified) {
     if (!save_button_) {
-        save_button_ = std::make_unique<UIButton>("💾 Ctrl+S", SAVE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+        std::string label = supports_emojis() ? "💾 Ctrl+S" : "⌼ Ctrl+S";
+        save_button_ = std::make_unique<UIButton>(label, SAVE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
     
     save_button_->set_active(modified);
@@ -397,7 +401,8 @@ Element UIRenderer::render_save_button(bool modified) {
 
 Element UIRenderer::render_bold_button(bool active) {
     if (!bold_button_) {
-        bold_button_ = std::make_unique<UIButton>("🅱️ Alt+B", BOLD_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+        std::string label = supports_emojis() ? "🅱️ Alt+B" : "Ⓑ Alt+B";
+        bold_button_ = std::make_unique<UIButton>(label, BOLD_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
     
     bold_button_->set_active(active);
@@ -415,7 +420,7 @@ Element UIRenderer::render_italic_button(bool active) {
 
 Element UIRenderer::render_underline_button(bool active) {
     if (!underline_button_) {
-        underline_button_ = std::make_unique<UIButton>("U Alt+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+        underline_button_ = std::make_unique<UIButton>("U̲ Alt+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
     
     underline_button_->set_active(active);
@@ -424,7 +429,7 @@ Element UIRenderer::render_underline_button(bool active) {
 
 Element UIRenderer::render_strikethrough_button(bool active) {
     if (!strikethrough_button_) {
-        strikethrough_button_ = std::make_unique<UIButton>("S Alt+S", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+        strikethrough_button_ = std::make_unique<UIButton>("x̶ Alt+T", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
     
     strikethrough_button_->set_active(active);
@@ -449,7 +454,8 @@ Element UIRenderer::render_font_button() {
 
 Element UIRenderer::render_undo_button(bool available) {
     if (!undo_button_) {
-        undo_button_ = std::make_unique<UIButton>("↩️ Ctrl+Z", UNDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+        std::string label = supports_emojis() ? "↩️ Ctrl+Z" : "↺ Ctrl+Z";
+        undo_button_ = std::make_unique<UIButton>(label, UNDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
     
     undo_button_->set_active(available);
@@ -458,7 +464,8 @@ Element UIRenderer::render_undo_button(bool available) {
 
 Element UIRenderer::render_redo_button(bool available) {
     if (!redo_button_) {
-        redo_button_ = std::make_unique<UIButton>("↪️ Ctrl+Y", REDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+        std::string label = supports_emojis() ? "↪️ Ctrl+Y" : "↻ Ctrl+Y";
+        redo_button_ = std::make_unique<UIButton>(label, REDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
     
     redo_button_->set_active(available);
