@@ -1,8 +1,10 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include "ftxui/dom/elements.hpp"
 #include "shared_types.hpp"
+#include "ui_button.hpp"
 
 /// @brief Handles all UI rendering for the editor
 class UIRenderer {
@@ -76,4 +78,16 @@ private:
         std::function<bool(int, int)> is_char_selected_fn,
         EditorMode editor_mode
     );
+
+    // Button instances for efficient rendering with dirty flags
+    std::unique_ptr<UIButton> save_button_;
+    std::unique_ptr<UIButton> bold_button_;
+    std::unique_ptr<UIButton> italic_button_;
+    std::unique_ptr<UIButton> underline_button_;
+    std::unique_ptr<UIButton> strikethrough_button_;
+    std::unique_ptr<UIButton> bullet_button_;
+    std::unique_ptr<UIButton> font_button_;
+    std::unique_ptr<UIButton> undo_button_;
+    std::unique_ptr<UIButton> redo_button_;
+    std::unique_ptr<UIButton> close_button_;
 };

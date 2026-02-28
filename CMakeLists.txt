@@ -24,6 +24,8 @@ add_executable(bznota
     src/editor.hpp
     src/ui_renderer.cpp
     src/ui_renderer.hpp
+    src/ui_button.cpp
+    src/ui_button.hpp
     src/selection_manager.cpp
     src/selection_manager.hpp
     src/clipboard_manager.cpp
