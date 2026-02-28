@@ -8,11 +8,13 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows.meta,fit,backgrounds}
+\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{fancyhdr}
-\usepackage{tikz}
-\usetikzlibrary{positioning,shapes,arrows.meta,fit,backgrounds}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{float}
@@ -21,6 +23,20 @@
 \usepackage{array}
 \usepackage{tocloft}
 \usepackage{setspace}
+\usepackage{datetime2}
+
+% ============================================================================
+% CUSTOM DATE STYLE (DD.MM.YYYY)
+% ============================================================================
+\DTMnewdatestyle{CustomDateStyle}{%
+  \renewcommand{\DTMdisplaydate}[4]{%
+  \number##3.%               % Day
+  \DTMtwodigits{##2}.%       % Month
+  \number##1%                % Year
+  }%
+  \renewcommand{\DTMDisplaydate}{\DTMdisplaydate}%
+}
+\DTMsetdatestyle{CustomDateStyle}
 
 % ============================================================================
 % CONFIGURATION
@@ -61,7 +77,12 @@
 % DOCUMENT
 % ============================================================================
 \begin{document}
-
+\begin{figure}
+    \centering
+    \includegraphics[width=8cm]{"../assets/BZ-Nota_icon_256.png"}
+\end{figure}
+\enlargethispage{-7cm} % Allows negative space adjustment
+\vspace{-7cm} % Now this will work
 \maketitle
 
 % ============================================================================
@@ -103,11 +124,13 @@
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|c|c|c|p{6cm}|}
+\begin{tabular}{|c|c|c|p{8cm}|}
 \hline
 \textbf{Version} & \textbf{Date} & \textbf{Author} & \textbf{Description} \\
 \hline
-1.0 & \today & BZ-Interactive & Complete TDD Creation \\
+1.0 & \date{26.02.2026} & BZ-Interactive & Complete TDD Creation \\
+\hline 
+1.1 & \date{28.02.2026} & Barkın Zorlu & Add Optimized Button Rendering \\
 \hline
 \end{tabular}
 \end{table}
