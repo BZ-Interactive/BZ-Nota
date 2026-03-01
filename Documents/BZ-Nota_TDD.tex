@@ -5,7 +5,7 @@
 % ============================================================================
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{tikz}
@@ -132,6 +132,8 @@
 \hline 
 1.1 & \date{28.02.2026} & Barkın Zorlu & Add Optimized Button Rendering \\
 \hline
+1.2 & \date{01.03.2026} & Barkın Zorlu & Organization Edits to TDD \\
+\hline
 \end{tabular}
 \end{table}
 
@@ -228,7 +230,7 @@ The BZ-Nota application consists of the following core components:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{8cm}|}
+\begin{tabular}{|p{5cm}|p{8cm}|}
 \hline
 \textbf{Component} & \textbf{Description} \\
 \hline
@@ -360,7 +362,6 @@ The Input Manager handles:
 \end{itemize}
 
 \subsection{Key Binding System}
-
 \begin{lstlisting}
 // File operations
 Ctrl+S         => Save file
@@ -562,6 +563,7 @@ When text is typed with active formatting, the EditingManager automatically wrap
     \item Path validation and security checks
 \end{itemize}
 
+\newpage
 \subsection{File Operations}
 
 \begin{lstlisting}
@@ -597,6 +599,7 @@ Implements undo/redo with a memory-efficient diff-based approach:
     \item Minimizes memory usage through differential storage
 \end{itemize}
 
+\newpage
 \subsection{Diff-Based Command Pattern}
 
 \begin{lstlisting}
@@ -950,6 +953,7 @@ Resource Errors & Memory allocation failures \\
 \end{tabular}
 \end{table}
 
+\newpage
 \section{Logging System}
 
 \subsection{Log Levels}
@@ -1147,6 +1151,9 @@ sudo cmake --install . --prefix /usr/local
 \end{lstlisting}
 
 \subsection{Install Structure}
+
+\par
+The installation prefers environments' default directory listings.
 
 \begin{itemize}
     \item Binary: \texttt{/usr/local/bin/bznota}
