@@ -64,7 +64,7 @@ private:
     ftxui::Element render_undo_button(bool available);
     ftxui::Element render_redo_button(bool available);
     
-    ftxui::Element render_editor_mode_dropdown(EditorMode mode);
+    ftxui::Element& render_editor_mode_dropdown(EditorMode mode);
 
     /// @brief Render the close button
     ftxui::Element render_close_button();
@@ -89,5 +89,6 @@ private:
     std::unique_ptr<UIButton> font_button_;
     std::unique_ptr<UIButton> undo_button_;
     std::unique_ptr<UIButton> redo_button_;
-    std::unique_ptr<UIButton> close_button_;
+    std::unique_ptr<ftxui::Element> editor_mode_button_;
+    inline static EditorMode cached_editor_mode = { EditorMode::FANCY };
 };

@@ -40,19 +40,21 @@ Editor::~Editor() {
 
 bool Editor::set_editor_mode(EditorMode mode) {
     if (mode == editor_mode) return false; // No change
-    
+    std::string mode_name = "";
+
     if (mode == EditorMode::CODE || mode == EditorMode::DOCUMENT) {
         // check for supported languages ONLY APPLICABLE AFTER SYNTAX HIGHLIGHTING IS IMPLEMENTED
         
         // temporary
         if (editor_mode == EditorMode::FANCY) {
             editor_mode = EditorMode::BASIC;
-            set_status("Switched editor mode to BASIC");
+            mode_name = "BASIC";
         }
         else if (editor_mode == EditorMode::BASIC) {
             editor_mode = EditorMode::FANCY;
-            set_status("Switched editor mode to FANCY");
+            mode_name = "Fancy";
         }
+        set_status("Switched editor mode to " + mode_name);
         return true;
         // Temporary end
 
@@ -68,9 +70,26 @@ bool Editor::set_editor_mode(EditorMode mode) {
         // if so return true;
     }
 
+    // not implemented yet
+    #if 0
     editor_mode = mode;
-    set_status("Switched editor mode to " + std::to_string(static_cast<int>(mode)));
+    switch (editor_mode) {
+    case EditorMode::BASIC:
+        mode_name = "BASIC";
+        break;
+    case EditorMode::CODE:
+        mode_name = "CODE";
+        break;
+    case EditorMode::FANCY:
+        mode_name = "FANCY";
+        break;
+    case EditorMode::DOCUMENT:
+        mode_name = "Document";
+        break;
+    }
+    set_status("Switched editor mode to " + mode_name);
     return true;
+    #endif
 }
 
 // ===== File Operations =====

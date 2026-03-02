@@ -52,7 +52,6 @@ static const Color EDITOR_MODE_DOCUMENT_FG = Color::White;
 UIRenderer::UIRenderer() {}
 
 bool UIRenderer::supports_emojis() const {
-    // The 'static' keyword ensures this block runs ONLY the first time the function is called.
     static const bool emoji_capable = []() -> bool {
         const char* colorterm = std::getenv("COLORTERM");
         const char* term = std::getenv("TERM");
@@ -60,25 +59,25 @@ bool UIRenderer::supports_emojis() const {
         const char* wt_profile = std::getenv("WT_PROFILE_ID");
         std::string term_str = term ? term : "";
 
-        // 1. Windows Terminal detection - supports emojis well
+        // Windows Terminal detection - supports emojis well
         if (wt_session || wt_profile) {
             return true;
         }
 
-        // 2. Check for TrueColor. Almost all modern terminals with 24-bit color 
-        // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty).
+        // Check for TrueColor. Almost all modern terminals with 24-bit color 
+        // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty, Konsole).
         if (colorterm && (std::string(colorterm) == "truecolor" || 
                           std::string(colorterm) == "24bit")) {
             return true;
         }
 
-        // 3. Explicitly whitelist modern terminals that might not set COLORTERM
+        // Explicitly whitelist modern terminals that might not set COLORTERM
         if (term_str == "alacritty" || term_str == "xterm-kitty" || term_str == "foot") {
             return true;
         }
 
-        // 4. Known "Legacy" environments (like UXTerm/Xterm, Windows CMD)
-        // These are best served with your '⌼' and other safe Unicode symbols.
+        // Legacy environments (like UXTerm/Xterm, Windows CMD)
+        // These are served with safe Unicode symbols, tested on XTerm.
         return false; 
     }();
 
@@ -333,6 +332,8 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
         render_redo_button(can_redo),
         render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
         render_close_button(),
+        spacing,
+        spacing, // the two extra spacing is for Konsole's scrolling bar (its hiding +q in exit)
         spacing
     }) | bgcolor(Color::DarkBlue);
 }
@@ -473,44 +474,51 @@ Element UIRenderer::render_redo_button(bool available) {
 }
 
 // not really a dropdown consider and change to button if need be
-Element UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
-    std::string mode_text;
-    Color bg_color;
-    Color fg_color;
+Element& UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
+    
+    if (cached_editor_mode != mode || !editor_mode_button_) {
+        std::string mode_text;
+        Color bg_color;
+        Color fg_color;
+        cached_editor_mode = mode;
+        switch (mode) {
+            case EditorMode::BASIC:
+                mode_text = "Mode: Basic";
+                bg_color = EDITOR_MODE_BASIC_BG;
+                fg_color = EDITOR_MODE_BASIC_FG;
+                break;
+            case EditorMode::FANCY:
+                mode_text = "Mode: Fancy";
+                bg_color = EDITOR_MODE_FANCY_BG;
+                fg_color = EDITOR_MODE_FANCY_FG;
+                break;
+            case EditorMode::CODE:
+                mode_text = "Mode: Code";
+                bg_color = EDITOR_MODE_CODE_BG;
+                fg_color = EDITOR_MODE_CODE_FG;
+                break;
+            case EditorMode::DOCUMENT:
+                mode_text = "Mode: Document";
+                bg_color = EDITOR_MODE_DOCUMENT_BG;
+                fg_color = EDITOR_MODE_DOCUMENT_FG;
+                break;
+        }
 
-    switch (mode) {
-        case EditorMode::BASIC:
-            mode_text = "Mode: Basic";
-            bg_color = EDITOR_MODE_BASIC_BG;
-            fg_color = EDITOR_MODE_BASIC_FG;
-            break;
-        case EditorMode::FANCY:
-            mode_text = "Mode: Fancy";
-            bg_color = EDITOR_MODE_FANCY_BG;
-            fg_color = EDITOR_MODE_FANCY_FG;
-            break;
-        case EditorMode::CODE:
-            mode_text = "Mode: Code";
-            bg_color = EDITOR_MODE_CODE_BG;
-            fg_color = EDITOR_MODE_CODE_FG;
-            break;
-        case EditorMode::DOCUMENT:
-            mode_text = "Mode: Document";
-            bg_color = EDITOR_MODE_DOCUMENT_BG;
-            fg_color = EDITOR_MODE_DOCUMENT_FG;
-            break;
-    }
-
-    return hbox({spacing, text(mode_text), text(" F7 ") | nothing}) |
+        editor_mode_button_ = std::make_unique<Element>(hbox({spacing, text(mode_text), text(" F7 ") | nothing}) |
            bgcolor(bg_color) |
            color(fg_color) |
-           bold;
+           bold);
+    }
+    return *editor_mode_button_;
 }
 
 Element UIRenderer::render_close_button() {
-    auto symbol = supports_emojis() ? text("❌") | nothing : text("X") | bold;
-    return hbox({spacing, symbol, text(" Ctrl+Q ") | nothing}) | 
-           bgcolor(CLOSE_BUTTON_BG) | 
-           color(CLOSE_BUTTON_FG) | 
-           bold;
+    static const Element close_button = [this]() {
+        auto symbol = supports_emojis() ? text("❌") : text("X") | bold;
+        return hbox({spacing, symbol, text(" Ctrl+Q "), spacing}) | 
+               bgcolor(CLOSE_BUTTON_BG) | 
+               color(CLOSE_BUTTON_FG) | 
+               bold;
+    }();
+    return close_button;
 }
