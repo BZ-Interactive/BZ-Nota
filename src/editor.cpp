@@ -5,12 +5,12 @@
 #include <cctype>
 #include <csignal>
 #include <cstdio>
-#include <termios.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <libgen.h>
 #include <cstring>
 #include <tuple>
+
 
 using namespace ftxui;
 
@@ -18,10 +18,10 @@ using namespace ftxui;
 // volatile sig_atomic_t = thread-safe atomic type for signal handlers
 static volatile sig_atomic_t ctrl_c_pressed = 0;
 
-static void handle_sigint(int sig) {
-    (void)sig;  // Unused parameter (suppress warning)
-    ctrl_c_pressed = 1;
-}
+//static void handle_sigint(int sig) {
+//    (void)sig;  // Unused parameter (suppress warning)
+//    ctrl_c_pressed = 1;
+//}
 
 // ===== Constructor / Destructor =====
 // Constructor initializer list (more efficient than assigning in body)
@@ -657,48 +657,34 @@ void Editor::exit() {
 }
 
 // ===== Main Loop =====
-
 void Editor::run() {
-    // Setup signal handling
-    struct sigaction sa;
-    sa.sa_handler = handle_sigint;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, nullptr);
+    // These must be sent to the terminal BEFORE the FTXUI loop starts.
+    std::cout << "\x1b[?1049h\x1b[>1u\x1b[?1004h" << std::flush; // this is nuclear "give me raw events" mode
     
-    // Ignore other signals
-    signal(SIGTSTP, SIG_IGN);
-    signal(SIGQUIT, SIG_IGN);
-    
-    // Set terminal to raw mode with signals disabled
-    struct termios old_term, new_term;
-    tcgetattr(STDIN_FILENO, &old_term);
-    new_term = old_term;
-    new_term.c_lflag &= ~(ISIG); // Disable signal generation
-    tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
-    
-    // Create FTXUI screen
-    auto screen_instance = ScreenInteractive::FullscreenPrimaryScreen();
-    screen = &screen_instance;
-    
-    // Force FTXUI to not handle Ctrl+C automatically
-    screen->ForceHandleCtrlC(false);
-    
-    // Disable mouse support
-    screen->TrackMouse(false);
-    
-    // Create component
-    auto component = Renderer([&] {
-        return render();
-    });
-    
-    component = CatchEvent(component, [&](Event event) {
-        return handle_event(event);
-    });
-    
-    // Run main loop
-    screen->Loop(component);
-    
-    // Restore terminal settings
-    tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+    try { // doesnt crash but just incase, mainly to reset the terminal state on unexpected errors
+        auto screen_instance = ScreenInteractive::FullscreenPrimaryScreen();
+        screen = &screen_instance;
+
+        screen->ForceHandleCtrlC(false); // handle Ctrl+C manually
+        screen->TrackMouse(false); // at least for now
+
+        // 4. Create the Component Tree
+        auto main_component = Renderer([&] {
+            return render();
+        });
+
+        // We use CatchEvent to pass every key/sequence to InputManager
+        main_component = CatchEvent(main_component, [&](Event event) { return handle_event(event); });
+
+        // Start the Main Loop (This blocks until the editor closes)
+        screen->Loop(main_component);
+    }
+    catch (const std::exception& e) {
+        std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
+        std::cerr << "\r\n[!] Editor Crashed: " << e.what() << std::endl;
+        throw;
+    }
+
+    // Reset the terminal to its original state
+    std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
 }

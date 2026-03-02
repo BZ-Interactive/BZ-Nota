@@ -401,7 +401,7 @@ Element UIRenderer::render_save_button(bool modified) {
 
 Element UIRenderer::render_bold_button(bool active) {
     if (!bold_button_) {
-        std::string label = supports_emojis() ? "🅱️ Alt+B" : "Ⓑ Alt+B";
+        std::string label = supports_emojis() ? "🅱️ Ctrl+B" : "Ⓑ Ctrl+B";
         bold_button_ = std::make_unique<UIButton>(label, BOLD_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
     
@@ -411,7 +411,7 @@ Element UIRenderer::render_bold_button(bool active) {
 
 Element UIRenderer::render_italic_button(bool active) {
     if (!italic_button_) {
-        italic_button_ = std::make_unique<UIButton>("I Alt+I", ITALIC_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+        italic_button_ = std::make_unique<UIButton>("I Ctrl+I", ITALIC_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
     
     italic_button_->set_active(active);
@@ -420,7 +420,7 @@ Element UIRenderer::render_italic_button(bool active) {
 
 Element UIRenderer::render_underline_button(bool active) {
     if (!underline_button_) {
-        underline_button_ = std::make_unique<UIButton>("U̲ Alt+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
+        underline_button_ = std::make_unique<UIButton>("U̲ Ctrl+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
     
     underline_button_->set_active(active);
@@ -429,7 +429,7 @@ Element UIRenderer::render_underline_button(bool active) {
 
 Element UIRenderer::render_strikethrough_button(bool active) {
     if (!strikethrough_button_) {
-        strikethrough_button_ = std::make_unique<UIButton>("x̶ Alt+T", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
+        strikethrough_button_ = std::make_unique<UIButton>("x̶ Ctrl+T", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
     
     strikethrough_button_->set_active(active);

@@ -11,19 +11,26 @@ InputManager::InputManager() {}
 // ===================== Helper Functions =====================
 
 void InputManager::show_debug_info(const std::string& input, Editor& editor) {
+    if (input.empty()) return;
+
     std::ostringstream oss;
+    oss << "RAW: ";
     
-    // Format hex string
+    // Convert every single byte to HEX
     for (unsigned char c : input) {
-        oss << std::hex << std::setw(2) << std::setfill('0') << (int)c << " ";
+        oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)c << " ";
     }
-    
-    // Determine key type
-    if (input.length() == 1 && (uint8_t)input[0] <= 26) {
-        editor.set_status("CTRL Key: " + oss.str());
-    } else if (input.length() > 1 && input[0] == '\x1b') {
-        editor.set_status("Alt Key: " + oss.str());
+
+    // Add a readable representation for non-printables
+    oss << " | STR: ";
+    for (unsigned char c : input) {
+        if (c < 32) oss << "^" << (char)(c + 64);
+        else if (c < 127) oss << (char)c;
+        else oss << "?";
     }
+
+    // Always set the status so we see the "misses"
+    editor.set_status(oss.str());
 }
 
 // ===================== Main Event Handler =====================
@@ -93,6 +100,12 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
         // Line operations
         case CtrlKey::O: editor.insert_line_above(); return true;
         case CtrlKey::K: editor.insert_line_below(); return true;
+        
+        // Formatting Shortcuts
+        case CtrlKey::B: editor.toggle_bold(); return true;
+        case CtrlKey::I: editor.toggle_italic(); return true;
+        case CtrlKey::U: editor.toggle_underline(); return true;
+        case CtrlKey::T: editor.toggle_strikethrough(); return true;
 
         // Quit
         case CtrlKey::Q:
@@ -111,12 +124,15 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
 
 bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
     using namespace ftxui;
-    
-    // Formatting shortcuts
+
+    #ifdef 0
+    // may completely remove if ctrl is deemed reliable
+    // Formatting Shortcuts
     if (event == Event::AltB) { editor.toggle_bold(); return true; }
     if (event == Event::AltI) { editor.toggle_italic(); return true; }
     if (event == Event::AltU) { editor.toggle_underline(); return true; }
     if (event == Event::AltT) { editor.toggle_strikethrough(); return true; }
+    #endif
     
     return false;
 }
@@ -286,7 +302,7 @@ bool InputManager::handle_navigation_sequences(
     if (input == "\x1b[1;2C") { editor.move_cursor_right(true); return true; }
     if (input == "\x1b[1;2A") { editor.move_cursor_up(true); return true; }
     if (input == "\x1b[1;2B") { editor.move_cursor_down(true); return true; }
-    
+
     // Ctrl+Arrow: Word navigation
     if (input == "\x1b[1;5D") { editor.move_word_left(false); return true; }
     if (input == "\x1b[1;5C") { editor.move_word_right(false); return true; }
