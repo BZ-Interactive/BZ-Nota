@@ -88,8 +88,8 @@ bool Editor::set_editor_mode(EditorMode mode) {
         break;
     }
     set_status("Switched editor mode to " + mode_name);
-    return true;
     #endif
+    return true;
 }
 
 // ===== File Operations =====
@@ -677,15 +677,13 @@ void Editor::exit() {
 
 // ===== Main Loop =====
 void Editor::run() {
-    // These must be sent to the terminal BEFORE the FTXUI loop starts.
-    std::cout << "\x1b[?1049h\x1b[>1u\x1b[?1004h" << std::flush; // this is nuclear "give me raw events" mode
-    
     try { // doesnt crash but just incase, mainly to reset the terminal state on unexpected errors
         auto screen_instance = ScreenInteractive::FullscreenPrimaryScreen();
         screen = &screen_instance;
 
         screen->ForceHandleCtrlC(false); // handle Ctrl+C manually
         screen->TrackMouse(false); // at least for now
+        screen->ForceHandleCtrlZ(false); // handle Ctrl+Z manually for undo
 
         // 4. Create the Component Tree
         auto main_component = Renderer([&] {
@@ -699,11 +697,7 @@ void Editor::run() {
         screen->Loop(main_component);
     }
     catch (const std::exception& e) {
-        std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
         std::cerr << "\r\n[!] Editor Crashed: " << e.what() << std::endl;
         throw;
     }
-
-    // Reset the terminal to its original state
-    std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
 }

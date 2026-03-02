@@ -100,12 +100,6 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
         // Line operations
         case CtrlKey::O: editor.insert_line_above(); return true;
         case CtrlKey::K: editor.insert_line_below(); return true;
-        
-        // Formatting Shortcuts
-        case CtrlKey::B: editor.toggle_bold(); return true;
-        case CtrlKey::I: editor.toggle_italic(); return true;
-        case CtrlKey::U: editor.toggle_underline(); return true;
-        case CtrlKey::T: editor.toggle_strikethrough(); return true;
 
         // Quit
         case CtrlKey::Q:
@@ -123,17 +117,14 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
 }
 
 
-bool InputManager::handle_alt_keys([[maybe_unused]]ftxui::Event event, [[maybe_unused]]Editor& editor) {
+bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
     using namespace ftxui;
 
-    #if 0
-    // may completely remove if ctrl is deemed reliable
     // Formatting Shortcuts
     if (event == Event::AltB) { editor.toggle_bold(); return true; }
     if (event == Event::AltI) { editor.toggle_italic(); return true; }
     if (event == Event::AltU) { editor.toggle_underline(); return true; }
     if (event == Event::AltT) { editor.toggle_strikethrough(); return true; }
-    #endif
     
     return false;
 }
