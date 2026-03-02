@@ -125,12 +125,14 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
 bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
     using namespace ftxui;
 
-    // may completely remove if ctrl deemed reliable
+    #ifdef 0
+    // may completely remove if ctrl is deemed reliable
     // Formatting Shortcuts
     if (event == Event::AltB) { editor.toggle_bold(); return true; }
     if (event == Event::AltI) { editor.toggle_italic(); return true; }
     if (event == Event::AltU) { editor.toggle_underline(); return true; }
     if (event == Event::AltT) { editor.toggle_strikethrough(); return true; }
+    #endif
     
     return false;
 }
