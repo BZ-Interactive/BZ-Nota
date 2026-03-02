@@ -226,10 +226,10 @@ To launch the editor, run the executable with a file path:
 
 **Formatting**
 
-*   `Alt+B` — Bold
-*   `Alt+I` — Italic
-*   `Alt+U` — Underline
-*   `Alt+T` — Strikethrough
+*   `Ctrl+B` — Bold
+*   `Ctrl+I` — Italic
+*   `Ctrl+U` — Underline
+*   `Ctrl+T` — Strikethrough
 
 All work on selection, can use this to write formatted or apply any format to a pre-written text.
 
@@ -249,7 +249,7 @@ All can be applied on top of each other.
 *   `Ctrl+O` — Insert blank line above
 *   `Ctrl+K` — Insert blank line below
 
-**Note:** Some keybindings may be intercepted by your terminal emulator. For best results, use Alacritty or disable conflicting terminal shortcuts.
+**Note:** Uses Kitty Keyboard Protocol. However, some keybindings may still be intercepted by your terminal emulator. If none of the alternative keys work for you disable conflicting terminal shortcuts.
 
 **System Clipboard:** The system clipboard feature requires external tools (`xclip`/`xsel` for X11, `wl-clipboard` for Wayland, built-in on macOS). See [CLIPBOARD.md](CLIPBOARD.md) for detailed setup instructions.
 

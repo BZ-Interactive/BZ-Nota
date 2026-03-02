@@ -99,7 +99,7 @@
 \hline
 \textbf{Project Name} & BZ-Nota \\
 \hline
-\textbf{Version} & 0.6.9 \\
+\textbf{Version} & 0.7.0 \\
 \hline
 \textbf{Project Type} & Terminal-Based Text Editor \\
 \hline
@@ -133,6 +133,8 @@
 1.1 & \date{28.02.2026} & Barkın Zorlu & Add Optimized Button Rendering \\
 \hline
 1.2 & \date{01.03.2026} & Barkın Zorlu & Organization Edits to TDD \\
+\hline
+1.3 & \date{02.03.2026} & Barkın Zorlu & Update to v0.7.0 - Kitty Keyboard Protocol and CTRL formatting shortcuts \\
 \hline
 \end{tabular}
 \end{table}
@@ -342,7 +344,7 @@ The UI Renderer component is responsible for:
     \item Built on FTXUI library for TUI rendering
     \item Implements a retained-mode rendering system
     \item Supports color output and text styling
-    \item Handles VT100 escape sequences for terminal control
+    \item Handles VT100 and Kitty Keyboard Protocol escape sequences
     \item Parses and renders Markdown formatting (bold, italic, underline, strikethrough)
     \item Supports emoji display in terminal (with fallback detection)
     \item Renders multi-pane layout (header, content, status bar, shortcuts bar)
@@ -355,10 +357,11 @@ The UI Renderer component is responsible for:
 The Input Manager handles:
 
 \begin{itemize}
-    \item Reading keyboard input from terminal
+    \item Reading keyboard input from terminal using Kitty Keyboard Protocol
     \item Mapping key bindings to editor actions
     \item Managing input event queues
     \item Supporting special keys (arrows, function keys, etc.)
+    \item Enhanced key event discrimination for modifier combinations
 \end{itemize}
 
 \subsection{Key Binding System}
@@ -380,11 +383,11 @@ Ctrl+Shift+C / Ctrl+Shift+V  => Modern terminal clipboard
 Tab            => Insert tab
 Shift+Tab      => Remove leading tab (unindent)
 
-// Formatting (Alt + key in FANCY/DOCUMENT modes)
-Alt+B          => Toggle bold
-Alt+I          => Toggle italic
-Alt+U          => Toggle underline
-Alt+T          => Toggle strikethrough
+// Formatting (Ctrl + key in FANCY/DOCUMENT modes)
+Ctrl+B         => Toggle bold
+Ctrl+I         => Toggle italic
+Ctrl+U         => Toggle underline
+Ctrl+T         => Toggle strikethrough
 
 // Navigation
 Arrow Keys     => Move cursor
