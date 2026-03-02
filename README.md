@@ -169,18 +169,29 @@ For other platforms, use the equivalent package manager (e.g., `brew`, `pacman`,
 <!-- USAGE EXAMPLES -->
 ## ✍️ Usage
 
-### Basic Usage
-
-To launch the editor, run the executable with a file path:
+if intalled you can run it from anywhere:
 
 ```sh
-./bznota <filename>
+bznota <options> <filename>
+```
+if not installed run from local folder:
+
+```sh
+./bznota <options> <filename>
 ```
 
-### Command-Line Options
+### Basic Usage
+
+Run the editor without a file path, it will create but not save a new file "Untitled". File can be renamed via F2 during editing.
 
 ```sh
-./bznota [-d] [-v] <filename>
+bznota
+```
+
+To launch the editor with a pre-existing file, run the executable with the file path:
+
+```sh
+bznota <filename>
 ```
 
 **Options:**
@@ -193,16 +204,13 @@ To launch the editor, run the executable with a file path:
 
 ```sh
 # Open a file for editing
-./bznota example.txt
+bznota example.txt
 
 # Display version information
-./bznota -v
+bznota -v
 
 # Open with debug mode enabled
-./bznota -d example.txt
-
-# Debug mode can be placed anywhere
-./bznota --debug myfile.cpp
+bznota -d example.txt
 ```
 
 ### Keybindings
