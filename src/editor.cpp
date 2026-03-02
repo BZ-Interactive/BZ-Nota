@@ -660,24 +660,31 @@ void Editor::exit() {
 void Editor::run() {
     // These must be sent to the terminal BEFORE the FTXUI loop starts.
     std::cout << "\x1b[?1049h\x1b[>1u\x1b[?1004h" << std::flush; // this is nuclear "give me raw events" mode
+    
+    try { // doesnt crash but just incase, mainly to reset the terminal state on unexpected errors
+        auto screen_instance = ScreenInteractive::FullscreenPrimaryScreen();
+        screen = &screen_instance;
 
-    auto screen_instance = ScreenInteractive::FullscreenPrimaryScreen();
-    screen = &screen_instance;
+        screen->ForceHandleCtrlC(false); // handle Ctrl+C manually
+        screen->TrackMouse(false); // at least for now
 
-    screen->ForceHandleCtrlC(false); // handle Ctrl+C manually
-    screen->TrackMouse(false); // at least for now
+        // 4. Create the Component Tree
+        auto main_component = Renderer([&] {
+            return render();
+        });
 
-    // 4. Create the Component Tree
-    auto main_component = Renderer([&] {
-        return render();
-    });
+        // We use CatchEvent to pass every key/sequence to InputManager
+        main_component = CatchEvent(main_component, [&](Event event) { return handle_event(event); });
 
-    // We use CatchEvent to pass every key/sequence to InputManager
-    main_component = CatchEvent(main_component, [&](Event event) { return handle_event(event); });
-
-    // Start the Main Loop (This blocks until the editor closes)
-    screen->Loop(main_component);
+        // Start the Main Loop (This blocks until the editor closes)
+        screen->Loop(main_component);
+    }
+    catch (const std::exception& e) {
+        std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
+        std::cerr << "\r\n[!] Editor Crashed: " << e.what() << std::endl;
+        throw;
+    }
 
     // Reset the terminal to its original state
-    std::cout << "\x1b[?1049l\x1b[<u\x1b[?1004l" << std::flush; // reset for raw mode
+    std::cout << "\x1b[<u\x1b[?1049l\x1b[?1004l" << std::flush; // reset for raw mode
 }
