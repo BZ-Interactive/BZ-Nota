@@ -125,7 +125,7 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
 bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
     using namespace ftxui;
 
-    #ifdef 0
+    #if 0
     // may completely remove if ctrl is deemed reliable
     // Formatting Shortcuts
     if (event == Event::AltB) { editor.toggle_bold(); return true; }
