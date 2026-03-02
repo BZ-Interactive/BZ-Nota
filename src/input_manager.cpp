@@ -122,7 +122,8 @@ bool InputManager::handle_ctrl_keys(unsigned char ch, Editor& editor) {
     }
 }
 
-bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
+
+bool InputManager::handle_alt_keys([[maybe_unused]]ftxui::Event event, [[maybe_unused]]Editor& editor) {
     using namespace ftxui;
 
     #if 0

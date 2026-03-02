@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.6.9-orange)
+![Version](https://img.shields.io/badge/version-0.7.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Git LFS](https://img.shields.io/badge/Git-LFS-blue)
 
