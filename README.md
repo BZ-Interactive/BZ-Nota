@@ -243,6 +243,14 @@ All work on selection, can use this to write formatted or apply any format to a 
 
 All can be applied on top of each other.
 
+**Editor Modes (F7):**
+*   `BASIC` — Plain text, no markdown parsing (shows raw **bold** markers)
+*   `FANCY` — Markdown parsing enabled (**bold**, *italic*, etc. rendered live)
+*   `CODE` — Syntax highlighting, no markdown (in development)
+*   `DOCUMENT` — FANCY + grammar features (in development)
+
+**Appearance (F8):**
+*   `F8` — Toggle between dark mode (default) and light mode
 
 **Navigation:**
 *   `Arrow Keys` — Move cursor
