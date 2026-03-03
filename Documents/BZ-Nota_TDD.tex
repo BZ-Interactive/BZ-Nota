@@ -126,17 +126,21 @@
 	\centering
 	\begin{tabular}{|c|c|c|p{8cm}|}
 		\hline
-		\textbf{Version} & \textbf{Date}     & \textbf{Author} & \textbf{Description}                                       \\
+		\textbf{Version} & \textbf{Date}     & \textbf{Author} & \textbf{Description}                                            \\
 		\hline
-		1.0              & \date{26.02.2026} & BZ-Interactive  & Complete TDD Creation                                      \\
+		1.0              & \date{26.02.2026} & BZ-Interactive  & Complete TDD Creation                                           \\
 		\hline
-		1.1              & \date{28.02.2026} & Barkın Zorlu    & Add Optimized Button Rendering                             \\
+		1.1              & \date{28.02.2026} & Barkın Zorlu    & Add Optimized Button Rendering                                  \\
 		\hline
-		1.2              & \date{01.03.2026} & Barkın Zorlu    & Organization Edits to TDD                                  \\
+		1.2              & \date{01.03.2026} & Barkın Zorlu    & Organization Edits to TDD                                       \\
 		\hline
-		1.3              & \date{02.03.2026} & Barkın Zorlu    & Update to v0.7.0 - ALT formatting shortcuts                \\
+		1.3              & \date{02.03.2026} & Barkın Zorlu    & Update to v0.7.0 - ALT formatting shortcuts                     \\
 		\hline
-		1.4              & \date{03.03.2026} & Barkın Zorlu    & Remove explicit Kitty protocol, use Alt+key for formatting \\
+		1.4              & \date{03.03.2026} & Barkın Zorlu    & Remove explicit Kitty protocol, use Alt+key for formatting      \\
+		\hline
+		1.5              & \date{03.03.2026} & Barkın Zorlu    & Add dark/light mode toggle via F8 (dark is default)             \\
+		\hline
+		1.6              & \date{03.03.2026} & Barkın Zorlu    & Document Editor Modes and F7 toggle (BASIC/FANCY/CODE/DOCUMENT) \\
 		\hline
 	\end{tabular}
 \end{table}
@@ -350,6 +354,10 @@ The UI Renderer component is responsible for:
 	\item Parses and renders Markdown formatting (bold, italic, underline, strikethrough)
 	\item Supports emoji display in terminal (with fallback detection)
 	\item Renders multi-pane layout (header, content, status bar, shortcuts bar)
+	\item Dark mode is the default theme (dark background, light foreground)
+	\item Theme toggle via F8 provides instant switching between dark and light modes
+	\item Theme preference is not persisted - always starts in dark mode on launch
+	\item Theme preference will be stored in a config file for automatic switching on startup (future enhancement)
 \end{itemize}
 
 \section{Input Manager Component}
@@ -390,6 +398,10 @@ Alt+B         => Toggle bold
 Alt+I         => Toggle italic
 Alt+U         => Toggle underline
 Alt+T         => Toggle strikethrough
+
+// Appearance
+F7			   => Toggle Editor mode (switches between BASIC, FANCY, CODE, DOCUMENT modes)
+F8             => Toggle dark/light mode (instant switch, dark is default)
 
 // Navigation
 Arrow Keys     => Move cursor
@@ -453,23 +465,33 @@ public:
 
 \section{Editor Modes}
 
-BZ-Nota supports multiple editing modes to suit different use cases:
+BZ-Nota supports multiple editing modes to suit different use cases. Switch between modes using \textbf{F7} (cycles: BASIC $\rightarrow$ FANCY $\rightarrow$ CODE $\rightarrow$ DOCUMENT $\rightarrow$ BASIC).
 
 \subsection{BASIC Mode}
 
-Plain text editing with no formatting support. Markdown markers like \texttt{**text**} are displayed literally without formatting applied. Suitable for code editing where you want exact byte-for-byte content.
+Plain text editing with no formatting support. Markdown markers like \texttt{**text**} or \texttt{*italic*} are displayed literally as raw text without any styling applied. This is meant to be used when you want exact byte-for-byte content. Formatting shortcuts (Alt+B/I/U/T) are disabled in this mode.
 
 \subsection{FANCY Mode (Default)}
 
-Document editing with Markdown formatting support. Text wrapped in \texttt{**bold**}, \texttt{*italic*}, \texttt{<u>underline</u>}, and \texttt{\textasciitilde\textasciitilde strikethrough\textasciitilde\textasciitilde} markers is rendered with appropriate styling in the editor UI. Users can toggle formatting with Alt+B/I/U/T while typing or apply it to selections. Multiple formats can be applied on top of each other. This is the default mode suitable for note-taking and documentation.
+Document editing with Markdown formatting support. Text wrapped in formatting markers is rendered with appropriate styling in the editor UI:
+\begin{itemize}
+	\item \texttt{**bold**} $\rightarrow$ displayed as \textbf{bold}
+	\item \texttt{*italic*} $\rightarrow$ displayed as \textit{italic}
+	\item \texttt{<u>underline</u>} $\rightarrow$ displayed as \underline{underline}
+	\item \texttt{\textasciitilde\textasciitilde strikethrough\textasciitilde\textasciitilde} $\rightarrow$ displayed as strikethrough
+\end{itemize}
+Users can toggle formatting with \textbf{Alt+B/I/U/T} while typing or apply to selections. Multiple formats can be stacked. This is the default mode suitable for note-taking and documentation.
 
 \subsection{CODE Mode}
 
-Syntax highlighting for programming languages with color-coded display of keywords, strings, comments, and other language constructs. No Markdown formatting rendering. Currently in development.
+Syntax highlighting for programming languages with color-coded display of keywords, strings, comments, and other language constructs. Markdown formatting markers are displayed literally (like BASIC mode). \textbf{Currently in development - falls back to BASIC behavior.}
 
 \subsection{DOCUMENT Mode}
 
-Enhanced FANCY mode with planned support for dictionary checking, grammar suggestions, and document-specific features. Currently in development.
+Enhanced FANCY mode with support for dictionary checking, grammar suggestions, and document-specific features. \textbf{Currently in development - falls back to FANCY behavior.}
+
+\medskip
+\textit{Note: In the current implementation, F7 toggles between BASIC and FANCY modes only. CODE and DOCUMENT modes will be fully implemented in a future release.}
 
 \section{Selection Manager Component}
 
