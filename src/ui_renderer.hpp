@@ -95,4 +95,7 @@ private:
     inline static EditorMode cached_editor_mode = { EditorMode::FANCY };
     std::unique_ptr<ftxui::Element> color_mode_button_;
     bool cached_color_mode_dark = true; // default to dark mode
+
+    ftxui::Color seperator_color_bg;
+    ftxui::Color seperator_color_fg;
 };

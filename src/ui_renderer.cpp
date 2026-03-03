@@ -49,6 +49,17 @@ static const Color EDITOR_MODE_CODE_FG = Color::White;
 static const Color EDITOR_MODE_DOCUMENT_BG = Color::NavyBlue;
 static const Color EDITOR_MODE_DOCUMENT_FG = Color::White;
 
+// Dark mode
+static const Color COLOR_MODE_DARK_BG = Color::Black;
+static const Color COLOR_MODE_DARK_FG = Color::White;
+static const Color COLOR_MODE_DARK_SEPARATOR = Color::Grey19;
+
+// Light mode
+static const Color COLOR_MODE_LIGHT_BG = Color::White;
+static const Color COLOR_MODE_LIGHT_FG = Color::Black;
+static const Color COLOR_MODE_LIGHT_SEPARATOR = Color::GrayLight;
+
+
 UIRenderer::UIRenderer() {}
 
 bool UIRenderer::supports_emojis() const {
@@ -208,14 +219,14 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
 Element UIRenderer::render(const RenderParams& params) {
     int screen_height = Terminal::Size().dimy;
     int visible_lines = screen_height - 3;
-    
+
     auto lines = render_lines(params.buffer, params.cursor_x, params.cursor_y, params.scroll_y, visible_lines, params.is_char_selected_fn, params.editor_mode);
     
     return vbox({
         render_header(params.filename, params.modified, params.can_undo, params.can_redo, params.bold_active, params.italic_active, params.underline_active, params.strikethrough_active, params.editor_mode),
-        separator(),
-        vbox(std::move(lines)) | flex,
-        separator(),
+        separator() | bgcolor(seperator_color_bg) | color(seperator_color_fg),
+        vbox(std::move(lines)) | flex | (cached_color_mode_dark ? bgcolor(COLOR_MODE_DARK_BG) | color(COLOR_MODE_DARK_FG) : bgcolor(COLOR_MODE_LIGHT_BG) | color(COLOR_MODE_LIGHT_FG)),
+        separator() | bgcolor(seperator_color_bg) | color(seperator_color_fg),
         render_status_bar(params.cursor_x, params.cursor_y, params.status_message, params.status_shown, params.status_type),
         render_shortcuts()
     });
@@ -515,6 +526,19 @@ Element& UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
 Element& UIRenderer::render_color_mode_button(bool dark) {
     if (cached_color_mode_dark != dark || !color_mode_button_) {
         cached_color_mode_dark = dark;
+        seperator_color_bg = dark ? COLOR_MODE_DARK_SEPARATOR : COLOR_MODE_LIGHT_SEPARATOR;
+        seperator_color_fg = dark ? COLOR_MODE_DARK_FG : COLOR_MODE_LIGHT_FG;
+        auto symbol = text("");
+        if (supports_emojis()) { symbol = text(dark ? "🌙" : "☀️"); }
+        else { symbol = text(dark ? "☽" : "☀"); }
+        color_mode_button_ = std::make_unique<Element>(hbox({spacing, symbol, text(" F8 ") | nothing}) |
+           bgcolor(Color::GrayDark) |
+           color(Color::White) |
+           bold);
+    } if (cached_color_mode_dark != dark || !color_mode_button_) {
+        cached_color_mode_dark = dark;
+        seperator_color_bg = dark ? COLOR_MODE_DARK_SEPARATOR : COLOR_MODE_LIGHT_SEPARATOR;
+        seperator_color_fg = dark ? COLOR_MODE_DARK_FG : COLOR_MODE_LIGHT_FG;
         auto symbol = text("");
         if (supports_emojis()) { symbol = text(dark ? "🌙" : "☀️"); }
         else { symbol = text(dark ? "☽" : "☀"); }
