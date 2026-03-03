@@ -92,6 +92,12 @@ bool Editor::set_editor_mode(EditorMode mode) {
     return true;
 }
 
+bool Editor::change_color_mode() {
+    UIRenderer::color_mode_dark = !UIRenderer::color_mode_dark;
+    set_status(UIRenderer::color_mode_dark ? "Switched to Dark Mode" : "Switched to Light Mode");
+    return true;
+}
+
 // ===== File Operations =====
 
 void Editor::load_file() {

@@ -15,6 +15,7 @@ public:
     /// @param params All rendering parameters bundled in a struct
     /// @return The rendered FTXUI Element
     ftxui::Element render(const RenderParams& params);
+    inline static bool color_mode_dark = { true };
 
 private:
     /// @brief Check if the terminal supports emojis
@@ -65,6 +66,7 @@ private:
     ftxui::Element render_redo_button(bool available);
     
     ftxui::Element& render_editor_mode_dropdown(EditorMode mode);
+    ftxui::Element& render_color_mode_button(bool dark);
 
     /// @brief Render the close button
     ftxui::Element render_close_button();
@@ -91,4 +93,9 @@ private:
     std::unique_ptr<UIButton> redo_button_;
     std::unique_ptr<ftxui::Element> editor_mode_button_;
     inline static EditorMode cached_editor_mode = { EditorMode::FANCY };
+    std::unique_ptr<ftxui::Element> color_mode_button_;
+    bool cached_color_mode_dark = true; // default to dark mode
+
+    ftxui::Color seperator_color_bg;
+    ftxui::Color seperator_color_fg;
 };

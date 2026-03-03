@@ -81,6 +81,7 @@ public:
 
     EditorMode get_editor_mode() const { return editor_mode; }
     bool set_editor_mode(EditorMode mode);
+    bool change_color_mode();
     
     // ===== Public methods accessible by InputManager =====
     void save_file();
