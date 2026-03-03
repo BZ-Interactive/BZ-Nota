@@ -162,7 +162,9 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         return true;
     } else if (event == Event::F7) {
         int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 4; // Cycle through modes
-        editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode));
+        if (editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode))) { return true; }
+    } else if (event == Event::F8) {
+        if (editor.change_color_mode()) { return true; }
     }
     
     return false;

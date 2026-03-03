@@ -331,6 +331,7 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
         render_undo_button(can_undo),
         render_redo_button(can_redo),
         render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
+        render_color_mode_button(color_mode_dark), // Toggle between light/dark mode.
         render_close_button(),
         spacing,
         spacing, // the two extra spacing is for Konsole's scrolling bar (its hiding +q in exit)
@@ -475,7 +476,6 @@ Element UIRenderer::render_redo_button(bool available) {
 
 // not really a dropdown consider and change to button if need be
 Element& UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
-    
     if (cached_editor_mode != mode || !editor_mode_button_) {
         std::string mode_text;
         Color bg_color;
@@ -510,6 +510,20 @@ Element& UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
            bold);
     }
     return *editor_mode_button_;
+}
+
+Element& UIRenderer::render_color_mode_button(bool dark) {
+    if (cached_color_mode_dark != dark || !color_mode_button_) {
+        cached_color_mode_dark = dark;
+        auto symbol = text("");
+        if (supports_emojis()) { symbol = text(dark ? "🌙" : "☀️"); }
+        else { symbol = text(dark ? "☽" : "☀"); }
+        color_mode_button_ = std::make_unique<Element>(hbox({spacing, symbol, text(" F8 ") | nothing}) |
+           bgcolor(Color::GrayDark) |
+           color(Color::White) |
+           bold);
+    }
+    return *color_mode_button_;
 }
 
 Element UIRenderer::render_close_button() {
