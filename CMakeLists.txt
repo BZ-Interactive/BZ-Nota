@@ -16,6 +16,7 @@ configure_file(bznota.desktop.in bznota.desktop @ONLY)
 
 # Add ftxui as a subdirectory (submodule)
 add_subdirectory(vendor/ftxui)
+add_subdirectory(vendor/md4c)
 
 # Create the main executable
 add_executable(bznota
@@ -46,15 +47,19 @@ add_executable(bznota
     src/formatter.hpp
     src/utf8_utils.cpp
     src/utf8_utils.hpp
+    src/parser_manager.cpp
+    src/parser_manager.hpp
 )
 
 # Link ftxui libraries
 target_link_libraries(bznota PRIVATE ftxui::screen ftxui::dom ftxui::component)
+target_link_libraries(bznota PRIVATE ftxui::dom md4c)
 
 # Include directories
 target_include_directories(bznota PRIVATE src)
 target_include_directories(bznota PRIVATE ${CMAKE_BINARY_DIR}/src)  # For generated version.hpp
 target_include_directories(bznota PRIVATE vendor/ftxui/include)
+target_include_directories(bznota PRIVATE vendor/md4c/src)
 
 # Compiler options for better warnings and debugging
 if(MSVC)
