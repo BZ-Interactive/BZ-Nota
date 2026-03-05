@@ -80,7 +80,7 @@ Key Features:
 *   **Intuitive Editing**: Familiar keybindings and a focus on simplicity.
 *   **Modern TUI**: Clear and modern looks with emoji support.
 *   **High Performance**: Built with C++ for speed and low resource usage.
-*   **Minimal Resource Usage**: Uses less than 2MB on an empty file and close to zero CPU usage when editing.
+*   **Minimal Resource Usage**: Uses less than 6MB on an empty file and close to zero CPU usage when editing.
 *   **Safe Renaming & Saving**: Prompts before overwriting existing files and privilege elevation to save files requiring elevated permissions.
 
 (Privilege elevation is currently being worked on)
