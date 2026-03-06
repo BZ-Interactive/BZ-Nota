@@ -60,7 +60,7 @@
     .wrapper {
       position: relative;
       z-index: 1;
-      max-width: 860px;
+      max-width: 1060px;
       margin: 0 auto;
       padding: 0 24px;
     }
@@ -159,12 +159,16 @@
     /* ── Cards ── */
     .cards {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       padding-bottom: 100px;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 860px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
       .cards { grid-template-columns: 1fr; }
     }
 
@@ -304,6 +308,7 @@
     .card:nth-child(1) { animation: fadeUp 0.5s 0.35s ease both; }
     .card:nth-child(2) { animation: fadeUp 0.5s 0.45s ease both; }
     .card:nth-child(3) { animation: fadeUp 0.5s 0.55s ease both; }
+    .card:nth-child(4) { animation: fadeUp 0.5s 0.65s ease both; }
   </style>
 </head>
 <body>
@@ -319,26 +324,30 @@
       <div class="hero-eyebrow">Documentation</div>
       <h1><a href="https://github.com/BZ-Interactive/BZ-Nota" target="_blank" rel="noopener" style="text-decoration:none;"><span class="highlight">BZ-Nota</span></a></h1>
       <p class="hero-desc">
-        An open source project. Browse the technical design document, follow tutorials,
-        or explore example configurations to get started.
+        BZ-Nota is a high-performance, feature-rich, terminal-based text editor built with C++ and FTXUI. Combining a modern UI with a tiny footprint—using less than 6MB of RAM—it offers a seamless experience for both raw text and Markdown editing.
       </p>
-      <div style="margin-bottom: 32px;">
-        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); padding: 4px 14px; border-radius: 999px; letter-spacing: 0.08em;">v0.7.0</span>
+      <div style="margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">🧠 &lt;6MB RAM</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #38bdf8; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">📦 1.6MB binary</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #fb923c; background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">⚡ ~1% CPU</span>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); padding: 5px 16px; border-radius: 999px; letter-spacing: 0.1em;">v0.7.0</span>
       </div>
       <div class="divider"></div>
 
       <div class="cards">
 
-        <!-- TDD -->
-        <a href="https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.pdf" class="card" target="_blank" rel="noopener">
-          <div class="card-icon blue">📄</div>
+        <!-- Features -->
+        <div class="card disabled">
+          <div class="card-icon blue">✨</div>
           <div>
-            <div class="card-label">Reference</div>
-            <div class="card-title">Technical Design Doc</div>
+            <div class="card-label">Overview</div>
+            <div class="card-title">Features</div>
           </div>
-          <p class="card-desc">The full TDD covering architecture, design decisions, and implementation details.</p>
-          <div class="card-arrow">Read document →</div>
-        </a>
+          <p class="card-desc">A full breakdown of BZ-Nota's capabilities, from Markdown support to performance highlights.</p>
+          <div class="soon-tag">Coming soon</div>
+        </div>
 
         <!-- Tutorials - coming soon -->
         <div class="card disabled">
@@ -358,9 +367,20 @@
             <div class="card-label">Resources</div>
             <div class="card-title">Example Configs</div>
           </div>
-          <p class="card-desc">Sample configurations and real-world examples to use as a starting point.</p>
+          <p class="card-desc">Personalize your experience by modifying shortcuts, changing colour colors and preferences.</p>
           <div class="soon-tag">Coming soon</div>
         </div>
+
+        <!-- TDD -->
+        <a href="https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.pdf" class="card" target="_blank" rel="noopener">
+          <div class="card-icon" style="background: rgba(251,146,60,0.15);">📄</div>
+          <div>
+            <div class="card-label">Reference</div>
+            <div class="card-title">Technical Design Doc</div>
+          </div>
+          <p class="card-desc">The full TDD covering architecture, design decisions, and implementation details.</p>
+          <div class="card-arrow">Read document →</div>
+        </a>
 
       </div>
     </section>
