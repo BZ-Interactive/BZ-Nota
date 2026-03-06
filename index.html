@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BZ-Nota</title>
+  <meta name="description" content="BZ-Nota is a high-performance terminal-based text editor built with C++ and FTXUI. Under 6MB RAM, 1.6MB binary, ~1% CPU — with full Markdown support and a modern TUI." />
   <link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,29 +32,33 @@
       overflow-x: hidden;
     }
 
-    /* ── Background mesh ── */
-    body::before {
-      content: '';
+    /* ── Terminal canvas background ── */
+    #terminal-bg {
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(79,142,247,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(167,139,250,0.10) 0%, transparent 60%);
-      pointer-events: none;
       z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background: #0a0d12;
     }
 
-    /* ── Grid overlay ── */
-    body::after {
-      content: '';
-      position: fixed;
+    #terminal-bg canvas {
+      position: absolute;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.38;
+    }
+
+    /* Soft radial vignette so text stays readable */
+    #terminal-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 50%, transparent 30%, rgba(10,13,18,0.82) 100%),
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(79,142,247,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(167,139,250,0.07) 0%, transparent 60%);
     }
 
     /* ── Layout ── */
@@ -164,7 +169,7 @@
       padding-bottom: 100px;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       .cards { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -328,7 +333,21 @@
       </p>
       <div style="margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">🧠 &lt;6MB RAM</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em; display:inline-flex; align-items:center; gap:7px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+              <rect x="2" y="7" width="20" height="10" rx="2" stroke="#4ade80" stroke-width="1.6"/>
+              <rect x="5" y="11" width="2" height="2" rx="0.4" fill="#4ade80"/>
+              <rect x="9" y="11" width="2" height="2" rx="0.4" fill="#4ade80"/>
+              <rect x="13" y="11" width="2" height="2" rx="0.4" fill="#4ade80"/>
+              <rect x="17" y="11" width="2" height="2" rx="0.4" fill="#4ade80"/>
+              <line x1="6" y1="7" x2="6" y2="5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="9" y1="7" x2="9" y2="5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="12" y1="7" x2="12" y2="5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="15" y1="7" x2="15" y2="5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="18" y1="7" x2="18" y2="5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            &lt;6MB RAM
+          </span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #38bdf8; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">📦 1.6MB binary</span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #fb923c; background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.2); padding: 6px 18px; border-radius: 999px; letter-spacing: 0.06em;">⚡ ~1% CPU</span>
         </div>
@@ -349,16 +368,6 @@
           <div class="soon-tag">Coming soon</div>
         </div>
 
-        <!-- Tutorials - coming soon -->
-        <div class="card disabled">
-          <div class="card-icon purple">🎓</div>
-          <div>
-            <div class="card-label">Learn</div>
-            <div class="card-title">Tutorials</div>
-          </div>
-          <p class="card-desc">Step-by-step guides to help you get up and running with BZ-Nota.</p>
-          <div class="soon-tag">Coming soon</div>
-        </div>
 
         <!-- Example Configs -->
         <div class="card disabled">
@@ -371,12 +380,27 @@
           <div class="soon-tag">Coming soon</div>
         </div>
 
+        <!-- View Source -->
+        <a href="https://github.com/BZ-Interactive/BZ-Nota" class="card" target="_blank" rel="noopener">
+          <div class="card-icon" style="background: rgba(74,222,128,0.12);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+            </svg>
+          </div>
+          <div>
+            <div class="card-label">Repository</div>
+            <div class="card-title">View Source</div>
+          </div>
+          <p class="card-desc">Browse the full source code, open issues, and contribute to BZ-Nota on GitHub.</p>
+          <div class="card-arrow" style="color:#4ade80;">Open GitHub →</div>
+        </a>
+
         <!-- TDD -->
         <a href="https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/Documents/BZ-Nota_TDD.pdf" class="card" target="_blank" rel="noopener">
           <div class="card-icon" style="background: rgba(251,146,60,0.15);">📄</div>
           <div>
             <div class="card-label">Reference</div>
-            <div class="card-title">Technical Design Doc</div>
+            <div class="card-title">Technical Design Document</div>
           </div>
           <p class="card-desc">The full TDD covering architecture, design decisions, and implementation details.</p>
           <div class="card-arrow">Read document →</div>
@@ -393,6 +417,72 @@
       <a href="https://github.com/BZ-Interactive/BZ-Nota" target="_blank" rel="noopener">view on GitHub</a>
     </div>
   </footer>
+
+  <!-- Terminal background -->
+  <div id="terminal-bg"><canvas id="term-canvas"></canvas></div>
+
+  <script>
+    /* ── TERMINAL RAIN BACKGROUND ── */
+    const canvas = document.getElementById('term-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    // Characters: mix of ASCII box-drawing, code symbols, alphanumeric
+    const CHARS = '│─┼┐┘┌└├┤┬┴▓▒░█▄▀■□►◄▲▼01{}[]()<>=/\\;:+-*&^%$#@!~`ABCDEFabcdef';
+
+    // Colour bands — cool blue/teal/purple to match the theme
+    const COLORS = [
+      'rgba(79,142,247,',   // accent blue
+      'rgba(167,139,250,',  // accent purple
+      'rgba(45,212,191,',   // teal
+      'rgba(148,163,184,',  // slate
+    ];
+
+    const FONT_SIZE = 13;
+    let cols, drops;
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols  = Math.floor(canvas.width / FONT_SIZE);
+      drops = Array.from({ length: cols }, () => Math.random() * -100);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      // Fade trail
+      ctx.fillStyle = 'rgba(10,13,18,0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `${FONT_SIZE}px "IBM Plex Mono", monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const char  = CHARS[Math.floor(Math.random() * CHARS.length)];
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const y     = drops[i] * FONT_SIZE;
+
+        // Head glyph — brighter
+        ctx.fillStyle = color + '0.9)';
+        ctx.fillText(char, i * FONT_SIZE, y);
+
+        // Occasional extra-bright head flash
+        if (Math.random() > 0.97) {
+          ctx.fillStyle = 'rgba(200,230,255,0.95)';
+          ctx.fillText(char, i * FONT_SIZE, y);
+        }
+
+        // Reset column when it exits the screen
+        if (y > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i] += Math.random() * 0.4 + 0.15; // vary speed per column
+      }
+    }
+
+    setInterval(draw, 50);
+  </script>
 
 </body>
 </html>
