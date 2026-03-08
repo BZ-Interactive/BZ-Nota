@@ -199,6 +199,8 @@ bznota <filename>
 *   `-h`, `--help` — Show usage and option explanations
 *   `-d`, `--debug` — Enable debug mode (displays key sequence information in the status bar)
 *   `-v`, `--version` — Display version information and exit
+*   `-l`, `--license` — Display license information and exit
+*   `--splash`, `--logo` — Display Unicode ANSI Logo and exit
 
 **Examples:**
 
