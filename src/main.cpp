@@ -1,7 +1,11 @@
 #include "editor.hpp"
 #include "version.hpp"
 #include <iostream>
+#include <fstream>
 #include <string>
+
+const std::string raw_logo_path = "logo_raw.txt";
+const std::string license_path = "LICENSE";
 
 /// @brief Usage instructions for the command-line interface, called when -h or --help is passed, or when invalid arguments are given
 /// @param program_name The name of the program (typically argv[0])
@@ -11,6 +15,8 @@ void print_usage(const std::string& program_name)
     std::cout << "Options:\n";
     std::cout << "  -d,--debug    Enable debug mode (show key sequences)\n";
     std::cout << "  -v,--version    Show version information\n";
+    std::cout << "  -l,--license    Show license information\n";
+    std::cout << "  --splash, --logo    Show splash screen\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -29,7 +35,25 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-v" || arg == "--version") {
             std::cout << BZ_NOTA_APP_NAME << " " << BZ_NOTA_VERSION << "\n";
             return 0;
-        } else if (arg[0] == '-') {
+        } else if (arg == "--splash" || arg == "--logo") {
+            std::ifstream file(raw_logo_path, std::ios::binary);
+            if (file) {
+                // Read and print directly to preserve every escape code and Unicode character
+                std::cout << file.rdbuf() << "\x1b[0m" << std::endl;
+            } else {
+                std::cerr << "Logo file not found: " << raw_logo_path << std::endl;
+            }
+            return 1;
+        } else if (arg == "-l" || arg == "--license") {
+            std::ifstream file(license_path, std::ios::binary);
+            if (file) {
+                std::cout << "\n" << std::endl;
+                std::cout << file.rdbuf() << std::endl;
+            } else {
+                std::cerr << "License file not found: " << license_path << std::endl;
+            }
+            return 1;
+        }  else if (arg[0] == '-') {
             print_usage(argv[0]);
             return 1;
         } else {

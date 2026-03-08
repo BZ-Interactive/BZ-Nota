@@ -14,6 +14,10 @@ configure_file(src/version.hpp.in src/version.hpp @ONLY)
 # Generate .desktop file from template
 configure_file(bznota.desktop.in bznota.desktop @ONLY)
 
+# Add logo and license files
+configure_file(logo_raw.txt logo_raw.txt @ONLY)
+configure_file(LICENSE LICENSE @ONLY)
+
 # Add ftxui as a subdirectory (submodule)
 add_subdirectory(vendor/ftxui)
 
