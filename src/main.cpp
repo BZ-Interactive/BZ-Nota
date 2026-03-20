@@ -1,26 +1,27 @@
 #include "editor.hpp"
 #include "version.hpp"
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <iostream>
+#include <print>
+
+using namespace std::literals;
 
 const std::string raw_logo_path = "logo_raw.txt";
 const std::string license_path = "LICENSE";
 
 /// @brief Usage instructions for the command-line interface, called when -h or --help is passed, or when invalid arguments are given
 /// @param program_name The name of the program (typically argv[0])
-void print_usage(const std::string& program_name)
+void print_usage(std::string_view program_name)
 {
-    std::cout << "Usage: " << program_name << " [-d] <filename>\n";
-    std::cout << "Options:\n";
-    std::cout << "  -d,--debug    Enable debug mode (show key sequences)\n";
-    std::cout << "  -v,--version    Show version information\n";
-    std::cout << "  -l,--license    Show license information\n";
-    std::cout << "  --splash, --logo    Show splash screen\n";
+    std::println("Usage: {} [-d] <filename>", program_name);
+    std::println("Options:");
+    std::println("  -d,--debug    Enable debug mode (show key sequences)");
+    std::println("  -v,--version    Show version information");
+    std::println("  -l,--license    Show license information");
+    std::println("  --splash, --logo    Show splash screen");
 }
 
 int main(int argc, char* argv[]) {
-
     // Parse command-line arguments
     bool debug_mode = false;
     std::string filename;
@@ -33,43 +34,42 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-d" || arg == "--debug") {
             debug_mode = true;
         } else if (arg == "-v" || arg == "--version") {
-            std::cout << BZ_NOTA_APP_NAME << " " << BZ_NOTA_VERSION << "\n";
+            std::println("{} {}", BZ_NOTA_APP_NAME, BZ_NOTA_VERSION);
             return 0;
         } else if (arg == "--splash" || arg == "--logo") {
             std::ifstream file(raw_logo_path, std::ios::binary);
             if (file) {
-                // Read and print directly to preserve every escape code and Unicode character
                 std::cout << file.rdbuf() << "\x1b[0m" << std::endl;
             } else {
-                std::cerr << "Logo file not found: " << raw_logo_path << std::endl;
+                std::println("Logo file not found: {}", raw_logo_path);
             }
             return 1;
         } else if (arg == "-l" || arg == "--license") {
             std::ifstream file(license_path, std::ios::binary);
             if (file) {
-                std::cout << "\n" << std::endl;
+                std::println();
                 std::cout << file.rdbuf() << std::endl;
             } else {
-                std::cerr << "License file not found: " << license_path << std::endl;
+                std::println("License file not found: {}", license_path);
             }
             return 1;
-        }  else if (arg[0] == '-') {
+        }  else if (arg.starts_with("-")) {
             print_usage(argv[0]);
             return 1;
         } else {
-            filename = arg;  // First non-option argument is the filename
+            filename = std::move(arg); // First non-option is the filename
         }
     }
     
     if (filename.empty()) {
-        filename = "Untitled"; // Default filename if none provided
+        filename = "Untitled"sv; // Default filename if none provided
     }
     
     try {
         Editor editor(filename, debug_mode);
-        editor.run(); // Launch the ftxui-based editor interface
+        editor.run();
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::println("Error: {}", e.what());
         return 1;
     }
     
