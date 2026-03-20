@@ -47,8 +47,9 @@ int main(int argc, char* argv[]) {
         } else if (arg == "-l" || arg == "--license") {
             std::ifstream file(license_path, std::ios::binary);
             if (file) {
-                std::println();
-                std::cout << file.rdbuf() << std::endl;
+                std::ostringstream oss;
+                oss << file.rdbuf();
+                std::println("\n{}", oss.str());
             } else {
                 std::println("License file not found: {}", license_path);
             }
