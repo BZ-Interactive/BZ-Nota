@@ -1,6 +1,5 @@
 #include "ui_renderer.hpp"
 #include "utf8_utils.hpp"
-#include "ftxui/component/component.hpp"
 #include "ftxui/screen/terminal.hpp"
 //#include <shared_types.hpp>
 
@@ -75,9 +74,9 @@ bool UIRenderer::supports_emojis() const {
             return true;
         }
 
-        // Check for TrueColor. Almost all modern terminals with 24-bit color 
+        // Check for TrueColor. Almost all modern terminals with 24-bit color
         // handle font fallbacks and emojis well (Gnome, Alacritty, Kitty, Konsole).
-        if (colorterm && (std::string(colorterm) == "truecolor" || 
+        if (colorterm && (std::string(colorterm) == "truecolor" ||
                           std::string(colorterm) == "24bit")) {
             return true;
         }
@@ -89,7 +88,7 @@ bool UIRenderer::supports_emojis() const {
 
         // Legacy environments (like UXTerm/Xterm, Windows CMD)
         // These are served with safe Unicode symbols, tested on XTerm.
-        return false; 
+        return false;
     }();
 
     return emoji_capable;
@@ -98,27 +97,27 @@ bool UIRenderer::supports_emojis() const {
 UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& line_text, size_t start_pos, bool is_selected, int cursor_x_in_line) {
     ParseResult result;
     result.bytes_consumed = 0;
-    
+
     if (start_pos >= line_text.length()) {
         return result;
     }
-    
+
     // Check for markdown markers
     std::string remaining = line_text.substr(start_pos);
-    
+
     // Check for bold **
     if (remaining.length() >= 2 && remaining.substr(0, 2) == "**") {
         size_t end_pos = remaining.find("**", 2);
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(2, end_pos - 2);
             result.bytes_consumed = end_pos + 2;
-            
+
             // Recursively parse content for nested formatting
             size_t content_pos = 0;
             while (content_pos < content.length()) {
-                auto nested = parse_markdown_segment(content, content_pos, is_selected, 
+                auto nested = parse_markdown_segment(content, content_pos, is_selected,
                     cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 2) : -1);
-                
+
                 // Apply bold to all nested elements
                 for (auto& elem : nested.elements) {
                     elem = elem | bold;
@@ -129,20 +128,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
             return result;
         }
     }
-    
+
     // Check for strikethrough ~~
     if (remaining.length() >= 2 && remaining.substr(0, 2) == "~~") {
         size_t end_pos = remaining.find("~~", 2);
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(2, end_pos - 2);
             result.bytes_consumed = end_pos + 2;
-            
+
             // Recursively parse content for nested formatting
             size_t content_pos = 0;
             while (content_pos < content.length()) {
                 auto nested = parse_markdown_segment(content, content_pos, is_selected,
                     cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 2) : -1);
-                
+
                 // Apply strikethrough to all nested elements
                 for (auto& elem : nested.elements) {
                     elem = elem | strikethrough;
@@ -153,20 +152,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
             return result;
         }
     }
-    
+
     // Check for underline <u>
     if (remaining.length() >= 3 && remaining.substr(0, 3) == "<u>") {
         size_t end_pos = remaining.find("</u>");
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(3, end_pos - 3);
             result.bytes_consumed = end_pos + 4;
-            
+
             // Recursively parse content for nested formatting
             size_t content_pos = 0;
             while (content_pos < content.length()) {
                 auto nested = parse_markdown_segment(content, content_pos, is_selected,
                     cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 3) : -1);
-                
+
                 // Apply underline to all nested elements
                 for (auto& elem : nested.elements) {
                     elem = elem | underlined;
@@ -177,20 +176,20 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
             return result;
         }
     }
-    
+
     // Check for italic *
     if (remaining.length() >= 1 && remaining[0] == '*') {
         size_t end_pos = remaining.find("*", 1);
         if (end_pos != std::string::npos) {
             std::string content = remaining.substr(1, end_pos - 1);
             result.bytes_consumed = end_pos + 2;
-            
+
             // Recursively parse content for nested formatting
             size_t content_pos = 0;
             while (content_pos < content.length()) {
                 auto nested = parse_markdown_segment(content, content_pos, is_selected,
                     cursor_x_in_line >= 0 ? cursor_x_in_line - (int)(start_pos + 1) : -1);
-                
+
                 // Apply italic to all nested elements
                 for (auto& elem : nested.elements) {
                     elem = elem | italic;
@@ -201,18 +200,18 @@ UIRenderer::ParseResult UIRenderer::parse_markdown_segment(const std::string& li
             return result;
         }
     }
-    
+
     // No formatting found - return single character
     int char_len = UTF8Utils::get_char_length(line_text, start_pos);
     std::string ch_str = line_text.substr(start_pos, char_len);
     result.bytes_consumed = char_len;
-    
+
     bool is_cursor_here = (cursor_x_in_line >= 0 && (int)start_pos == cursor_x_in_line);
     auto elem = text(ch_str);
     if (is_cursor_here) elem = elem | inverted | bold;
     if (is_selected) elem = elem | bgcolor(Color::Blue) | color(Color::Black);
     result.elements.push_back(elem);
-    
+
     return result;
 }
 
@@ -221,7 +220,7 @@ Element UIRenderer::render(const RenderParams& params) {
     int visible_lines = screen_height - 3;
 
     auto lines = render_lines(params.buffer, params.cursor_x, params.cursor_y, params.scroll_y, visible_lines, params.is_char_selected_fn, params.editor_mode);
-    
+
     return vbox({
         render_header(params.filename, params.modified, params.can_undo, params.can_redo, params.bold_active, params.italic_active, params.underline_active, params.strikethrough_active, params.editor_mode),
         separator() | bgcolor(seperator_color_bg) | color(seperator_color_fg),
@@ -242,27 +241,27 @@ Elements UIRenderer::render_lines(
 ) {
     Elements lines_display;
     int max_line_num_width = std::to_string(buffer.size()).length();
-    
+
     for (int i = 0; i < visible_lines && (scroll_y + i) < (int)buffer.size(); i++) {
         int line_idx = scroll_y + i;
         std::string line_num = std::to_string(line_idx + 1);
-        
+
         // Pad line number
         while ((int)line_num.length() < max_line_num_width) {
             line_num = " " + line_num;
         }
-        
+
         std::string line_content = buffer[line_idx];
-        
+
         // Build line with selection highlighting and markdown parsing
         Elements line_elements;
         size_t byte_pos = 0;
-        
+
         while (byte_pos <= line_content.length()) {
             if (byte_pos == line_content.length() && line_idx != cursor_y) break;
-            
+
             bool is_selected = is_char_selected_fn(byte_pos, line_idx);
-            
+
             if (byte_pos < line_content.length()) {
                 // Handle tabs specially
                 if (line_content[byte_pos] == '\t') {
@@ -279,7 +278,7 @@ Elements UIRenderer::render_lines(
                         // Pass cursor_x if this is the cursor line, -1 otherwise
                         int cursor_x_for_parse = (line_idx == cursor_y) ? cursor_x : -1;
                         auto parse_result = parse_markdown_segment(line_content, byte_pos, is_selected, cursor_x_for_parse);
-                        
+
                         for (auto& elem : parse_result.elements) {
                             line_elements.push_back(elem);
                         }
@@ -308,7 +307,7 @@ Elements UIRenderer::render_lines(
                 byte_pos++;
             }
         }
-        
+
         // line number + separator + content
         auto line_elem = hbox(std::move(line_elements));
         auto full_line = hbox({
@@ -316,15 +315,15 @@ Elements UIRenderer::render_lines(
             text(" │ ") | color(Color::GrayDark),
             line_elem
         });
-        
+
         lines_display.push_back(full_line);
     }
-    
+
     return lines_display;
 }
 
 Element UIRenderer::render_header(const std::string& filename, bool modified, bool can_undo, bool can_redo,
-                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active, 
+                                  bool bold_active, bool italic_active, bool underline_active, bool strikethrough_active,
                                   EditorMode editor_mode) {
     std::string title = "BZ-Nota - " + filename + (modified ? " [modified]" : "");
     return hbox({
@@ -380,10 +379,10 @@ Element UIRenderer::render_status_bar(
         break;
     }
 
-    std::string pos_info = "Line " + std::to_string(cursor_y + 1) + 
+    std::string pos_info = "Line " + std::to_string(cursor_y + 1) +
                           ", Col " + std::to_string(cursor_x + 1);
     std::string status_display = status_shown ? status_message : pos_info;
-    
+
     return hbox({
         text(" " + status_display) | flex
     }) | bgcolor(background_color) |
@@ -392,7 +391,7 @@ Element UIRenderer::render_status_bar(
 }
 
 // this is where we can display available shortcuts or tips that doesn't fit on the upper bar.
-// its created once on 
+// its created once on
 Element UIRenderer::render_shortcuts() {
     static const Element shortcuts = hbox({
         spacing | flex,
@@ -407,7 +406,7 @@ Element UIRenderer::render_save_button(bool modified) {
         std::string label = supports_emojis() ? "💾 Ctrl+S" : "⌼ Ctrl+S";
         save_button_ = std::make_unique<UIButton>(label, SAVE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
-    
+
     save_button_->set_active(modified);
     return save_button_->render();
 }
@@ -417,7 +416,7 @@ Element UIRenderer::render_bold_button(bool active) {
         std::string label = supports_emojis() ? "🅱️ Alt+B" : "Ⓑ Alt+B";
         bold_button_ = std::make_unique<UIButton>(label, BOLD_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
-    
+
     bold_button_->set_active(active);
     return bold_button_->render();
 }
@@ -426,7 +425,7 @@ Element UIRenderer::render_italic_button(bool active) {
     if (!italic_button_) {
         italic_button_ = std::make_unique<UIButton>("I Alt+I", ITALIC_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
-    
+
     italic_button_->set_active(active);
     return italic_button_->render();
 }
@@ -435,7 +434,7 @@ Element UIRenderer::render_underline_button(bool active) {
     if (!underline_button_) {
         underline_button_ = std::make_unique<UIButton>("U̲ Alt+U", UNDERLINE_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
-    
+
     underline_button_->set_active(active);
     return underline_button_->render();
 }
@@ -444,7 +443,7 @@ Element UIRenderer::render_strikethrough_button(bool active) {
     if (!strikethrough_button_) {
         strikethrough_button_ = std::make_unique<UIButton>("x̶ Alt+T", STRIKETHROUGH_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
-    
+
     strikethrough_button_->set_active(active);
     return strikethrough_button_->render();
 }
@@ -453,7 +452,7 @@ Element UIRenderer::render_bullet_button() {
     if (!bullet_button_) {
         bullet_button_ = std::make_unique<UIButton>("•", Color::White, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
-    
+
     return bullet_button_->render();
 }
 
@@ -461,7 +460,7 @@ Element UIRenderer::render_font_button() {
     if (!font_button_) {
         font_button_ = std::make_unique<UIButton>("F", Color::White, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
-    
+
     return font_button_->render();
 }
 
@@ -470,7 +469,7 @@ Element UIRenderer::render_undo_button(bool available) {
         std::string label = supports_emojis() ? "↩️ Ctrl+Z" : "↺ Ctrl+Z";
         undo_button_ = std::make_unique<UIButton>(label, UNDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_PRIMARY, false, nullptr);
     }
-    
+
     undo_button_->set_active(available);
     return undo_button_->render();
 }
@@ -480,7 +479,7 @@ Element UIRenderer::render_redo_button(bool available) {
         std::string label = supports_emojis() ? "↪️ Ctrl+Y" : "↻ Ctrl+Y";
         redo_button_ = std::make_unique<UIButton>(label, REDO_BUTTON_ACTIVE_BG, BUTTON_DISABLED_BG_SECONDARY, false, nullptr);
     }
-    
+
     redo_button_->set_active(available);
     return redo_button_->render();
 }
@@ -512,6 +511,8 @@ Element& UIRenderer::render_editor_mode_dropdown(EditorMode mode) {
                 mode_text = "Mode: Document";
                 bg_color = EDITOR_MODE_DOCUMENT_BG;
                 fg_color = EDITOR_MODE_DOCUMENT_FG;
+                break;
+            case EditorMode::Count: // meant for Count enum.
                 break;
         }
 
@@ -553,9 +554,9 @@ Element& UIRenderer::render_color_mode_button(bool dark) {
 Element UIRenderer::render_close_button() {
     static const Element close_button = [this]() {
         auto symbol = supports_emojis() ? text("❌") : text("X") | bold;
-        return hbox({spacing, symbol, text(" Ctrl+Q "), spacing}) | 
-               bgcolor(CLOSE_BUTTON_BG) | 
-               color(CLOSE_BUTTON_FG) | 
+        return hbox({spacing, symbol, text(" Ctrl+Q "), spacing}) |
+               bgcolor(CLOSE_BUTTON_BG) |
+               color(CLOSE_BUTTON_FG) |
                bold;
     }();
     return close_button;

@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include <cctype>
 #include <csignal>
 #include <cstdio>
 #include <unistd.h>

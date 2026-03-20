@@ -1,6 +1,4 @@
 #pragma once
-#include <cstdint>
-#include <limits>
 #include <string>
 #include <vector>
 #include <functional>
@@ -33,7 +31,8 @@ enum class EditorMode {
     BASIC, // Basic with no formatting etc. Will show **Bold** as is.
     FANCY, // has formatting like bold/italic, etc. Will show *Italic* with italic tilt.
     CODE, // syntax highlighting, no formatting. Will show **Bold** as is, but keywords in color, for future implementation.
-    DOCUMENT // like fancy but with support for dictionary and grammar features, for future implementation.
+    DOCUMENT, // like fancy but with support for dictionary and grammar features, for future implementation.
+    Count // keep at end to get count via std::to_underlying
 };
 
 /// @brief Parameters for rendering the editor UI

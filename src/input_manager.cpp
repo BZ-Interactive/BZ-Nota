@@ -15,7 +15,7 @@ void InputManager::show_debug_info(const std::string& input, Editor& editor) {
 
     std::ostringstream oss;
     oss << "RAW: ";
-    
+
     // Convert every single byte to HEX
     for (unsigned char c : input) {
         oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0') << (int)c << " ";
@@ -125,16 +125,16 @@ bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
     if (event == Event::AltI) { editor.toggle_italic(); return true; }
     if (event == Event::AltU) { editor.toggle_underline(); return true; }
     if (event == Event::AltT) { editor.toggle_strikethrough(); return true; }
-    
+
     return false;
 }
 
 bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
     // F1: Help
     if (event == Event::F1) {
-        editor.set_status("Fn Help: F1-Help, F2-Rename, F5-Reload", StatusBarType::NORMAL);
+        editor.set_status("Fn Help: F1-Help, F2-Rename, F7-Editor Mode, F8-Dark/Light Mode", StatusBarType::NORMAL);
         return true;
-    } 
+    }
     // F2: Start rename mode
     else if (event == Event::F2) {
         // Extract just the filename (remove path)
@@ -143,7 +143,7 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         if (last_slash != std::string::npos) {
             basename = basename.substr(last_slash + 1);
         }
-        
+
         // Initialize rename mode
         is_renaming = true;
         rename_input = basename;
@@ -155,18 +155,19 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         rename_input = "";
         is_confirming_overwrite = false;
         pending_rename_target = "";
-        
+
         // 2. Clear visual glitches
         // This forces the terminal to wipe and redraw the whole grid
-        editor.screen_reset(); 
+        editor.screen_reset();
         return true;
     } else if (event == Event::F7) {
-        int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 4; // Cycle through modes
+        //int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 4; // Cycle through modes
+        auto next_editor_mode = (std::to_underlying(editor.get_editor_mode()) + 1) % std::to_underlying(EditorMode::Count);
         if (editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode))) { return true; }
     } else if (event == Event::F8) {
         if (editor.change_color_mode()) { return true; }
     }
-    
+
     return false;
 }
 
@@ -195,7 +196,7 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
         }
         return true; // Ignore other keys during confirmation
     }
-    
+
     // Handle Enter - confirm rename
     if (event == Event::Return) {
         if (rename_input.empty()) {
@@ -204,17 +205,17 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
             rename_input.clear();
             return true;
         }
-        
+
         // Get the directory path from the current filename
         std::string dirpath = "";
         size_t last_slash = editor.filename.find_last_of("/\\");
         if (last_slash != std::string::npos) {
             dirpath = editor.filename.substr(0, last_slash + 1);
         }
-        
+
         // Build full path for new filename
         std::string new_fullpath = dirpath + rename_input;
-        
+
         // Check if target file already exists
         std::ifstream test_file(new_fullpath);
         if (test_file.good()) {
@@ -225,16 +226,16 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
             editor.set_status("File '" + rename_input + "' already exists! Overwrite? (y/n)", StatusBarType::WARNING);
             return true;
         }
-        
+
         // File doesn't exist - proceed with rename
         editor.rename_file(new_fullpath);
-        
+
         // Exit rename mode
         is_renaming = false;
         rename_input.clear();
         return true;
     }
-    
+
     // Handle Escape - cancel rename
     if (event == Event::Escape) {
         editor.set_status("Rename cancelled", StatusBarType::NORMAL);
@@ -244,7 +245,7 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
         pending_rename_target.clear();
         return true;
     }
-    
+
     // Handle Backspace
     if (event == Event::Backspace) {
         if (!rename_input.empty()) {
@@ -254,11 +255,11 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
         editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
         return true;
     }
-    
+
     // Handle regular character input
     if (event.is_character()) {
         std::string input_str = event.input();
-        
+
         // Filter out invalid filename characters (basic validation)
         bool valid = true;
         for (char c : input_str) {
@@ -267,14 +268,14 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
                 break;
             }
         }
-        
+
         if (valid && !input_str.empty()) {
             rename_input += input_str;
             editor.set_status("Rename file to: " + rename_input + " (Enter to confirm, Esc to cancel)", StatusBarType::WARNING);
         }
         return true;
     }
-    
+
     // Ignore other keys during rename mode
     return true;
 }
@@ -288,9 +289,9 @@ bool InputManager::handle_navigation_sequences(
     if (debug_mode) {
         show_debug_info(input, editor);
     }
-    
+
     // ===== Arrow Navigation with Modifiers =====
-    
+
     // Shift+Arrow: Selection
     if (input == "\x1b[1;2D") { editor.move_cursor_left(true); return true; }
     if (input == "\x1b[1;2C") { editor.move_cursor_right(true); return true; }
@@ -300,64 +301,64 @@ bool InputManager::handle_navigation_sequences(
     // Ctrl+Arrow: Word navigation
     if (input == "\x1b[1;5D") { editor.move_word_left(false); return true; }
     if (input == "\x1b[1;5C") { editor.move_word_right(false); return true; }
-    
+
     // Ctrl+Shift+Arrow: Word selection (Alacritty)
     if (input == "\x1b[1;6D") { editor.move_word_left(true); return true; }
     if (input == "\x1b[1;6C") { editor.move_word_right(true); return true; }
-    
+
     // Alt+Shift+Arrow: Word selection (GNOME Terminal/Kitty fallback)
     if (input == "\x1b[1;4D") { editor.move_word_left(true); return true; }
     if (input == "\x1b[1;4C") { editor.move_word_right(true); return true; }
-    
+
     // ===== Home/End Navigation with Modifiers =====
-    
+
     // Shift+Home/End: Selection (xterm)
     if (input == "\x1b[1;2H") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[1;2F") { editor.move_cursor_end(true); return true; }
-    
+
     // Shift+Home/End: Selection (vt100)
     if (input == "\x1b[1;2~") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[4;2~") { editor.move_cursor_end(true); return true; }
-    
+
     // Ctrl+Shift+Home/End: Selection (Alacritty)
     if (input == "\x1b[1;6H") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[1;6F") { editor.move_cursor_end(true); return true; }
-    
+
     // Ctrl+Home/End: Selection
     if (input == "\x1b[1;5H") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[1;5F") { editor.move_cursor_end(true); return true; }
-    
+
     // Alt+Shift+Home/End: Selection (GNOME Terminal/Kitty)
     if (input == "\x1b[1;4H") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[1;4F") { editor.move_cursor_end(true); return true; }
-    
+
     // Alt+Home/End: Selection
     if (input == "\x1b[1;3H") { editor.move_cursor_home(true); return true; }
     if (input == "\x1b[1;3F") { editor.move_cursor_end(true); return true; }
-    
+
     // ===== System Clipboard Shortcuts =====
-    
+
     // Ctrl+Shift+C/V: Modern terminals (CSI u sequence)
     if (input == "\x1b[67;5u" || input == "\x1b[67;6u") { editor.copy_to_system_clipboard(); return true; }
     if (input == "\x1b[86;5u" || input == "\x1b[86;6u") { editor.paste_from_system_clipboard(); return true; }
-    
+
     // Alt+Shift+C/V: Alternative for some terminals
     if (input == "\x1b[67;4u") { editor.copy_to_system_clipboard(); return true; }
     if (input == "\x1b[86;4u") { editor.paste_from_system_clipboard(); return true; }
-    
+
     // Ctrl+Insert / Shift+Insert: Traditional shortcuts
     if (input == "\x1b[2;5~") { editor.copy_to_system_clipboard(); return true; }
     if (input == "\x1b[2;2~") { editor.paste_from_system_clipboard(); return true; }
-    
+
     // ===== Other Special Keys =====
-    
+
     // Shift+Tab: Unindent
     if (input == "\x1b[Z") {
         editor.clear_selection();
         editor.unindent_current_line();
         return true;
     }
-    
+
     return false;
 }
 
