@@ -103,7 +103,7 @@
 		\hline
 		\textbf{Project Type}         & Terminal-Based Text Editor              \\
 		\hline
-		\textbf{Programming Language} & C++17                                   \\
+		\textbf{Programming Language} & C++23                                   \\
 		\hline
 		\textbf{Build System}         & CMake 3.10+                             \\
 		\hline
@@ -142,6 +142,8 @@
 		\hline
 		1.6              & \date{03.03.2026} & Barkın Zorlu    & Document Editor Modes and F7 toggle (BASIC/FANCY/CODE/DOCUMENT) \\
 		\hline
+		1.7              & \date{03.03.2026} & Barkın Zorlu    & Update C++ version to 23 to match current standard \\
+		\hline
 	\end{tabular}
 \end{table}
 
@@ -165,7 +167,7 @@ This Technical Design Document (TDD) outlines the architecture, design decisions
 
 \subsection{Description}
 
-BZ-Nota is a modern terminal user interface (TUI) text editor built entirely in C++17. It combines the intuitive editing experience of Micro with a sophisticated, btop-style dashboard interface to provide users with an enhanced terminal editing experience.
+BZ-Nota is a modern terminal user interface (TUI) text editor built entirely in C++23. It combines the intuitive editing experience of Micro with a sophisticated, btop-style dashboard interface to provide users with an enhanced terminal editing experience.
 
 \subsection{Key Characteristics}
 
@@ -903,7 +905,7 @@ Each component has one clear responsibility:
 		\hline
 		\textbf{Component} & \textbf{Technology} & \textbf{Purpose}                  \\
 		\hline
-		Language           & C++17               & High performance, modern features \\
+		Language           & C++23               & High performance, modern features \\
 		\hline
 		Build System       & CMake 3.10+         & Cross-platform build automation   \\
 		\hline
@@ -1358,7 +1360,7 @@ The installation prefers environments' default directory listings.
 
 BZ-Nota is designed as a modern, performant terminal-based text editor with a modular, maintainable architecture. The separation of concerns across multiple manager components allows for independent development, testing, and extension of features.
 
-The design follows proven software engineering principles and patterns, ensuring code quality and long-term maintainability. With its foundation on robust technologies like C++17 and FTXUI, BZ-Nota is positioned for continued growth and enhancement.
+The design follows proven software engineering principles and patterns, ensuring code quality and long-term maintainability. With its foundation on robust technologies like C++23 and FTXUI, BZ-Nota is positioned for continued growth and enhancement.
 
 This Technical Design Document serves as the canonical reference for the system architecture and will be maintained alongside the codebase throughout the project lifecycle.
 
@@ -1370,7 +1372,7 @@ This Technical Design Document serves as the canonical reference for the system 
 
 \begin{itemize}
 	\item FTXUI: \url{https://github.com/ArthurSonzogni/FTXUI}
-	\item C++17 Standard: ISO/IEC 14882:2017
+	\item C++23 Standard: ISO/IEC 14882:2024
 	\item CMake Documentation: \url{https://cmake.org/}
 	\item Design Patterns: Gang of Four, Design Patterns: Elements of Reusable Object-Oriented Software
 	\item SOLID Principles: Robert C. Martin, Clean Code

@@ -299,16 +299,13 @@ Windows:
 
 These are short-term items planned as next priorities; the editor will focus on core editing and the dashboard first.
 
-- Bullet Point Integration for more complex Text Editing
-- Privilege Elevation similar to Micro
+- Bullet Point Integration
+- Privilege Elevation similar to **[Micro](https://micro-editor.github.io/)**
 - User customization for UI colors
 - Limited user customization for controls
 - PgUp / PgDn support for navigation
 - Search, Find and Replace, including Batch Replace
-- Native simple grammar syntax highlighting for common formats (`.yaml`, `.toml`, `.md`, etc.) (via tree-sitter)
-- User-added complex grammar syntax highlighting via shared objects (`.so`) for languages like C++, C#, Python, Lua, etc. (via tree-sitter)
 - Mouse Support
-- Language dictionary and spell checking for 'Text Editing' mode (implementation may change)
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 📖 Documentation
@@ -360,7 +357,7 @@ Project Link: [https://github.com/BZ-Interactive/BZ-Nota](https://github.com/BZ-
 <!-- MARKDOWN LINKS & IMAGES -->
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: www.linkedin.com/in/barkin-zorlu
-[CPP-shield]: https://img.shields.io/badge/C++-17-blue
+[CPP-shield]: https://img.shields.io/badge/C++(23)-015B97?style=flat-square&logo=cplusplus&logoColor=ffffff
 [CPP-url]: https://isocpp.org/
 [ftxui-shield]: https://img.shields.io/badge/ftxui-UI-blue
 [ftxui-url]: https://github.com/ArthurSonzogni/ftxui
