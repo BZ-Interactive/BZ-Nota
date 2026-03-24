@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <functional>
-#include <memory>
 #include "ftxui/dom/elements.hpp"
 
 /// @brief A button class that implements dirty flag pattern for efficient rendering

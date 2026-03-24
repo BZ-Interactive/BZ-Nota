@@ -21,6 +21,7 @@
 #include "format_manager.hpp"
 #include "file_manager.hpp"
 #include "input_manager.hpp"
+#include "config_manager.hpp"
 
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
@@ -70,6 +71,7 @@ private:
     FormatManager format_manager;           // Formatting state (bold, italic, etc.)
     FileManager file_manager;               // File I/O operations
     InputManager input_manager;             // Keyboard/mouse input dispatch
+    ConfigManager config_manager;           // Config persistence (theme mode)
     
     // ===== File Operations =====
     void load_file();

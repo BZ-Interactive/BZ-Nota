@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
-#include <vector>
 #include <csignal>
 #include "ftxui/component/event.hpp"
-#include "shared_types.hpp"
 
 // Forward declaration to avoid circular dependency
 class Editor;

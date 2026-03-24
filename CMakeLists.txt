@@ -4,6 +4,7 @@ project(BZ-Nota VERSION 0.7.0 LANGUAGES CXX)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
@@ -20,6 +21,7 @@ configure_file(LICENSE LICENSE @ONLY)
 
 # Add ftxui as a subdirectory (submodule)
 add_subdirectory(vendor/ftxui)
+add_subdirectory(vendor/tomlplusplus)
 
 # Create the main executable
 add_executable(bznota
@@ -50,6 +52,8 @@ add_executable(bznota
     src/formatter.hpp
     src/utf8_utils.cpp
     src/utf8_utils.hpp
+    src/config_manager.cpp
+    src/config_manager.hpp
 )
 
 # Link ftxui libraries
@@ -59,6 +63,7 @@ target_link_libraries(bznota PRIVATE ftxui::screen ftxui::dom ftxui::component)
 target_include_directories(bznota PRIVATE src)
 target_include_directories(bznota PRIVATE ${CMAKE_BINARY_DIR}/src)  # For generated version.hpp
 target_include_directories(bznota PRIVATE vendor/ftxui/include)
+target_include_directories(bznota PRIVATE vendor/tomlplusplus)
 
 # Compiler options for better warnings and debugging
 if(MSVC)

@@ -26,6 +26,8 @@ static volatile sig_atomic_t ctrl_c_pressed = 0;
 // Constructor initializer list (more efficient than assigning in body)
 Editor::Editor(const std::string& fn, bool dbg) 
     : filename(fn), debug_mode(dbg) {
+    config_manager.load();
+    UIRenderer::color_mode_dark = config_manager.is_dark_mode();
     load_file();
 }
 
@@ -93,6 +95,8 @@ bool Editor::set_editor_mode(EditorMode mode) {
 
 bool Editor::change_color_mode() {
     UIRenderer::color_mode_dark = !UIRenderer::color_mode_dark;
+    config_manager.set_dark_mode(UIRenderer::color_mode_dark);
+    config_manager.save();
     set_status(UIRenderer::color_mode_dark ? "Switched to Dark Mode" : "Switched to Light Mode");
     return true;
 }
