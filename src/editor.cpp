@@ -1,4 +1,4 @@
-#include "editor.hpp"
+#include <editor.hpp>
 #include <fstream>
 #include <iostream>
 #include <algorithm>

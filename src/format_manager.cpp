@@ -1,4 +1,4 @@
-#include "format_manager.hpp"
+#include <format_manager.hpp>
 
 FormatManager::FormatManager() {}
 
@@ -26,24 +26,24 @@ void FormatManager::toggle_strikethrough() {
 
 std::string FormatManager::get_opening_markers() const {
     std::string markers;
-    
+
     if (bold_active) markers += "**";
     if (italic_active) markers += "*";
     if (underline_active) markers += "<u>";
     if (strikethrough_active) markers += "~~";
-    
+
     return markers;
 }
 
 std::string FormatManager::get_closing_markers() const {
     std::string markers;
-    
+
     // Closing markers in reverse order
     if (strikethrough_active) markers += "~~";
     if (underline_active) markers += "</u>";
     if (italic_active) markers += "*";
     if (bold_active) markers += "**";
-    
+
     return markers;
 }
 
@@ -51,7 +51,7 @@ void FormatManager::start_formatting_session(std::vector<std::string>& buffer, i
     if (!has_active_formatting() || session_active) {
         return;
     }
-    
+
     std::string markers = get_opening_markers();
     buffer[cursor_y].insert(cursor_x, markers);
     cursor_x += markers.length();
@@ -62,7 +62,7 @@ void FormatManager::end_formatting_session(std::vector<std::string>& buffer, int
     if (!session_active) {
         return;
     }
-    
+
     std::string markers = get_closing_markers();
     buffer[cursor_y].insert(cursor_x, markers);
     cursor_x += markers.length();
@@ -73,10 +73,10 @@ void FormatManager::insert_formatting_markers(std::vector<std::string>& buffer, 
     if (!has_active_formatting()) {
         return;
     }
-    
+
     std::string opening = get_opening_markers();
     std::string closing = get_closing_markers();
-    
+
     // Insert both markers at cursor position
     buffer[cursor_y].insert(cursor_x, opening + closing);
     // Move cursor to between the markers
@@ -87,24 +87,24 @@ void FormatManager::split_formatting_at_cursor(std::vector<std::string>& buffer,
     if (cursor_y >= (int)buffer.size()) return;
     std::string& line = buffer[cursor_y];
     if (cursor_x < 0 || cursor_x > (int)line.length()) return;
-    
+
     std::string opening_marker, closing_marker;
-    
+
     switch (format_type) {
         case FormatType::BOLD:          opening_marker = "**";  closing_marker = "**";   break;
         case FormatType::ITALIC:        opening_marker = "*";   closing_marker = "*";    break;
         case FormatType::UNDERLINE:     opening_marker = "<u>"; closing_marker = "</u>"; break;
         case FormatType::STRIKETHROUGH: opening_marker = "~~";  closing_marker = "~~";   break;
     }
-    
+
     // Find opening marker before cursor
     size_t opening_pos = line.rfind(opening_marker, cursor_x - 1);
     if (opening_pos == std::string::npos || opening_pos >= (size_t)cursor_x) return;
-    
+
     // Find closing marker after cursor
     size_t closing_pos = line.find(closing_marker, cursor_x);
     if (closing_pos == std::string::npos || closing_pos <= (size_t)cursor_x) return;
-    
+
     // Insert closing marker before cursor and opening marker after cursor
     // Insert in reverse order to not mess up positions
     line.insert(cursor_x, closing_marker + opening_marker);
@@ -115,29 +115,29 @@ std::string FormatManager::wrap_text(const std::string& text) const {
     if (text.empty() || !has_active_formatting()) {
         return text;
     }
-    
+
     std::string result = text;
-    
+
     // Apply formatting in order: bold, italic, underline, strikethrough
     // This creates nested formatting like **_~~text~~_**
-    
+
     if (strikethrough_active) {
         result = "~~" + result + "~~";
     }
-    
+
     if (underline_active) {
         // Using HTML for underline as markdown doesn't have native underline
         result = "<u>" + result + "</u>";
     }
-    
+
     if (italic_active) {
         result = "*" + result + "*";
     }
-    
+
     if (bold_active) {
         result = "**" + result + "**";
     }
-    
+
     return result;
 }
 
@@ -159,35 +159,35 @@ std::string FormatManager::wrap_with_strikethrough(const std::string& text) cons
 
 int FormatManager::move_cursor_before_opening_markers(const std::string& line, int& cursor_x) const {
     if (cursor_x == 0) return 0;
-    
+
     int original_x = cursor_x;
     bool moved = true;
-    
+
     // Keep moving back while we find opening markers
     while (moved && cursor_x > 0) {
         moved = false;
-        
+
         // Check for opening bold **
         if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "**") {
             cursor_x -= 2;
             moved = true;
             continue;
         }
-        
+
         // Check for opening underline <u>
         if (cursor_x >= 3 && line.substr(cursor_x - 3, 3) == "<u>") {
             cursor_x -= 3;
             moved = true;
             continue;
         }
-        
+
         // Check for opening strikethrough ~~
         if (cursor_x >= 2 && line.substr(cursor_x - 2, 2) == "~~") {
             cursor_x -= 2;
             moved = true;
             continue;
         }
-        
+
         // Check for opening italic * (but not **)
         if (cursor_x >= 1 && line[cursor_x - 1] == '*') {
             // Make sure it's not part of **
@@ -200,7 +200,7 @@ int FormatManager::move_cursor_before_opening_markers(const std::string& line, i
             }
         }
     }
-    
+
     return original_x - cursor_x;
 }
 
@@ -209,14 +209,14 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
     has_italic = false;
     has_underline = false;
     has_strikethrough = false;
-    
+
     std::string result = text;
     bool changed = true;
-    
+
     // Keep removing formatting markers until none are left
     while (changed) {
         changed = false;
-        
+
         // Remove bold **
         size_t bold_open = result.find("**");
         if (bold_open != std::string::npos) {
@@ -235,7 +235,7 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
                 continue;
             }
         }
-        
+
         // Remove underline <u>
         size_t underline_open = result.find("<u>");
         if (underline_open != std::string::npos) {
@@ -254,7 +254,7 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
                 continue;
             }
         }
-        
+
         // Remove strikethrough ~~
         size_t strike_open = result.find("~~");
         if (strike_open != std::string::npos) {
@@ -273,7 +273,7 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
                 continue;
             }
         }
-        
+
         // Remove italic * (but not bold **)
         size_t italic_pos = result.find('*');
         if (italic_pos != std::string::npos) {
@@ -298,7 +298,7 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
             }
         }
     }
-    
+
     // Clean up any orphaned/incomplete formatting markers that might remain
     // Remove orphaned closing tags </u>
     size_t orphan_pos;
@@ -321,21 +321,20 @@ std::string FormatManager::extract_formatting_from_text(const std::string& text,
         result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 3);
         has_underline = true;
     }
-    
+
     // Clean up orphaned ** (single occurrence)
     orphan_pos = result.find("**");
     if (orphan_pos != std::string::npos) {
         result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 2);
         has_bold = true;
     }
-    
+
     // Clean up orphaned ~~ (single occurrence)
     orphan_pos = result.find("~~");
     if (orphan_pos != std::string::npos) {
         result = result.substr(0, orphan_pos) + result.substr(orphan_pos + 2);
         has_strikethrough = true;
     }
-    
+
     return result;
 }
-

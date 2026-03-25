@@ -1,5 +1,4 @@
-#include "undo_redo_manager.hpp"
-#include <algorithm>
+#include <undo_redo_manager.hpp>
 
 UndoRedoManager::UndoRedoManager() {}
 

@@ -1,5 +1,5 @@
-#include "ui_button.hpp"
-#include "ftxui/dom/elements.hpp"
+#include <ui_button.hpp>
+#include <ftxui/dom/elements.hpp>
 
 const ftxui::Element UIButton::spacing = ftxui::text(" ");
 
@@ -8,7 +8,7 @@ UIButton::UIButton(const std::string& label, ftxui::Color on_color, ftxui::Color
     on_color_(on_color),
     off_color_(off_color),
     active_(active),
-    dirty_(true),  // Mark as dirty initially to force first render 
+    dirty_(true),  // Mark as dirty initially to force first render
     on_click_(on_click),
     previous_state_{label, active} {
 }
@@ -61,14 +61,14 @@ void UIButton::clear_dirty() {
 
 ftxui::Element UIButton::create_element() const {
     ftxui::Element button_text = ftxui::text(label_);
-    
+
     // Apply styling based on active state
     if (active_) {
         button_text = button_text | ftxui::color(ftxui::Color::Palette256(16)) | ftxui::bold;
     } else {
         button_text = button_text | ftxui::color(ftxui::Color::White);
     }
-    
+
     // Add padding and border
     ftxui::Element button = ftxui::hbox({
         spacing,
@@ -76,9 +76,9 @@ ftxui::Element UIButton::create_element() const {
         spacing
     })  | ftxui::bgcolor(active_ ? on_color_ : off_color_)
         | ftxui::bold;
-    
+
     // Note: Click handler removed for now to focus on dirty flag functionality
     // FTXUI event handling would require additional setup
-    
+
     return button;
 }

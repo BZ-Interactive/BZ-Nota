@@ -1,6 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "shared_types.hpp"
+#include <shared_types.hpp>
 
 class ConfigManager {
 public:

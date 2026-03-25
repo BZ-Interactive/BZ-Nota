@@ -1,5 +1,5 @@
-#include "selection_manager.hpp"
-#include "formatter.hpp"
+#include <selection_manager.hpp>
+#include <formatter.hpp>
 #include <algorithm>  // For std::min, std::max, std::swap
 
 SelectionManager::SelectionManager() {}
