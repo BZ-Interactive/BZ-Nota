@@ -36,14 +36,14 @@ bool ConfigManager::load() {
     set_defaults();
 
     if (!fs::exists(config_path_)) {
-        return true;
+        save(); // Create config file with defaults if it doesn't exist
     }
 
     try {
         auto config = toml::parse_file(config_path_.string());
 
         if (auto dark_mode = config["theme"]["dark_mode"].value<bool>()) {
-            dark_mode = *dark_mode;
+            this->dark_mode = *dark_mode;
         }
 
         return true;
