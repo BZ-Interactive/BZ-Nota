@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.7.0-orange)
+![Version](https://img.shields.io/badge/version-0.8.0-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Git LFS](https://img.shields.io/badge/Git-LFS-blue)
 
@@ -248,8 +248,8 @@ All can be applied on top of each other.
 **Editor Modes (F7):**
 *   `BASIC` — Plain text, no markdown parsing (shows raw **bold** markers)
 *   `FANCY` — Markdown parsing enabled (**bold**, *italic*, etc. rendered live)
-*   `CODE` — Syntax highlighting, no markdown (in development)
-*   `DOCUMENT` — FANCY + grammar features (in development)
+*   `CODE` — Syntax highlighting, no markdown (Will be implemented after 1.0 relase, may be removed)
+*   `DOCUMENT` — FANCY + grammar features (Will be implemented after 1.0 relase, may be removed)
 
 **Appearance (F8):**
 *   `F8` — Toggle between dark mode (default) and light mode
