@@ -99,7 +99,7 @@
 		\hline
 		\textbf{Project Name}         & BZ-Nota                                 \\
 		\hline
-		\textbf{Version}              & 0.7.0                                   \\
+		\textbf{Version}              & 0.8.0                                   \\
 		\hline
 		\textbf{Project Type}         & Terminal-Based Text Editor              \\
 		\hline
@@ -126,23 +126,25 @@
 	\centering
 	\begin{tabular}{|c|c|c|p{8cm}|}
 		\hline
-		\textbf{Version} & \textbf{Date}     & \textbf{Author} & \textbf{Description}                                            \\
+		\textbf{Version} & \textbf{Date}     & \textbf{Author} & \textbf{Description}                                                      \\
 		\hline
-		1.0              & \date{26.02.2026} & BZ-Interactive  & Complete TDD Creation                                           \\
+		1.0              & \date{26.02.2026} & BZ-Interactive  & Complete TDD Creation                                                     \\
 		\hline
-		1.1              & \date{28.02.2026} & Barkın Zorlu    & Add Optimized Button Rendering                                  \\
+		1.1              & \date{28.02.2026} & Barkın Zorlu    & Add Optimized Button Rendering                                            \\
 		\hline
-		1.2              & \date{01.03.2026} & Barkın Zorlu    & Organization Edits to TDD                                       \\
+		1.2              & \date{01.03.2026} & Barkın Zorlu    & Organization Edits to TDD                                                 \\
 		\hline
-		1.3              & \date{02.03.2026} & Barkın Zorlu    & Update to v0.7.0 - ALT formatting shortcuts                     \\
+		1.3              & \date{02.03.2026} & Barkın Zorlu    & Update to v0.7.0 - ALT formatting shortcuts                               \\
 		\hline
-		1.4              & \date{03.03.2026} & Barkın Zorlu    & Remove explicit Kitty protocol, use Alt+key for formatting      \\
+		1.4              & \date{03.03.2026} & Barkın Zorlu    & Remove explicit Kitty protocol, use Alt+key for formatting                \\
 		\hline
-		1.5              & \date{03.03.2026} & Barkın Zorlu    & Add dark/light mode toggle via F8 (dark is default)             \\
+		1.5              & \date{03.03.2026} & Barkın Zorlu    & Add dark/light mode toggle via F8 (dark is default)                       \\
 		\hline
-		1.6              & \date{03.03.2026} & Barkın Zorlu    & Document Editor Modes and F7 toggle (BASIC/FANCY/CODE/DOCUMENT) \\
+		1.6              & \date{03.03.2026} & Barkın Zorlu    & Document Editor Modes and F7 toggle (BASIC/FANCY/CODE/DOCUMENT)           \\
 		\hline
-		1.7              & \date{03.03.2026} & Barkın Zorlu    & Update C++ version to 23 to match current standard \\
+		1.7              & \date{03.03.2026} & Barkın Zorlu    & Update C++ version to 23 to match current standard                        \\
+		\hline
+		1.8              & \date{26.03.2026} & Barkın Zorlu    & Add Config Manager for persistent settings (theme, future customizations) \\
 		\hline
 	\end{tabular}
 \end{table}
@@ -272,6 +274,8 @@ The BZ-Nota application consists of the following core components:
 		\hline
 		\textbf{Shared Types}      & Common enums and data structures (StatusBarType, EditorMode, etc.)           \\
 		\hline
+		\textbf{Config Manager}    & Persists user preferences (theme, future customizations)                     \\
+		\hline
 	\end{tabular}
 \end{table}
 
@@ -322,6 +326,7 @@ private:
     FormatManager format_manager;
     FileManager file_manager;
     InputManager input_manager;
+    ConfigManager config_manager;
     
 public:
     Editor(const std::string& filename, bool debug_mode = false);
@@ -358,8 +363,7 @@ The UI Renderer component is responsible for:
 	\item Renders multi-pane layout (header, content, status bar, shortcuts bar)
 	\item Dark mode is the default theme (dark background, light foreground)
 	\item Theme toggle via F8 provides instant switching between dark and light modes
-	\item Theme preference is not persisted - always starts in dark mode on launch
-	\item Theme preference will be stored in a config file for automatic switching on startup (future enhancement)
+	\item Theme preference is persisted and restored on next launch via ConfigManager
 \end{itemize}
 
 \section{Input Manager Component}
@@ -493,7 +497,7 @@ Syntax highlighting for programming languages with color-coded display of keywor
 Enhanced FANCY mode with support for dictionary checking, grammar suggestions, and document-specific features. \textbf{Currently in development - falls back to FANCY behavior.}
 
 \medskip
-\textit{Note: In the current implementation, F7 toggles between BASIC and FANCY modes only. CODE and DOCUMENT modes will be fully implemented in a future release.}
+\textit{Note: In the current implementation, F7 toggles between BASIC and FANCY modes only. CODE and DOCUMENT modes may not be implemented if deemed out of scope for the initial release.}
 
 \section{Selection Manager Component}
 
@@ -591,6 +595,39 @@ When text is typed with active formatting, the EditingManager automatically wrap
 	\item File rename operations
 	\item Path validation and security checks
 \end{itemize}
+
+\section{Config Manager Component}
+
+\subsection{Responsibility}
+
+The Config Manager handles persistent user preferences:
+
+\begin{itemize}
+	\item Saves and loads user configuration from config file
+	\item Manages theme preference (light/dark mode)
+	\item Future: colour customization options
+	\item Future: limited control customizations
+\end{itemize}
+
+\subsection{Design Details}
+
+\begin{itemize}
+	\item Configuration stored in \texttt{\textasciitilde/.config/bznota/config.toml }
+	\item TOML-based configuration format
+	\item Currently stores last used theme preference
+	\item Designed to be extensible for future customization options
+	\item Graceful handling of missing or corrupted config files (defaults to dark theme)
+\end{itemize}
+
+\subsection{Configuration Schema}
+
+\begin{lstlisting}
+{
+  "theme": "dark" | "light",
+  "colours": { ... },    // Future: custom colour palette
+  "controls": { ... }    // Future: key binding customizations
+}
+\end{lstlisting}
 
 \newpage
 \subsection{File Operations}
@@ -910,6 +947,8 @@ Each component has one clear responsibility:
 		Build System       & CMake 3.10+         & Cross-platform build automation   \\
 		\hline
 		UI Framework       & FTXUI               & Terminal UI rendering             \\
+		\hline
+		Config Parser      & toml++              & Configuration parsing and serialization\\
 		\hline
 		Platform           & Linux/Unix          & Target deployment platform        \\
 		\hline
@@ -1278,6 +1317,8 @@ The installation prefers environments' default directory listings.
 		\hline
 		version.hpp.in              & Version number template (filled by CMake)                                           \\
 		\hline
+		config\_manager.hpp/cpp     & Persistent user preferences (theme, future customizations)                          \\
+		\hline
 	\end{tabular}
 \end{table}
 
@@ -1302,6 +1343,7 @@ The installation prefers environments' default directory listings.
 		\node (undo) [draw, rectangle, fill=green!20, below=2.5cm of file] {UndoRedoManager};
 		\node (utf8) [draw, rectangle, fill=blue!20, below=2.5cm of clipboard] {UTF8 Utils};
 		\node (shared) [draw, rectangle, fill=blue!20, below=2.5cm of undo] {Shared Types};
+		\node (config) [draw, rectangle, fill=blue!20, right=3cm of shared] {ConfigManager};
 
 		\draw (editor) -- (ui);
 		\draw (ui) -- (ui_button);
@@ -1318,6 +1360,8 @@ The installation prefers environments' default directory listings.
 		\draw (editor) -- (shared);
 		\draw (ui) -- (shared);
 		\draw (format) -- (shared);
+		\draw (editor) -- (config);
+		\draw (ui) -- (config);
 	\end{tikzpicture}
 	\caption{Component Dependency Graph}
 	\label{fig:dependencies}

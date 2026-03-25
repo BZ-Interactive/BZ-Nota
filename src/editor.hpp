@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <memory>
 #include <functional>
 #include <tuple>
 
@@ -21,44 +20,45 @@
 #include "format_manager.hpp"
 #include "file_manager.hpp"
 #include "input_manager.hpp"
+#include "config_manager.hpp"
 
 /// @brief Main text editor class - handles UI, input, and editing operations
 class Editor {
 public:
     Editor(const std::string& filename, bool debug_mode = false);
     ~Editor();
-    
+
     /// @brief Start the editor main loop
     void run();
     std::string filename; // Includes File path
-    
+
 private:
     // Core data (std::vector = List<string>, std::string = string)
     std::vector<std::string> buffer; // Text buffer - each line is one string
-    
+
     bool modified = false; // Has unsaved changes?
     bool status_shown = false; // Show status in UI?
     StatusBarType status_bar_type = StatusBarType::NORMAL; // Status bar type (normal, error, warning)
     std::string status_message = "";
 
     EditorMode editor_mode = EditorMode::FANCY; // Default to FANCY mode with formatting
-    
+
     // Cursor position
     int cursor_x = 0;
     int cursor_y = 0;
-    
+
     // Viewport
     int scroll_y = 0;
-    
+
     // Screen reference for exiting
     ftxui::ScreenInteractive* screen = nullptr;
-    
+
     // Quit confirmation state
     bool confirm_quit = false;
-    
+
     // Debug mode - show key sequences in status bar
     bool debug_mode = false;
-    
+
     // Manager instances (RAII - automatically constructed/destructed, no 'new' needed)
     // Note to self: These are actual objects, not references
     UIRenderer ui_renderer;                 // Handles all rendering
@@ -70,10 +70,11 @@ private:
     FormatManager format_manager;           // Formatting state (bold, italic, etc.)
     FileManager file_manager;               // File I/O operations
     InputManager input_manager;             // Keyboard/mouse input dispatch
-    
+    ConfigManager config_manager;           // Config persistence (theme mode)
+
     // ===== File Operations =====
     void load_file();
-    
+
 public:
     // ===== Undo grouping state (public so InputManager can access) =====
     bool typing_state_saved = false;
@@ -82,14 +83,14 @@ public:
     EditorMode get_editor_mode() const { return editor_mode; }
     bool set_editor_mode(EditorMode mode);
     bool change_color_mode();
-    
+
     // ===== Public methods accessible by InputManager =====
     void save_file();
     void rename_file(const std::string& new_filename);
     void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);
     void screen_reset();
     void exit();
-    
+
     // Selection
     void start_selection();
     void update_selection();
@@ -99,18 +100,18 @@ public:
     void delete_selection_if_active();
     std::string get_selected_text() const;
     bool is_char_selected(int x, int y) const;
-    
+
     // Clipboard
     void copy_to_system_clipboard();
     void paste_from_system_clipboard();
     void cut_to_system_clipboard();
-    
+
     void insert_char(char c);
     void insert_string(const std::string& str);
     void insert_newline();
     void delete_char();
     void delete_forward();
-    
+
     // Formatting
     void toggle_bold();
     void toggle_italic();
@@ -126,7 +127,7 @@ public:
     void move_word_right(bool select = false);
     void move_cursor_home(bool select = false);
     void move_cursor_end(bool select = false);
-    
+
     // Undo/Redo
     void save_state();
     void undo();
@@ -155,13 +156,13 @@ private:
     void ensure_cursor_visible(int screen_height);
     void clamp_cursor_and_scroll();
     std::tuple<std::function<void()>, std::function<void()>> get_selection_callbacks();
-    
+
     // ===== UI Rendering =====
     ftxui::Element render();
-    
+
     // ===== Event Handling =====
     bool handle_event(ftxui::Event event);
-    
+
     // Getters (note to self: C++ doesn't have properties like C#)
     // 'const &' returns reference without copying (not to self: like 'ref readonly' in C#)
     // Trailing 'const' means method doesn't modify object

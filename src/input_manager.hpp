@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
-#include <vector>
 #include <csignal>
-#include "ftxui/component/event.hpp"
-#include "shared_types.hpp"
+#include <ftxui/component/event.hpp>
 
 // Forward declaration to avoid circular dependency
 class Editor;
@@ -31,13 +29,13 @@ namespace CtrlKey {
 class InputManager {
 public:
     InputManager();
-    
+
     /// @brief Main event handler - dispatches to appropriate sub-handlers
     /// @param event FTXUI event to handle
     /// @param editor Reference to editor instance for calling action methods
     /// @param buffer Text buffer (for direct manipulation in some cases)
     /// @param cursor_x Cursor X position (modifiable)
-    /// @param cursor_y Cursor Y position (modifiable)  
+    /// @param cursor_y Cursor Y position (modifiable)
     /// @param modified Modified flag (modifiable)
     /// @param status_shown Status bar visibility flag (modifiable)
     /// @param status_bar_type Status bar type (modifiable)
@@ -46,7 +44,7 @@ public:
     /// @param ctrl_c_pressed Signal flag for Ctrl+C (modifiable)
     /// @return true if event was handled, false otherwise
     bool handle_event(ftxui::Event event, Editor& editor, volatile sig_atomic_t& ctrl_c_pressed);
-    
+
 private:
     bool is_renaming = false; // State for F2 rename operation
     std::string rename_input; // Buffer for F2 rename input
@@ -55,16 +53,16 @@ private:
 
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(unsigned char ch, Editor& editor);
-    
+
     /// @brief Handle Alt+key combinations (Alt+B, Alt+I, Alt+U, Alt+T for formatting)
     bool handle_alt_keys(ftxui::Event event, Editor& editor);
-    
+
     /// @brief Handle escape/navigation sequences (arrows with modifiers, word navigation)
     bool handle_navigation_sequences(const std::string& input, Editor& editor, bool debug_mode);
-    
+
     /// @brief Handle function keys (F1, F2, etc.)
     bool handle_fn_keys(ftxui::Event event, Editor& editor);
-    
+
     /// @brief Handle text input during rename mode (F2)
     bool handle_rename_input(ftxui::Event event, Editor& editor);
 
@@ -73,7 +71,7 @@ private:
 
     /// @brief Handle standard keys (arrows, backspace, delete, enter, tab)
     bool handle_standard_keys(ftxui::Event event, Editor& editor);
-    
+
     /// @brief Handle regular text input (UTF-8 characters)
     bool handle_text_input(ftxui::Event event, Editor& editor);
 

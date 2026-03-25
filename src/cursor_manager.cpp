@@ -1,5 +1,5 @@
-#include "cursor_manager.hpp"
-#include "utf8_utils.hpp"
+#include <cursor_manager.hpp>
+#include <utf8_utils.hpp>
 #include <algorithm>  // std::min, std::max
 #include <cctype>     // isspace, isalnum
 

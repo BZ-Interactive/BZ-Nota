@@ -1,5 +1,5 @@
-#include "editing_manager.hpp"
-#include "utf8_utils.hpp"
+#include <editing_manager.hpp>
+#include <utf8_utils.hpp>
 
 EditingManager::EditingManager() {}
 
@@ -31,10 +31,10 @@ void EditingManager::insert_newline(
     std::string current_line = buffer[cursor_y];
     std::string before_cursor = current_line.substr(0, cursor_x);
     std::string after_cursor = current_line.substr(cursor_x);
-    
+
     buffer[cursor_y] = before_cursor;
     buffer.insert(buffer.begin() + cursor_y + 1, after_cursor);
-    
+
     cursor_y++;
     cursor_x = 0;
 }

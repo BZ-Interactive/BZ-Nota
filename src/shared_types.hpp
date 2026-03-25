@@ -63,3 +63,15 @@ enum class FormatType {
     UNDERLINE,
     STRIKETHROUGH
 };
+
+/// @brief Config operation status codes
+enum class ConfigStatus {
+    SUCCESS = 1,
+    FAILURE = 0,
+    DIRECTORY_ERROR = 2,
+    PERMISSION_ERROR = 3,
+    PARSE_ERROR = 4,
+    FILE_NOT_FOUND = 5,
+    WRITE_ERROR = 6,
+    READ_ERROR = 7
+};

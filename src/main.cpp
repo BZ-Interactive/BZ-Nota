@@ -1,5 +1,5 @@
-#include "editor.hpp"
-#include "version.hpp"
+#include <editor.hpp>
+#include <version.hpp>
 #include <fstream>
 #include <iostream>
 #include <print>
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     // Parse command-line arguments
     bool debug_mode = false;
     std::string filename;
-    
+
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
@@ -61,11 +61,11 @@ int main(int argc, char* argv[]) {
             filename = std::move(arg); // First non-option is the filename
         }
     }
-    
+
     if (filename.empty()) {
         filename = "Untitled"sv; // Default filename if none provided
     }
-    
+
     try {
         Editor editor(filename, debug_mode);
         editor.run();
@@ -73,6 +73,6 @@ int main(int argc, char* argv[]) {
         std::println("Error: {}", e.what());
         return 1;
     }
-    
+
     return 0;
 }
