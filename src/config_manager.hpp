@@ -1,12 +1,15 @@
 #pragma once
 #include <filesystem>
+#include "shared_types.hpp"
 
 class ConfigManager {
 public:
     ConfigManager();
 
-    bool load();
-    bool save();
+    [[nodiscard]] ConfigStatus load();
+    [[nodiscard]] ConfigStatus save();
+
+    const std::string& last_error() const { return last_error_; }
 
     bool is_dark_mode() const { return dark_mode; }
     void set_dark_mode(bool dark) { dark_mode = dark; }
@@ -17,4 +20,5 @@ private:
 
     bool dark_mode = true;
     std::filesystem::path config_path_;
+    std::string last_error_;
 };

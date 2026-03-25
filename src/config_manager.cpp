@@ -1,8 +1,9 @@
-#include "config_manager.hpp"
-#include "toml.hpp"
+#include <config_manager.hpp>
+#include <toml.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <shared_types.hpp>
 
 namespace fs = std::filesystem;
 
@@ -32,11 +33,13 @@ void ConfigManager::set_defaults() {
     dark_mode = true;
 }
 
-bool ConfigManager::load() {
+ConfigStatus ConfigManager::load() {
     set_defaults();
 
     if (!fs::exists(config_path_)) {
-        save(); // Create config file with defaults if it doesn't exist
+        last_error_ = "Config file not found, creating defaults";
+        (void)save();
+        return ConfigStatus::FILE_NOT_FOUND;
     }
 
     try {
@@ -44,21 +47,31 @@ bool ConfigManager::load() {
 
         if (auto dark_mode = config["theme"]["dark_mode"].value<bool>()) {
             this->dark_mode = *dark_mode;
+        } else {
+            last_error_ = "Dark_mode not found in config";
+            set_defaults();
+            return ConfigStatus::PARSE_ERROR;
         }
 
-        return true;
+        last_error_.clear();
+        return ConfigStatus::SUCCESS;
+
     } catch (const toml::parse_error& e) {
-        std::cerr << "Failed to parse config: " << e.what() << std::endl;
+        last_error_ = std::string("Parse error: ") + e.what();
         set_defaults();
-        return false;
+        return ConfigStatus::PARSE_ERROR;
+    } catch (const fs::filesystem_error& e) {
+        last_error_ = std::string("Directory error: ") + e.what();
+        set_defaults();
+        return ConfigStatus::DIRECTORY_ERROR;
     } catch (const std::exception& e) {
-        std::cerr << "Failed to load config: " << e.what() << std::endl;
+        last_error_ = std::string("Load error: ") + e.what();
         set_defaults();
-        return false;
+        return ConfigStatus::FAILURE;
     }
 }
 
-bool ConfigManager::save() {
+ConfigStatus ConfigManager::save() {
     try {
         fs::path dir = config_path_.parent_path();
         if (!fs::exists(dir)) {
@@ -72,14 +85,24 @@ bool ConfigManager::save() {
 
         std::ofstream file(config_path_);
         if (!file) {
-            std::cerr << "Failed to open config file for writing: " << config_path_ << std::endl;
-            return false;
+            last_error_ = "Failed to open file for writing (permission error)";
+            return ConfigStatus::PERMISSION_ERROR;
         }
 
         file << config;
-        return file.good();
+        if (!file.good()) {
+            last_error_ = "Failed to write to file";
+            return ConfigStatus::WRITE_ERROR;
+        }
+
+        last_error_.clear();
+        return ConfigStatus::SUCCESS;
+
+    } catch (const fs::filesystem_error& e) {
+        last_error_ = std::string("Directory error: ") + e.what();
+        return ConfigStatus::DIRECTORY_ERROR;
     } catch (const std::exception& e) {
-        std::cerr << "Failed to save config: " << e.what() << std::endl;
-        return false;
+        last_error_ = std::string("Save error: ") + e.what();
+        return ConfigStatus::FAILURE;
     }
 }

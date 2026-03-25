@@ -24,10 +24,9 @@ static volatile sig_atomic_t ctrl_c_pressed = 0;
 
 // ===== Constructor / Destructor =====
 // Constructor initializer list (more efficient than assigning in body)
-Editor::Editor(const std::string& fn, bool dbg) 
-    : filename(fn), debug_mode(dbg) {
-    config_manager.load();
-    UIRenderer::color_mode_dark = config_manager.is_dark_mode();
+Editor::Editor(const std::string& fn, bool dbg) : filename(fn), debug_mode(dbg) {
+    if (config_manager.load() != ConfigStatus::SUCCESS) { set_status(config_manager.last_error(), StatusBarType::ERROR); } // error but not a critical one.
+    UIRenderer::color_mode_dark = config_manager.is_dark_mode(); // has default value
     load_file();
 }
 
@@ -45,7 +44,7 @@ bool Editor::set_editor_mode(EditorMode mode) {
 
     if (mode == EditorMode::CODE || mode == EditorMode::DOCUMENT) {
         // check for supported languages ONLY APPLICABLE AFTER SYNTAX HIGHLIGHTING IS IMPLEMENTED
-        
+
         // temporary
         if (editor_mode == EditorMode::FANCY) {
             editor_mode = EditorMode::BASIC;
@@ -96,7 +95,7 @@ bool Editor::set_editor_mode(EditorMode mode) {
 bool Editor::change_color_mode() {
     UIRenderer::color_mode_dark = !UIRenderer::color_mode_dark;
     config_manager.set_dark_mode(UIRenderer::color_mode_dark);
-    config_manager.save();
+    if (config_manager.save() != ConfigStatus::SUCCESS) { set_status(config_manager.last_error(), StatusBarType::ERROR); } // error but not a critical one.
     set_status(UIRenderer::color_mode_dark ? "Switched to Dark Mode" : "Switched to Light Mode");
     return true;
 }
@@ -132,7 +131,6 @@ void Editor::rename_file(const std::string& new_filename) {
     }
 
     FileOperationResult result = file_manager.rename_file(filename, new_filename);
-    
     set_status(result.message, result.status_type);
     if (result.success) {
         filename = new_filename;
@@ -155,7 +153,7 @@ void Editor::clear_selection() {
 
 void Editor::delete_selection() {
     if (!selection_manager.has_active_selection()) return;
-    
+
     save_state();
     selection_manager.delete_selection(buffer, cursor_x, cursor_y);
     clamp_cursor_and_scroll();
@@ -164,7 +162,7 @@ void Editor::delete_selection() {
 
 void Editor::select_all() {
     if (buffer.empty()) return;
-    
+
     int end_y = buffer.size() - 1;
     int end_x = buffer[end_y].size();
     selection_manager.select_all(end_x, end_y);
@@ -187,7 +185,7 @@ void Editor::copy_to_system_clipboard() {
         set_status("No text selected");
         return;
     }
-    
+
     if (clipboard_manager.copy_to_system(text)) {
         set_status("Copied " + std::to_string(text.length()) + " chars to system clipboard");
     } else {
@@ -199,13 +197,13 @@ void Editor::paste_from_system_clipboard() {
     save_state();
     typing_state_saved = false;
     last_action = EditorAction::PASTE_SYSTEM;
-    
+
     if (selection_manager.has_active_selection()) {
         delete_selection();
     }
-    
+
     int char_count = clipboard_manager.paste_from_system(buffer, cursor_x, cursor_y);
-    
+
     if (char_count < 0) {
         set_status("Failed to paste from system clipboard");
     } else if (char_count == 0) {
@@ -222,7 +220,7 @@ void Editor::cut_to_system_clipboard() {
         set_status("No text selected");
         return;
     }
-    
+
     if (clipboard_manager.copy_to_system(text)) {
         delete_selection();
         set_status("Cut " + std::to_string(text.length()) + " chars to system clipboard");
@@ -362,41 +360,41 @@ void Editor::toggle_format(FormatType format_type) {
 
 void Editor::insert_char(char c) {
     delete_selection_if_active();
-    
+
     // Check if we're inside existing formatting markers
     bool inside_markers = cursor_manager.is_cursor_inside_formatting_markers(buffer[cursor_y], cursor_x);
-    
+
     // Insert formatting markers if active and not already inside formatted text
     if (format_manager.has_active_formatting() && !inside_markers) {
         // Insert both opening and closing markers, cursor stays between them
         format_manager.insert_formatting_markers(buffer, cursor_x, cursor_y);
         modified = true;
     }
-    
+
     editing_manager.insert_char(buffer, cursor_x, cursor_y, c);
     modified = true;
 }
 
 void Editor::insert_string(const std::string& str) {
     delete_selection_if_active();
-    
+
     // Check if we're inside existing formatting markers
     bool inside_markers = cursor_manager.is_cursor_inside_formatting_markers(buffer[cursor_y], cursor_x);
-    
+
     // Insert formatting markers if active and not already inside formatted text
     if (format_manager.has_active_formatting() && !inside_markers) {
         // Insert both opening and closing markers, cursor stays between them
         format_manager.insert_formatting_markers(buffer, cursor_x, cursor_y);
         modified = true;
     }
-    
+
     editing_manager.insert_string(buffer, cursor_x, cursor_y, str);
     modified = true;
 }
 
 void Editor::insert_newline() {
     delete_selection_if_active();
-    
+
     save_state();
     typing_state_saved = false;
     last_action = EditorAction::NEWLINE;
@@ -458,13 +456,13 @@ void Editor::delete_char() {
         delete_selection();
         return;
     }
-    
+
     if (last_action != EditorAction::DELETE) {
         save_state();
         last_action = EditorAction::DELETE;
     }
     typing_state_saved = false;
-    
+
     editing_manager.delete_char(buffer, cursor_x, cursor_y);
     clamp_cursor_and_scroll();
     modified = true;
@@ -475,13 +473,13 @@ void Editor::delete_forward() {
         delete_selection();
         return;
     }
-    
+
     if (last_action != EditorAction::DELETE_FORWARD) {
         save_state();
         last_action = EditorAction::DELETE_FORWARD;
     }
     typing_state_saved = false;
-    
+
     editing_manager.delete_forward(buffer, cursor_x, cursor_y);
     clamp_cursor_and_scroll();
     modified = true;
@@ -554,15 +552,15 @@ void Editor::ensure_cursor_visible(int screen_height) {
 void Editor::clamp_cursor_and_scroll() {
     // Ensure buffer is never empty
     if (buffer.empty()) buffer.push_back("");
-    
+
     // Clamp cursor_y
     if (cursor_y < 0) cursor_y = 0;
     if (cursor_y >= (int)buffer.size()) cursor_y = (int)buffer.size() - 1;
-    
+
     // Clamp cursor_x
     if (cursor_x < 0) cursor_x = 0;
     if (cursor_x > (int)buffer[cursor_y].length()) cursor_x = (int)buffer[cursor_y].length();
-    
+
     // Clamp scroll_y
     if (scroll_y < 0) scroll_y = 0;
     if (scroll_y >= (int)buffer.size()) scroll_y = std::max(0, (int)buffer.size() - 1);
@@ -597,7 +595,7 @@ void Editor::undo() {
         set_status("Nothing to undo");
         return;
     }
-    
+
     typing_state_saved = false;
     last_action = EditorAction::UNDO;
     undo_redo_manager.undo(buffer, cursor_x, cursor_y);
@@ -611,7 +609,7 @@ void Editor::redo() {
         set_status("Nothing to redo");
         return;
     }
-    
+
     typing_state_saved = false;
     last_action = EditorAction::REDO;
     undo_redo_manager.redo(buffer, cursor_x, cursor_y);
@@ -626,24 +624,24 @@ Element Editor::render() {
     clamp_cursor_and_scroll();
     int screen_height = Terminal::Size().dimy;
     ensure_cursor_visible(screen_height);
-    
+
     // Check if cursor is inside formatting markers
     bool bold_at_cursor, italic_at_cursor, underline_at_cursor, strikethrough_at_cursor;
-    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x, 
-                                           bold_at_cursor, italic_at_cursor, 
+    cursor_manager.get_formatting_at_cursor(buffer[cursor_y], cursor_x,
+                                           bold_at_cursor, italic_at_cursor,
                                            underline_at_cursor, strikethrough_at_cursor);
-    
+
     // Show formatting as active if either globally active or cursor is inside formatted text
     bool show_bold = format_manager.is_bold() || bold_at_cursor;
     bool show_italic = format_manager.is_italic() || italic_at_cursor;
     bool show_underline = format_manager.is_underline() || underline_at_cursor;
     bool show_strikethrough = format_manager.is_strikethrough() || strikethrough_at_cursor;
-    
+
     // Use UIRenderer to handle all rendering
     auto is_char_selected_fn = [this](int x, int y) {
         return this->is_char_selected(x, y);
     };
-    
+
     RenderParams params{
         buffer,
         cursor_x, cursor_y,
@@ -662,7 +660,7 @@ Element Editor::render() {
         show_strikethrough,
         is_char_selected_fn
     };
-    
+
     return ui_renderer.render(params);
 }
 
