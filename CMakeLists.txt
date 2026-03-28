@@ -101,4 +101,9 @@ install(FILES assets/BZ-Nota_icon_scalable.svg DESTINATION ${CMAKE_INSTALL_DATAR
 # Update icon cache after installation (run with appropriate privileges)
 install(CODE "execute_process(COMMAND gtk-update-icon-cache -f -t ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor ERROR_QUIET)")
 
+# License and Raw Logo install
+install(FILES ${CMAKE_BINARY_DIR}/logo_raw.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${CMAKE_BINARY_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/bznota)
+
+
 # Note: BZ-Nota_icon.ico is kept in assets folder for Windows packaging but not installed on Linux
