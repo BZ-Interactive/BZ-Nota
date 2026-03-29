@@ -86,7 +86,9 @@ FileOperationResult FileManager::save_file_with_sudo(const std::string& filename
         }
     }
 
-    std::string cmd = "printf '\\033[2J\\033[H'; printf '\\nRequesting sudo access to save: " + filename + "\\n\\n'; sudo tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
+    // clear the terminal and show a message before running sudo
+    std::string cmd = "printf '\\033[2J\\033[H'; printf '\\nRequesting sudo access to save: " +
+        filename + "\\n\\n'; sudo tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
     int result = system(cmd.c_str());
     std::remove(temp_file.c_str());
 
