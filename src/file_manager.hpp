@@ -33,4 +33,6 @@ public:
     [[nodiscard]] FileOperationResult save_file(const std::string& filename, const std::vector<std::string>& buffer);
 
     [[nodiscard]] FileOperationResult rename_file(const std::string& old_filename, const std::string& new_filename);
+
+    [[nodiscard]] FileOperationResult save_file_with_sudo(const std::string& filename, const std::vector<std::string>& buffer);
 };

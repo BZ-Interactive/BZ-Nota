@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <libgen.h>
 #include <cstdlib>
+#include <unistd.h>
 
 FileOperationResult FileManager::load_file(const std::string& filename, std::vector<std::string>& buffer) {
     buffer.clear();
@@ -42,8 +43,7 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
         StatusBarType status_type = StatusBarType::ERROR;
 
         if (err == EACCES) {
-            error_msg = "Permission denied when saving file! Save as sudo? (y/n)";
-            // TODO: implement "save as sudo" flow for permission errors
+            error_msg = "Permission denied! Save as sudo? (y/n)";
         } else if (err == ENOENT) {
             error_msg = "Directory does not exist!";
         } else if (err == EAGAIN) {
@@ -69,6 +69,32 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
     }
 
     return FileOperationResult(true, "File saved successfully", 0, StatusBarType::SUCCESS);
+}
+
+FileOperationResult FileManager::save_file_with_sudo(const std::string& filename, const std::vector<std::string>& buffer) {
+    char pid_str[32];
+    snprintf(pid_str, sizeof(pid_str), "%d", static_cast<int>(getpid()));
+    std::string temp_file = "/tmp/bznota_sudo_" + std::string(pid_str) + ".tmp";
+
+    {
+        std::ofstream temp_ofs(temp_file);
+        if (!temp_ofs) {
+            return FileOperationResult(false, "Failed to create temp file for sudo save!", 0, StatusBarType::ERROR);
+        }
+        for (const auto& line : buffer) {
+            temp_ofs << line << '\n';
+        }
+    }
+
+    std::string cmd = "printf '\\033[2J\\033[H'; printf '\\nRequesting sudo access to save: " + filename + "\\n\\n'; sudo tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
+    int result = system(cmd.c_str());
+    std::remove(temp_file.c_str());
+
+    if (result != 0) {
+        return FileOperationResult(false, "Sudo save failed!", result, StatusBarType::ERROR);
+    }
+
+    return FileOperationResult(true, "File saved with sudo", 0, StatusBarType::SUCCESS);
 }
 
 FileOperationResult FileManager::rename_file(const std::string& old_filename, const std::string& new_filename) {

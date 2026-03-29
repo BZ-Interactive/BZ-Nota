@@ -112,6 +112,21 @@ void Editor::load_file() {
 void Editor::save_file() {
     FileOperationResult result = file_manager.save_file(filename, buffer);
 
+    if (result.error_code == EACCES) {
+        input_manager.start_sudo_confirm();
+        set_status(result.message, result.status_type);
+        return;
+    }
+
+    set_status(result.message, result.status_type);
+    if (result.success)
+        modified = false;
+}
+
+void Editor::save_file_with_sudo() {
+    FileOperationResult result = file_manager.save_file_with_sudo(filename, buffer);
+
+    screen->Clear();
     set_status(result.message, result.status_type);
     if (result.success)
         modified = false;
