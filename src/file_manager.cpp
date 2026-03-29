@@ -29,6 +29,10 @@ FileOperationResult FileManager::load_file(const std::string& filename, std::vec
     return FileOperationResult(true);
 }
 
+bool FileManager::sudo_is_cached() {
+    return system("sudo -n true 2>/dev/null") == 0;
+}
+
 FileOperationResult FileManager::save_file(const std::string& filename, const std::vector<std::string>& buffer) {
     // Create directory if needed
     char* filename_copy = strdup(filename.c_str());
@@ -43,6 +47,9 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
         StatusBarType status_type = StatusBarType::ERROR;
 
         if (err == EACCES) {
+            if (sudo_is_cached()) {
+                return save_file_with_sudo(filename, buffer, false);
+            }
             error_msg = "Permission denied! Save as sudo? (y/n)";
         } else if (err == ENOENT) {
             error_msg = "Directory does not exist!";
@@ -71,7 +78,7 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
     return FileOperationResult(true, "File saved successfully", 0, StatusBarType::SUCCESS);
 }
 
-FileOperationResult FileManager::save_file_with_sudo(const std::string& filename, const std::vector<std::string>& buffer) {
+FileOperationResult FileManager::save_file_with_sudo(const std::string& filename, const std::vector<std::string>& buffer, bool interactive) {
     char pid_str[32];
     snprintf(pid_str, sizeof(pid_str), "%d", static_cast<int>(getpid()));
     std::string temp_file = "/tmp/bznota_sudo_" + std::string(pid_str) + ".tmp";
@@ -86,10 +93,16 @@ FileOperationResult FileManager::save_file_with_sudo(const std::string& filename
         }
     }
 
-    // clear the terminal and show a message before running sudo
-    std::string cmd = "printf '\\033[2J\\033[H'; printf '\\nRequesting sudo access to save: " +
-        filename + "\\n\\n'; sudo tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
-    int result = system(cmd.c_str());
+    // check for cached sudo, if cached bypass the interactive prompt
+    int result;
+    if (interactive && !sudo_is_cached()) {
+        std::string cmd = "printf '\\033[2J\\033[H'; printf '\\nRequesting sudo access to save: " +
+            filename + "\\n\\n'; sudo tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
+        result = system(cmd.c_str());
+    } else {
+        std::string cmd = "sudo -n tee \"" + filename + "\" > /dev/null < \"" + temp_file + "\"";
+        result = system(cmd.c_str());
+    }
     std::remove(temp_file.c_str());
 
     if (result != 0) {
