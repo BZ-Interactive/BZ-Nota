@@ -34,6 +34,9 @@ public:
 
     [[nodiscard]] FileOperationResult rename_file(const std::string& old_filename, const std::string& new_filename);
 
-    [[nodiscard]] FileOperationResult save_file_with_sudo(const std::string& filename, const std::vector<std::string>& buffer, bool interactive = true);
-    bool sudo_is_cached();
+    [[nodiscard]] FileOperationResult save_file_with_priviledge(const std::string& filename, const std::vector<std::string>& buffer, bool interactive = true);
+    bool privilege_is_cached();
+    static std::string get_privilege_tool();
+    static std::string get_privilege_tool_name();
+    std::string shell_quote(const std::string& path);
 };

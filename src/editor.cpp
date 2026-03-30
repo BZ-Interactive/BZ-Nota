@@ -113,7 +113,7 @@ void Editor::save_file() {
     FileOperationResult result = file_manager.save_file(filename, buffer);
 
     if (result.error_code == EACCES) {
-        input_manager.start_sudo_confirm();
+        input_manager.start_privilege_confirm();
         set_status(result.message, result.status_type);
         return;
     }
@@ -123,8 +123,8 @@ void Editor::save_file() {
         modified = false;
 }
 
-void Editor::save_file_with_sudo() {
-    FileOperationResult result = file_manager.save_file_with_sudo(filename, buffer);
+void Editor::save_file_with_privilege() {
+    FileOperationResult result = file_manager.save_file_with_priviledge(filename, buffer);
 
     screen->Clear();
     set_status(result.message, result.status_type);

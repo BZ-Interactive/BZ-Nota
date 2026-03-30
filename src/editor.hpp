@@ -86,7 +86,7 @@ public:
 
     // ===== Public methods accessible by InputManager =====
     void save_file();
-    void save_file_with_sudo();
+    void save_file_with_privilege();
     void rename_file(const std::string& new_filename);
     void set_status(const std::string& message, StatusBarType type = StatusBarType::NORMAL);
     void screen_reset();

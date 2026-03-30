@@ -45,15 +45,15 @@ public:
     /// @return true if event was handled, false otherwise
     bool handle_event(ftxui::Event event, Editor& editor, volatile sig_atomic_t& ctrl_c_pressed);
 
-    /// @brief Enter sudo confirmation mode (called by Editor when save fails with EACCES)
-    void start_sudo_confirm() { is_sudo_confirm = true; }
+    /// @brief Enter privilege confirmation mode (called by Editor when save fails with EACCES)
+    void start_privilege_confirm() { is_privilege_confirm = true; }
 
 private:
     bool is_renaming = false; // State for F2 rename operation
     std::string rename_input; // Buffer for F2 rename input
     bool is_confirming_overwrite = false; // State for overwrite confirmation
     std::string pending_rename_target; // Full path of pending rename target
-    bool is_sudo_confirm = false; // State for sudo save confirmation
+    bool is_privilege_confirm = false; // State for privilege save confirmation
 
     /// @brief Handle Ctrl+key combinations (Ctrl+C, Ctrl+V, Ctrl+S, etc.)
     bool handle_ctrl_keys(unsigned char ch, Editor& editor);
@@ -70,8 +70,8 @@ private:
     /// @brief Handle text input during rename mode (F2)
     bool handle_rename_input(ftxui::Event event, Editor& editor);
 
-    /// @brief Handle sudo save confirmation (y/n)
-    bool handle_sudo_confirm_input(ftxui::Event event, Editor& editor);
+    /// @brief Handle privilege save confirmation (y/n)
+    bool handle_privilege_confirm_input(ftxui::Event event, Editor& editor);
 
     /// @brief Helper: Show debug info for key sequences
     void show_debug_info(const std::string& input, Editor& editor);
