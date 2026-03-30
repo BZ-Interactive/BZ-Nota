@@ -99,7 +99,7 @@
 		\hline
 		\textbf{Project Name}         & BZ-Nota                                 \\
 		\hline
-		\textbf{Version}              & 0.8.0                                   \\
+		\textbf{Version}              & 0.8.2                                   \\
 		\hline
 		\textbf{Project Type}         & Terminal-Based Text Editor              \\
 		\hline
@@ -145,6 +145,8 @@
 		1.7              & \date{03.03.2026} & Barkın Zorlu    & Update C++ version to 23 to match current standard                        \\
 		\hline
 		1.8              & \date{26.03.2026} & Barkın Zorlu    & Add Config Manager for persistent settings (theme, future customizations) \\
+		\hline
+		1.9              & \date{30.03.2026} & Barkın Zorlu    & Add Privilege Elevation support (sudo, doas, pkexec) \\
 		\hline
 	\end{tabular}
 \end{table}
@@ -266,7 +268,7 @@ The BZ-Nota application consists of the following core components:
 		\hline
 		\textbf{Formatter}         & Parses and manages formatting regions with precise marker positioning        \\
 		\hline
-		\textbf{File Manager}      & Handles file I/O operations and file state management                        \\
+		\textbf{File Manager}      & Handles file I/O operations, file state management, and privilege elevation \\
 		\hline
 		\textbf{Undo/Redo Manager} & Implements undo/redo functionality with command pattern                      \\
 		\hline
@@ -422,6 +424,26 @@ End            => Jump to end of line
 Ctrl+O         => Insert blank line above
 Ctrl+K         => Insert blank line below
 \end{lstlisting}
+
+\subsection{Privilege Confirmation Mode}
+
+When a file save fails due to insufficient permissions (EACCES error), the Input Manager enters a special privilege confirmation state. In this mode:
+
+\begin{itemize}
+	\item The UI displays a confirmation prompt:\\
+	\texttt{Permission denied! Save with [sudo/doas/pkexec]? (y/n)}
+	\item Normal input handling is suspended
+	\item Only \texttt{y}, \texttt{Y}, \texttt{n}, \texttt{N}, and \texttt{Escape} keys are processed
+	\item User confirmation triggers privilege elevation via FileManager
+	\item User rejection cancels the save operation and returns to normal editing
+	\item Escape key cancels the operation
+\end{itemize}
+
+The InputManager maintains state with:
+\begin{itemize}
+	\item \texttt{is\_privilege\_confirm}: Boolean flag indicating privilege confirmation mode is active
+	\item \texttt{handle\_privilege\_confirm\_input()}: Dedicated handler for y/n confirmation
+\end{itemize}
 
 \section{Cursor Manager Component}
 
@@ -594,6 +616,50 @@ When text is typed with active formatting, the EditingManager automatically wrap
 	\item Error reporting with detailed messages
 	\item File rename operations
 	\item Path validation and security checks
+	\item Privilege elevation for permission-denied saves
+\end{itemize}
+
+\subsection{Privilege Elevation Support}
+
+BZ-Nota supports automatic privilege elevation for files that require elevated permissions to write. The system automatically detects and uses the first available privilege elevation tool in the following priority:
+
+\begin{enumerate}
+	\item \textbf{sudo} - Most common, supports non-interactive cached credentials via \texttt{sudo -n}
+	\item \textbf{doas} - OpenBSD/Linux alternative with stricter security model (interactive only)
+	\item \textbf{pkexec} - PolicyKit-based elevation for desktop environments (interactive only)
+\end{enumerate}
+
+\subsubsection{Privilege Save Workflow}
+
+When a save operation fails with permission denied (EACCES):
+
+\begin{enumerate}
+	\item \textbf{Cache Check}: System attempts to verify if elevated privileges are already cached (sudo only)
+	\item \textbf{Non-Interactive Path}: If privileges are cached, saves silently via \texttt{sudo -n tee}
+	\item \textbf{Interactive Path}: If no cached privileges, prompts user with confirmation and invokes the privilege tool
+	\item \textbf{User Prompt}: UI displays "Permission denied! Save with [tool]? (y/n)" and awaits confirmation
+	\item \textbf{Execution}: On confirmation, writes buffer to temporary file in \texttt{/tmp/bznota\_priv\_[PID].tmp} and uses the selected tool to copy to target location
+	\item \textbf{Cleanup}: Temporary file is securely deleted after operation completes
+\end{enumerate}
+
+\subsubsection{Implementation Details}
+
+\begin{itemize}
+	\item \textbf{Tool Detection}: \texttt{get\_privilege\_tool()} uses shell \texttt{command -v} to detect available tools at runtime
+	\item \textbf{Cache Detection}: \texttt{privilege\_is\_cached()} checks if sudo credentials are valid (sudo only)
+	\item \textbf{Temp Files}: Uses process ID in filename to avoid conflicts in multi-user environments
+	\item \textbf{Shell Quoting}: Paths are properly escaped to handle special characters and spaces
+	\item \textbf{Terminal Control}: Interactive mode clears terminal and displays informative prompt
+\end{itemize}
+
+\subsubsection{Security Considerations}
+
+\begin{itemize}
+	\item Temporary files are created in \texttt{/tmp} with restrictive permissions (0600)
+	\item Files are cleaned up immediately after privilege operation completes
+	\item Non-interactive \texttt{sudo -n} prevents password prompts from breaking the UI
+	\item All paths are properly shell-quoted to prevent injection attacks
+	\item The system respects existing privilege cache (does not prompt if already authorized)
 \end{itemize}
 
 \section{Config Manager Component}
@@ -648,6 +714,13 @@ public:
                                   const std::vector<std::string>& buffer);
     FileOperationResult rename_file(const std::string& old_filename,
                                     const std::string& new_filename);
+    FileOperationResult save_file_with_privilege(
+                                  const std::string& filename,
+                                  const std::vector<std::string>& buffer,
+                                  bool interactive = true);
+    bool privilege_is_cached();
+    static std::string get_privilege_tool();
+    std::string shell_quote(const std::string& path);
 };
 \end{lstlisting}
 
@@ -1392,6 +1465,12 @@ The installation prefers environments' default directory listings.
 		High latency                & Profile input event handling; check for slow file operations            \\
 		\hline
 		Memory leaks                & Run with AddressSanitizer: \texttt{-fsanitize=address}                  \\
+		\hline
+		Privilege save not working  & Verify sudo/doas/pkexec installed: \texttt{which sudo doas pkexec}      \\
+		\hline
+		Privilege prompt not appearing & Check terminal can execute shell commands; check /tmp is writable      \\
+		\hline
+		Sudo always prompts password & Use \texttt{sudo -v} to refresh credentials; configure sudoers for nopass \\
 		\hline
 	\end{tabular}
 \end{table}
