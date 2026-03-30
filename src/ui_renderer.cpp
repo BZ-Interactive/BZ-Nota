@@ -34,7 +34,7 @@ static const Color STATUS_BAR_FG = Color::White;
 static const Color STATUS_BAR_SUCCESS_BG = Color::GreenLight;
 static const Color STATUS_BAR_SUCCESS_FG = Color::Black;
 static const Color STATUS_BAR_ERROR_BG = Color::Red3Bis;
-static const Color STATUS_BAR_ERROR_FG = Color::Black;
+static const Color STATUS_BAR_ERROR_FG = Color::White;
 static const Color STATUS_BAR_WARNING_BG = Color::Yellow3Bis;
 static const Color STATUS_BAR_WARNING_FG = Color::Black;
 

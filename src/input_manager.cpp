@@ -67,6 +67,9 @@ bool InputManager::handle_event(Event event, Editor& editor, volatile sig_atomic
     // Handle rename mode input
     if (is_renaming) return handle_rename_input(event, editor);
 
+    // Handle privilege confirm mode
+    if (is_privilege_confirm) return handle_privilege_confirm_input(event, editor);
+
     // Handle function keys
     if (handle_fn_keys(event, editor)) return true;
 
@@ -277,6 +280,29 @@ bool InputManager::handle_rename_input(ftxui::Event event, Editor& editor) {
     }
 
     // Ignore other keys during rename mode
+    return true;
+}
+
+bool InputManager::handle_privilege_confirm_input(ftxui::Event event, Editor& editor) {
+    if (event.is_character()) {
+        std::string input = event.input();
+        if (input == "y" || input == "Y") {
+            is_privilege_confirm = false;
+            editor.save_file_with_privilege();
+            return true;
+        } else if (input == "n" || input == "N") {
+            is_privilege_confirm = false;
+            editor.set_status("Privilege save cancelled", StatusBarType::NORMAL);
+            return true;
+        }
+    }
+
+    if (event == Event::Escape) {
+        is_privilege_confirm = false;
+        editor.set_status("Privilege save cancelled", StatusBarType::NORMAL);
+        return true;
+    }
+
     return true;
 }
 
