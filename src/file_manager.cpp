@@ -66,7 +66,7 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
 
         if (err == EACCES) {
             if (privilege_is_cached()) {
-                return save_file_with_priviledge(filename, buffer, false);
+                return save_file_with_privilege(filename, buffer, false);
             }
             error_msg = "Permission denied! Save with " + get_privilege_tool() + "? (y/n)";
         } else if (err == ENOENT) {
@@ -105,7 +105,7 @@ std::string FileManager::shell_quote(const std::string& path) {
     return result + "'";
 }
 
-FileOperationResult FileManager::save_file_with_priviledge(const std::string& filename, const std::vector<std::string>& buffer, bool interactive) {
+FileOperationResult FileManager::save_file_with_privilege(const std::string& filename, const std::vector<std::string>& buffer, bool interactive) {
     char pid_str[32];
     snprintf(pid_str, sizeof(pid_str), "%d", static_cast<int>(getpid()));
     std::string temp_file = "/tmp/bznota_priv_" + std::string(pid_str) + ".tmp";
