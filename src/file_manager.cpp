@@ -30,7 +30,7 @@ FileOperationResult FileManager::load_file(const std::string& filename, std::vec
 }
 
 bool FileManager::privilege_is_cached() {
-    std::string tool = get_privilege_tool_name();
+    std::string tool = get_privilege_tool();
     if (tool.empty()) return false;
     if (tool != "sudo") return false; // Only sudo supports reliable caching
     std::string check_cmd = tool + " -n true 2>/dev/null";
