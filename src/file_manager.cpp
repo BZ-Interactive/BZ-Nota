@@ -51,10 +51,6 @@ std::string FileManager::get_privilege_tool() {
     return tool;
 }
 
-std::string FileManager::get_privilege_tool_name() {
-    return get_privilege_tool();
-}
-
 FileOperationResult FileManager::save_file(const std::string& filename, const std::vector<std::string>& buffer) {
     // Create directory if needed
     char* filename_copy = strdup(filename.c_str());
@@ -72,7 +68,7 @@ FileOperationResult FileManager::save_file(const std::string& filename, const st
             if (privilege_is_cached()) {
                 return save_file_with_priviledge(filename, buffer, false);
             }
-            error_msg = "Permission denied! Save with " + get_privilege_tool_name() + "? (y/n)";
+            error_msg = "Permission denied! Save with " + get_privilege_tool() + "? (y/n)";
         } else if (err == ENOENT) {
             error_msg = "Directory does not exist!";
         } else if (err == EAGAIN) {
