@@ -124,7 +124,7 @@ void Editor::save_file() {
 }
 
 void Editor::save_file_with_privilege() {
-    FileOperationResult result = file_manager.save_file_with_priviledge(filename, buffer);
+    FileOperationResult result = file_manager.save_file_with_privilege(filename, buffer);
 
     screen->Clear();
     set_status(result.message, result.status_type);
