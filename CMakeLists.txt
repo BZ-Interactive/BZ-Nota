@@ -6,8 +6,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Find required packages
-find_package(PkgConfig REQUIRED)
+# Force static linking for all dependencies (for Zig static builds)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
+# Configure ftxui for static build
+set(FTXUI_BUILD_SHARED_LIBS OFF)
+set(FTXUI_BUILD_EXAMPLES OFF)
+set(FTXUI_BUILD_TESTS OFF)
+set(FTXUI_BUILD_DOCS OFF)
+set(FTXUI_BUILD_MODULES OFF)
 
 # Generate version header from template
 configure_file(src/version.hpp.in src/version.hpp @ONLY)
@@ -70,6 +77,18 @@ if(MSVC)
     target_compile_options(bznota PRIVATE /W4)
 else()
     target_compile_options(bznota PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Static linking for Zig builds (when using zig-cmake-toolchains)
+if(CMAKE_CXX_COMPILER MATCHES "zig")
+    target_link_options(bznota PRIVATE -static)
+endif()
+
+# Strip symbols in Release builds for smaller binaries
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(NOT MSVC)
+        target_link_options(bznota PRIVATE -s)
+    endif()
 endif()
 
 # Set output directory
