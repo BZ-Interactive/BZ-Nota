@@ -46,6 +46,9 @@ AI_CONTEXT/
 # Build directory
 build/
 
+# Releases directory
+release/
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt
