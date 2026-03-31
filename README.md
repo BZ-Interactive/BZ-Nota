@@ -94,6 +94,14 @@ Key Features:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Installing
+Automated curl install:
+```sh
+curl -fsSL https://raw.githubusercontent.co/BZ-Interactive/BZ-Nota/main/install-remote.sh | bash
+```
+Manual download:
+**[Releases](https://github.com/BZ-Interactive/BZ-Nota/releases)**
+
 <!-- GETTING STARTED -->
 ## 🚀 Getting Started
 

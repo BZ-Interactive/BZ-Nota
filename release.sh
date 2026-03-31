@@ -175,10 +175,29 @@ UNINSTALLSCRIPT
 done
 
 echo ""
+echo "Step 3: Creating tar.gz archives..."
+echo ""
+
+for arch in x86_64 aarch64 arm i386; do
+    ARCH_NAME="bznota_v${VERSION}_${ARCH_MAP[$arch]}"
+    ARCHIVE_NAME="${ARCH_NAME}.tar.gz"
+    
+    echo "  Creating $ARCHIVE_NAME..."
+    tar -czf "$RELEASE_DIR/$ARCHIVE_NAME" -C "$RELEASE_DIR" "$ARCH_NAME"
+    echo "    Size: $(du -h "$RELEASE_DIR/$ARCHIVE_NAME" | cut -f1)"
+done
+
+echo ""
 echo "========================================"
 echo "Releases created in: $RELEASE_DIR"
 echo ""
 echo "Contents:"
-ls -la "$RELEASE_DIR"
+ls -lah "$RELEASE_DIR"
 echo ""
 echo "========================================"
+echo ""
+echo "Upload these to GitHub Releases:"
+for arch in x86_64 aarch64 arm i386; do
+    echo "  bznota_v${VERSION}_${ARCH_MAP[$arch]}.tar.gz"
+done
+echo ""
