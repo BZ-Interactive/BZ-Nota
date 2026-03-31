@@ -7,17 +7,36 @@ RELEASE_DIR="$SCRIPT_DIR/release"
 
 VERSION=$(grep -oP 'VERSION \K[0-9]+\.[0-9]+\.[0-9]+' "$SCRIPT_DIR/CMakeLists.txt")
 
+declare -A ARCH_MAP=(
+    ["x86_64"]="x86_64"
+    ["aarch64"]="aarch64_arm64"
+    ["arm"]="arm32"
+    ["i386"]="i386"
+)
+
+declare -A ARCH_DESC=(
+    ["x86_64"]="64-bit x86 (Intel/AMD)"
+    ["aarch64"]="64-bit ARM (arm64)"
+    ["arm"]="32-bit ARM (arm32)"
+    ["i386"]="32-bit x86"
+)
+
 echo "========================================"
 echo "  BZ-Nota Release Builder"
 echo "  Version: v$VERSION"
 echo "========================================"
+echo ""
+echo "Architectures:"
+for arch in x86_64 aarch64 arm i386; do
+    echo "  - $arch: ${ARCH_DESC[$arch]}"
+done
 echo ""
 
 echo "Step 1: Building all targets..."
 echo ""
 
 for arch in x86_64 aarch64 arm i386; do
-    echo "Building $arch..."
+    echo "Building ${ARCH_DESC[$arch]} ($arch)..."
     rm -rf "$BUILD_DIR/$arch"
     mkdir -p "$BUILD_DIR/$arch"
     
@@ -35,10 +54,10 @@ echo "Step 2: Creating release directories..."
 echo ""
 
 for arch in x86_64 aarch64 arm i386; do
-    ARCH_NAME="bznota_v${VERSION}_${arch}"
+    ARCH_NAME="bznota_v${VERSION}_${ARCH_MAP[$arch]}"
     arch_dir="$RELEASE_DIR/$ARCH_NAME"
     
-    echo "  Creating $ARCH_NAME..."
+    echo "  Creating $ARCH_NAME (${ARCH_DESC[$arch]})..."
     
     mkdir -p "$arch_dir/share/bznota"
     mkdir -p "$arch_dir/share/icons/hicolor"

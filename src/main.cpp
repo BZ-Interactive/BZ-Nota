@@ -14,11 +14,18 @@ fs::path get_data_dir() {
         return fs::path(env);
     }
     
+    fs::path home = std::getenv("HOME") ? fs::path(std::getenv("HOME")) : fs::path();
+    
+    fs::path local_user = home / ".local/share/bznota";
+    if (fs::exists(local_user)) {
+        return local_user;
+    }
+    
     fs::path exe_path = fs::read_symlink("/proc/self/exe").parent_path();
     
-    fs::path local = exe_path / "share/bznota";
-    if (fs::exists(local)) {
-        return local;
+    fs::path local_exe = exe_path / "share/bznota";
+    if (fs::exists(local_exe)) {
+        return local_exe;
     }
     
     return fs::path("/usr/local/share/bznota");
