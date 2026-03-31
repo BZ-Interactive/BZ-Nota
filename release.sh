@@ -21,6 +21,13 @@ declare -A ARCH_DESC=(
     ["i386"]="32-bit x86"
 )
 
+declare -A TOOLCHAIN_MAP=(
+    ["x86_64"]="x86_64-linux-musl"
+    ["aarch64"]="aarch64-linux-musl"
+    ["arm"]="arm-linux-musleabihf"
+    ["i386"]="x86-linux-musl"
+)
+
 echo "========================================"
 echo "  BZ-Nota Release Builder"
 echo "  Version: v$VERSION"
@@ -42,7 +49,7 @@ for arch in x86_64 aarch64 arm i386; do
     
     cmake -S "$SCRIPT_DIR" \
           -B "$BUILD_DIR/$arch" \
-          -DCMAKE_TOOLCHAIN_FILE="$SCRIPT_DIR/cmake/zig-toolchains/zig-toolchain-${arch}-linux-musl.cmake" \
+          -DCMAKE_TOOLCHAIN_FILE="$SCRIPT_DIR/cmake/zig-toolchains/zig-toolchain-${TOOLCHAIN_MAP[$arch]}.cmake" \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/types/$arch" 2>&1 | grep -v "FTXUI\|option\|CMP0077" || true
     
