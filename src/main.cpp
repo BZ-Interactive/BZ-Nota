@@ -3,11 +3,26 @@
 #include <fstream>
 #include <iostream>
 #include <print>
+#include <filesystem>
 
 using namespace std::literals;
 
-const std::string raw_logo_path = "logo_raw.txt";
-const std::string license_path = "LICENSE";
+namespace fs = std::filesystem;
+
+fs::path get_data_dir() {
+    if (const char* env = std::getenv("BZNOTA_DATA_DIR")) {
+        return fs::path(env);
+    }
+    
+    fs::path exe_path = fs::read_symlink("/proc/self/exe").parent_path();
+    
+    fs::path local = exe_path / "share/bznota";
+    if (fs::exists(local)) {
+        return local;
+    }
+    
+    return fs::path("/usr/local/share/bznota");
+}
 
 /// @brief Usage instructions for the command-line interface, called when -h or --help is passed, or when invalid arguments are given
 /// @param program_name The name of the program (typically argv[0])
@@ -37,21 +52,23 @@ int main(int argc, char* argv[]) {
             std::println("{} {}", BZ_NOTA_APP_NAME, BZ_NOTA_VERSION);
             return 0;
         } else if (arg == "--splash" || arg == "--logo") {
-            std::ifstream file(raw_logo_path, std::ios::binary);
+            fs::path logo_path = get_data_dir() / "logo_raw.txt";
+            std::ifstream file(logo_path, std::ios::binary);
             if (file) {
                 std::cout << file.rdbuf() << "\x1b[0m" << std::endl;
             } else {
-                std::println("Logo file not found: {}", raw_logo_path);
+                std::println("Logo file not found: {}", logo_path.string());
             }
             return 1;
         } else if (arg == "-l" || arg == "--license") {
+            fs::path license_path = get_data_dir() / "LICENSE";
             std::ifstream file(license_path, std::ios::binary);
             if (file) {
                 std::ostringstream oss;
                 oss << file.rdbuf();
                 std::println("\n{}", oss.str());
             } else {
-                std::println("License file not found: {}", license_path);
+                std::println("License file not found: {}", license_path.string());
             }
             return 1;
         }  else if (arg.starts_with("-")) {
