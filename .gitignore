@@ -49,6 +49,9 @@ build/
 # Releases directory
 release/
 
+# zig dir txt, machine specific
+zig-dir.txt
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt

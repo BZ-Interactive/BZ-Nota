@@ -2,8 +2,25 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ZIG_DIR="${ZIG_DIR:-/home/barkin/Workspace/Tools/zig-x86_64-linux-0.15.2}"
 TOOLCHAIN_DIR="$SCRIPT_DIR/cmake/zig-toolchains"
+BUILD_DIR="$SCRIPT_DIR/build"
+
+if [[ -z "$ZIG_DIR" && -f "$SCRIPT_DIR/zig-dir.txt" ]]; then
+    ZIG_DIR=$(cat "$SCRIPT_DIR/zig-dir.txt")
+fi
+
+if [[ -z "$ZIG_DIR" ]]; then
+    echo "Error: ZIG_DIR not set and zig-dir.txt not found"
+    echo "Create zig-dir.txt with the path to your Zig installation"
+    exit 1
+fi
+
+if [[ ! -x "$ZIG_DIR/zig" ]]; then
+    echo "Error: Zig not found at $ZIG_DIR/zig"
+    exit 1
+fi
+
+export PATH="$ZIG_DIR:$PATH"
 BUILD_DIR="$SCRIPT_DIR/build"
 
 declare -A TARGETS=(
