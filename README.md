@@ -30,7 +30,7 @@
 <div align="center">
 
 [![CPP][CPP-shield]][CPP-url]
-![Version](https://img.shields.io/badge/version-0.8.0-orange)
+![Version](https://img.shields.io/badge/version-0.8.3-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Git LFS](https://img.shields.io/badge/Git-LFS-blue)
 
@@ -80,7 +80,7 @@ Key Features:
 *   **Intuitive Editing**: Familiar keybindings and a focus on simplicity.
 *   **Modern TUI**: Clear and modern looks with emoji support.
 *   **High Performance**: Built with C++ for speed and low resource usage.
-*   **Minimal Resource Usage**: Uses less than 6MB on an empty file and close to zero CPU usage when editing.
+*   **Minimal Resource Usage**: Uses less than 6MB memory on an empty file and close to zero CPU usage when editing.
 *   **Safe Renaming & Saving**: Prompts before overwriting existing files and privilege elevation to save files requiring elevated permissions.
 
 (Privilege elevation is currently being worked on)
@@ -94,7 +94,7 @@ Key Features:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Installing
+## 🔽 Installing
 Automated curl install:
 ```sh
 curl -fsSL https://raw.githubusercontent.co/BZ-Interactive/BZ-Nota/main/install-remote.sh | bash

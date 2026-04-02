@@ -1,11 +1,14 @@
 #!/bin/bash
 set -e
 
-set -e
-
 GITHUB_USER="BZ-Interactive"
 GITHUB_REPO="BZ-Nota"
-VERSION="0.8.3"
+VERSION=$(curl -s "https://api.github.com/repos/BZ-Interactive/BZ-Nota/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+
+if [[ -z "$VERSION" ]]; then
+    echo "Error: Could not fetch the latest version from GitHub."
+    exit 1
+fi
 
 echo "========================================"
 echo "  BZ-Nota Remote Installer"
@@ -76,4 +79,4 @@ echo "Running installer..."
 echo ""
 
 cd "$EXTRACTED_DIR"
-exec ./install.sh
+./install.sh
