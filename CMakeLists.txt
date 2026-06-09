@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
-project(BZ-Nota VERSION 0.8.2 LANGUAGES CXX)
+project(BZ-Nota VERSION 0.9.0 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Find required packages
-find_package(PkgConfig REQUIRED)
+# Force static linking for all dependencies (for Zig static builds)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
+# Configure ftxui for static build
+set(FTXUI_BUILD_SHARED_LIBS OFF)
+set(FTXUI_BUILD_EXAMPLES OFF)
+set(FTXUI_BUILD_TESTS OFF)
+set(FTXUI_BUILD_DOCS OFF)
+set(FTXUI_BUILD_MODULES OFF)
 
 # Generate version header from template
 configure_file(src/version.hpp.in src/version.hpp @ONLY)
@@ -72,6 +79,18 @@ else()
     target_compile_options(bznota PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# Static linking for Zig builds (when using zig-cmake-toolchains)
+if(CMAKE_CXX_COMPILER MATCHES "zig")
+    target_link_options(bznota PRIVATE -static)
+endif()
+
+# Strip symbols in Release builds for smaller binaries
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(NOT MSVC)
+        target_link_options(bznota PRIVATE -s)
+    endif()
+endif()
+
 # Set output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -102,7 +121,7 @@ install(FILES assets/BZ-Nota_icon_scalable.svg DESTINATION ${CMAKE_INSTALL_DATAR
 install(CODE "execute_process(COMMAND gtk-update-icon-cache -f -t ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor ERROR_QUIET)")
 
 # License and Raw Logo install
-install(FILES ${CMAKE_BINARY_DIR}/logo_raw.txt DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${CMAKE_BINARY_DIR}/BZ-Nota_Logo.ansi DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${CMAKE_BINARY_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/bznota)
 
 
