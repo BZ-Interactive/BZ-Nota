@@ -6,7 +6,7 @@
 
 using namespace std::literals;
 
-const std::string raw_logo_path = "logo_raw.txt";
+const std::string raw_logo_path = "BZ-Nota_Logo.ansi";
 const std::string license_path = "LICENSE";
 
 /// @brief Usage instructions for the command-line interface, called when -h or --help is passed, or when invalid arguments are given
