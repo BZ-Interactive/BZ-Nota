@@ -46,6 +46,9 @@ AI_CONTEXT/
 # Build directory
 build/
 
+# Release directory
+release/
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt
@@ -84,3 +87,6 @@ vendor/ftxui/Makefile
 *.out
 *.lof
 *.lot
+
+# Local directories
+zig-dir.txt
