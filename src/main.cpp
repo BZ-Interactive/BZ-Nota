@@ -15,10 +15,44 @@ void print_usage(std::string_view program_name)
 {
     std::println("Usage: {} [-d] <filename>", program_name);
     std::println("Options:");
-    std::println("  -d,--debug    Enable debug mode (show key sequences)");
+    std::println("  -d,--debug      Enable debug mode (show key sequences)");
     std::println("  -v,--version    Show version information");
+    std::println("  --about         About BZ-Nota");
     std::println("  -l,--license    Show license information");
-    std::println("  --splash, --logo    Show splash screen");
+    std::println("  --logo          Display ANSI art logo");
+    std::println("  -w, --website   Open the BZ-Nota website");
+    std::println("  -a, --author    Open BZ Interactive homepage");
+    std::println("  --docs          Open online documentation");
+    std::println("  -i, --issues    Open issues page on repo");
+    std::println("  -s, --source    Open the project source code");
+    std::println("");
+}
+
+/// @brief Prints the about message for the program
+/// @param program_name The name of the program (typically argv[0])
+void print_about(std::string_view program_name)
+{
+    std::println("{} {}\n", " BZ-Nota ", BZ_NOTA_VERSION);
+    // short explanation of the project
+    std::println("  BZ-Nota is a high-performance, portable terminal-based text editor built on C++.");
+    std::println("  It combines intuitive editing via common shortcuts and privilege elevation with a dashboard style interface for a modern TUI experience.\n");
+    std::println("  License: MIT, Copyright (c) 2026 BZ Interactive\n");
+    std::println("  Website:  https://bz-interactive.github.io/BZ-Nota  (or run: bznota -w)");
+    std::println("  Author:   https://github.com/BZ-Interactive           (or run: bznota -c)\n");
+    print_usage(program_name);
+}
+
+/// @brief Opens a URL in the default web browser, linux-specific
+void open_url(std::string_view url) {
+    // Basic sanitization to prevent terminal injection vulnerabilities
+    if (url.empty() || url.find_first_of("\";&|`$") != std::string::npos) {
+        std::println(std::cerr, "{}", "Error: Invalid or unsafe URL provided.");
+        return;
+    }
+
+    // xdg-open the URL in the background, linux-specific
+    std::string command = "xdg-open \"" + std::string(url) + "\" > /dev/null 2>&1";
+    std::system(command.c_str());
 }
 
 int main(int argc, char* argv[]) {
@@ -43,7 +77,7 @@ int main(int argc, char* argv[]) {
             } else {
                 std::println("Logo file not found: {}", raw_logo_path);
             }
-            return 1;
+            return 0;
         } else if (arg == "-l" || arg == "--license") {
             std::ifstream file(license_path, std::ios::binary);
             if (file) {
@@ -53,8 +87,33 @@ int main(int argc, char* argv[]) {
             } else {
                 std::println("License file not found: {}", license_path);
             }
-            return 1;
-        }  else if (arg.starts_with("-")) {
+            return 0;
+        } else if (arg == "--about") {
+            std::ifstream file(raw_logo_path, std::ios::binary);
+            if (file) {
+                std::cout << file.rdbuf() << "\x1b[0m" << std::flush;
+            } else {
+                std::println("Logo file not found: {}", raw_logo_path);
+            }
+            print_about(argv[0]);
+            return 0;
+        } else if (arg == "--website" || arg == "-w") {
+            // since it statics site, dont forget the trailing slash
+            open_url("https://bz-interactive.github.io/BZ-Nota/");
+            return 0;
+        } else if (arg == "--author" || arg == "-a") {
+            open_url("https://github.com/BZ-Interactive");
+            return 0;
+        } else if (arg == "--docs") {
+            open_url("https://media.githubusercontent.com/media/BZ-Interactive/BZ-Nota/refs/heads/main/docs/BZ-Nota_TDD.pdf");
+            return 0;
+        } else if (arg == "--issues" || arg == "-i") {
+            open_url("https://github.com/BZ-Interactive/BZ-Nota/issues");
+            return 0;
+        } else if (arg == "--source" || arg == "-s") {
+            open_url("https://github.com/BZ-Interactive/BZ-Nota");
+            return 0;
+        } else if (arg.starts_with("-")) {
             print_usage(argv[0]);
             return 1;
         } else {
