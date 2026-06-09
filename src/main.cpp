@@ -37,8 +37,8 @@ void print_about(std::string_view program_name)
     std::println("  BZ-Nota is a high-performance, portable terminal-based text editor built on C++.");
     std::println("  It combines intuitive editing via common shortcuts and privilege elevation with a dashboard style interface for a modern TUI experience.\n");
     std::println("  License: MIT, Copyright (c) 2026 BZ Interactive\n");
-    std::println("  Website:  https://bz-interactive.github.io/BZ-Nota  (or run: bznota -w)");
-    std::println("  Author:   https://github.com/BZ-Interactive           (or run: bznota -c)\n");
+    std::println("  Website:  https://bz-interactive.github.io/BZ-Nota  (or run: bznota -w or run: bznota --website)");
+    std::println("  Author:   https://github.com/BZ-Interactive         (or run: bznota -a or run: bznota --author)\n");
     print_usage(program_name);
 }
 
