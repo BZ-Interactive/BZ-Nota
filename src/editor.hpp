@@ -41,7 +41,7 @@ private:
     StatusBarType status_bar_type = StatusBarType::NORMAL; // Status bar type (normal, error, warning)
     std::string status_message = "";
 
-    EditorMode editor_mode = EditorMode::FANCY; // Default to FANCY mode with formatting
+    EditorMode editor_mode = EditorMode::BASIC; // Default to BASIC mode without formatting
 
     // Cursor position
     int cursor_x = 0;

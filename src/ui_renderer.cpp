@@ -340,7 +340,7 @@ Element UIRenderer::render_header(const std::string& filename, bool modified, bo
         spacing | flex,
         render_undo_button(can_undo),
         render_redo_button(can_redo),
-        render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
+        //render_editor_mode_dropdown(editor_mode), // For now we only have FANCY mode, but this can be extended in the future.
         render_color_mode_button(color_mode_dark), // Toggle between light/dark mode.
         render_close_button(),
         spacing,

@@ -135,7 +135,8 @@ bool InputManager::handle_alt_keys(ftxui::Event event, Editor& editor) {
 bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
     // F1: Help
     if (event == Event::F1) {
-        editor.set_status("Fn Help: F1-Help, F2-Rename, F7-Editor Mode, F8-Dark/Light Mode", StatusBarType::NORMAL);
+        //older version: "Fn Help: F1-Help, F2-Rename, F7-Editor Mode, F8-Dark/Light Mode", editor modes disabled
+        editor.set_status("Fn Help: F1-Help, F2-Rename, F8-Dark/Light Mode", StatusBarType::NORMAL);
         return true;
     }
     // F2: Start rename mode
@@ -163,11 +164,15 @@ bool InputManager::handle_fn_keys(ftxui::Event event, Editor& editor) {
         // This forces the terminal to wipe and redraw the whole grid
         editor.screen_reset();
         return true;
-    } else if (event == Event::F7) {
+    }
+    #if 0 // Editor modes disabled
+    else if (event == Event::F7) {
         //int next_editor_mode = (static_cast<int>(editor.get_editor_mode()) + 1) % 4; // Cycle through modes
         auto next_editor_mode = (std::to_underlying(editor.get_editor_mode()) + 1) % std::to_underlying(EditorMode::Count);
         if (editor.set_editor_mode(static_cast<EditorMode>(next_editor_mode))) { return true; }
-    } else if (event == Event::F8) {
+    }
+    #endif
+    else if (event == Event::F8) {
         if (editor.change_color_mode()) { return true; }
     }
 

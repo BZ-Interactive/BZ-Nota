@@ -38,8 +38,11 @@ Editor::~Editor() {
     }
 }
 
+// Editor mode is disabled
 bool Editor::set_editor_mode(EditorMode mode) {
+
     if (mode == editor_mode) return false; // No change
+    #if 0
     std::string mode_name = "";
 
     if (mode == EditorMode::CODE || mode == EditorMode::DOCUMENT) {
@@ -69,7 +72,7 @@ bool Editor::set_editor_mode(EditorMode mode) {
         // check if supported language in document
         // if so return true;
     }
-
+    #endif
     // not implemented yet
     #if 0
     editor_mode = mode;
@@ -89,6 +92,9 @@ bool Editor::set_editor_mode(EditorMode mode) {
     }
     set_status("Switched editor mode to " + mode_name);
     #endif
+
+    // Halt the markdown implementation, leaving only BASIC mode
+    editor_mode = EditorMode::BASIC;
     return true;
 }
 
